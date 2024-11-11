@@ -39,16 +39,20 @@ falsetargs = targs_df[targs_df["Affinity(kcal/mol)"] == "False"]
 targs = targs.drop(index=falsetargs.index)
 
 feats_df = pd.read_csv(
-    training_path + "desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz",
+    training_path + "desc/rdkit/ChEMBL_scrambled_feats.csv",
     index_col="ID",
-    compression="gzip",
 )
 save_path = (
-    "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/init_RF_model/it0_diff_hyp_2/"
+    "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/init_RF_model/it0_scrambled/"
 )
 
 new_feat_df = feats_df
-new_feat_df = new_feat_df.drop(index=falsetargs.index)
+
+try:
+    new_feat_df = new_feat_df.drop(index=falsetargs.index)
+except Exception as e:
+    print(e)
+
 
 model = RF_model(docking_column=docking_column)
 

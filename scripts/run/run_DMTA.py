@@ -36,6 +36,8 @@ held_out_test_feats = (
 held_out_test_targs = (
     "/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_docked.csv"
 )
+remove_unreliable_molecules = False
+n_molecules_to_remove = 5
 
 # Running the Workflow
 run = RecDMTA(
@@ -56,6 +58,8 @@ run = RecDMTA(
     run_name=run_name,
     docking_column=docking_column,
     max_confs=max_confs,
+    rm_unrel_tr_data=remove_unreliable_molecules,
+    n_to_remove=n_molecules_to_remove
 )
 
 run.RunIterations(

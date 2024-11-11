@@ -14,61 +14,80 @@ from misc_functions import (
     molid_to_smiles,
     molid_ls_to_smiles,
 )
-
-
-an = Analysis()
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
+an = Analysis(results_dir=results_dir)
 
 # %%
-# an.Plot_Perf(
-#     experiments=[
-#         "20240910_10_mu",
-#         "20240910_10_mp",
-#         "20240910_10_r",
-#         "20240910_10_rmp",
-#         "20240910_10_rmpo",
-#         "20240910_10_mpo",
-#         "20240916_50_mu",
-#         "20240916_50_mp",
-#         "20240916_50_r",
-#         "20240916_50_rmp",
-#         "20240916_50_rmpo",
-#         "20240916_50_mpo",
-#     ],
-#     plot_int = True,
-#     plot_fname='int_plot'
-# )
+an.Plot_Perf(
+    experiments=[
+        "average_50_mp",
+        "average_50_rmp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+    ],
+    plot_int = True,
+    plot_fname='int_plot',
+)
 
-# an.Plot_Perf(
-#     experiments=[
-#         "20240910_10_mu",
-#         "20240910_10_mp",
-#         "20240910_10_r",
-#         "20240910_10_rmp",
-#         "20240910_10_rmpo",
-#         "20240910_10_mpo",
-#         "20240916_50_mu",
-#         "20240916_50_mp",
-#         "20240916_50_r",
-#         "20240916_50_rmp",
-#         "20240916_50_rmpo",
-#         "20240916_50_mpo",
-#     ],
-#     plot_ho = True,
-#     plot_fname='ho_plot'
-# )
+# %%
+an.Plot_Perf(
+    experiments=[
+        "average_10_mp",
+        "average_10_rmp",
+        "average_10_rmpo",
+        "average_10_mpo",
+        "average_10_r",
+        "average_10_mu",
+        "average_50_mp",
+        "average_50_rmp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+    ],
+    plot_ho = False,
+    plot_int= True,
+    plot_chembl_int= False,
+    plot_tr_ho= False,
+    plot_fname='all_avg_int_plot_cod_r',
+    set_ylims=True,
+    r_type = 'r2',
+    # rmse_ylim=(1.2, 0),
+    # sdep_ylim=(-0.2, 0.5),
+    # r2_ylim=(-0, 1),
+    bias_ylim= (-0.6, 0.2),
+)
+# %%
+an.Plot_Perf(
+    experiments=[
+        "average_50_mp",
+        "average_50_rmp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+    ],
+    plot_tr_ho = True,
+    set_ylims=False,
+    plot_fname='tr_ho_plot',
+    r_type = 'r2'
+)
+# %%
 
-# an.Plot_Perf(
-#     experiments=[
-#         "20241002_10_mu",
-#         "20241002_10_mp",
-#         "20241002_10_r",
-#         "20241002_10_rmp",
-#         "20241002_10_rmpo",
-#         "20241002_10_mpo",
-#     ],
-#     plot_fname="chembl_int_perf",
-#     plot_chembl_int=True,
-# )
+an.Plot_Perf(
+    experiments=[
+        "average_10_r",
+        "average_10_rmp",
+        "average_10_rmpo",
+        "average_10_mp",
+        "average_10_mpo",
+        "average_10_mu",
+    ],
+    plot_chembl_int= True,
+    plot_fname='chembl_plot'
+)
 
 # %%
 
@@ -131,43 +150,43 @@ an = Analysis()
 #                                               '20240916_50_mpo'])
 
 # %%
-an.MP_Top_Preds_Analysis(
-    experiments=[
-        "20240910_10_mu",
-        "20240910_10_mp",
-        "20240910_10_r",
-        "20240910_10_rmp",
-        "20240910_10_rmpo",
-        "20240910_10_mpo",
-        "20240916_50_mu",
-        "20240916_50_mp",
-        "20240916_50_r",
-        "20240916_50_rmp",
-        "20240916_50_rmpo",
-        "20240916_50_mpo",
-    ],
-    ascending=False,
-    filename="Avg_Bottom_Preds_Plot",
-)
+# an.MP_Top_Preds_Analysis(
+#     experiments=[
+#         "20240910_10_mu",
+#         "20240910_10_mp",
+#         "20240910_10_r",
+#         "20240910_10_rmp",
+#         "20240910_10_rmpo",
+#         "20240910_10_mpo",
+#         "20240916_50_mu",
+#         "20240916_50_mp",
+#         "20240916_50_r",
+#         "20240916_50_rmp",
+#         "20240916_50_rmpo",
+#         "20240916_50_mpo",
+#     ],
+#     ascending=False,
+#     filename="Avg_Bottom_Preds_Plot",
+# )
 
-an.MP_Top_Preds_Analysis(
-    experiments=[
-        "20240910_10_mu",
-        "20240910_10_mp",
-        "20240910_10_r",
-        "20240910_10_rmp",
-        "20240910_10_rmpo",
-        "20240910_10_mpo",
-        "20240916_50_mu",
-        "20240916_50_mp",
-        "20240916_50_r",
-        "20240916_50_rmp",
-        "20240916_50_rmpo",
-        "20240916_50_mpo",
-    ],
-    ascending=True,
-    filename="Avg_Top_Preds_Plot",
-)
+# an.MP_Top_Preds_Analysis(
+#     experiments=[
+#         "20240910_10_mu",
+#         "20240910_10_mp",
+#         "20240910_10_r",
+#         "20240910_10_rmp",
+#         "20240910_10_rmpo",
+#         "20240910_10_mpo",
+#         "20240916_50_mu",
+#         "20240916_50_mp",
+#         "20240916_50_r",
+#         "20240916_50_rmp",
+#         "20240916_50_rmpo",
+#         "20240916_50_mpo",
+#     ],
+#     ascending=True,
+#     filename="Avg_Top_Preds_Plot",
+# )
 
 
 # %%

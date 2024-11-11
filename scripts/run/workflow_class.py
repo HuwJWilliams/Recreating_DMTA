@@ -82,8 +82,10 @@ class RecDMTA:
             "rf__max_features": ["sqrt"],
             "rf__max_depth": [25, 50, 75, 100],
             "rf__min_samples_split": [2, 5],
-            "rf__min_samples_leaf": [2, 4, 8],
+            "rf__min_samples_leaf": [2, 4, 8]
         },
+        rm_unrel_tr_data: bool=False,
+        n_to_remove: int=5,
         username: str = "yhb18174",
     ):
         """
@@ -175,6 +177,8 @@ class RecDMTA:
         self.id_prefix = id_prefix
         self.hyper_params = hyper_params
         self.max_confs = max_confs
+        self.rm_unrel_tr_data = rm_unrel_tr_data
+        self.n_to_remove = n_to_remove
         self.username = username
 
         # Timings
@@ -581,9 +585,32 @@ class RecDMTA:
             save_path=self.it_dir,
             save_final_model=True,
             plot_feat_importance=True,
+            get_full_cv_data=self.rm_unrel_tr_data,
+            get_reliability_score=self.rm_unrel_tr_data
         )
 
+        print("Model trained successfully")
         self.it_rf_model = rf[0]
+        reliability_df = rf[8]
+
+        if self.rm_unrel_tr_data:
+            print(f"Removing {self.n_to_remove} most unreliable molecules form training set")
+            reliability_df.sort_values(by='Reliability_Score', ascending=False)
+            mols_to_remove = reliability_df.head(self.n_to_remove).index
+
+            # Retraining with unreliable molecules removed
+            rf = model.Train_Regressor(
+                search_type="grid",
+                hyper_params=self.hyper_params,
+                features=feats.drop(mols_to_remove),
+                targets=targs.drop(mols_to_remove),
+                save_path=self.it_dir,
+                save_final_model=True,
+                plot_feat_importance=True,
+                get_full_cv_data=self.rm_unrel_tr_data,
+                get_reliability_score=self.rm_unrel_tr_data
+            )
+            print("Model trained successfully")
 
         # Setting up arguments for the _predict_for_files() function
         args = [

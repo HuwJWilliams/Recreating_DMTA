@@ -27,7 +27,7 @@ ids, cnn_scores, aff_scores = mp.SubmitJobs(run_hrs=0, run_mins=20)
 
 # mol_dir_ls = [f'{docking_dir}{molid}' for molid in molid_ls]
 
-# ids, cnn_scores, aff_scores = mp.MakeCsv(save_data=True)
+ids, cnn_scores, aff_scores = mp.MakeCsv(save_data=True)
 
 print(ids)
 print(cnn_scores)

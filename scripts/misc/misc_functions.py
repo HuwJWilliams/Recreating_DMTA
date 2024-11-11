@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 import json
 from rdkit import Chem
+import shutil
 
 FILE_DIR = Path(__file__)
 PROJ_DIR = FILE_DIR.parent.parent.parent
@@ -271,3 +272,57 @@ def get_chembl_molid_smi():
     smi_ls = chembl_df["SMILES"].tolist()
 
     return molids, smi_ls
+
+def clean_chosen_mol(
+        experiment_ls: list,
+        experiment_dir: str,
+        n_mols: int,
+        save_changes: bool=True
+        ):
+    
+    """
+    Description
+    -----------
+    Function to clean the chosen mol files incase of restarts, will delete second instance of molecules so be careful
+    
+    Parameters
+    ----------
+    experiment_ls (list)        List of experiments to clean the chosen mol_files
+    experiment_dir (str)        Directory containing all experiments to clean chosen mol files
+    excluded_prefix (str)       Molecules with this prefix will not be selected to the chosen_mol file
+                                e.g., not including "CHEMBL" molecules
+    
+    Returns
+    -------
+    None
+    """        
+
+    for exp in experiment_ls:
+        print(f"Cleaning {exp} chosen_mol.csv")
+        exp_dpath = experiment_dir + exp + '/'
+        chosen_mols_fpath = exp_dpath + 'chosen_mol.csv'
+        chosen_mol_df = pd.read_csv(chosen_mols_fpath, index_col='ID')
+
+        chosen_mol_df.sort_values(by='Iteration')
+
+        filtered_df = chosen_mol_df.groupby('Iteration', group_keys=False).apply(
+            lambda group: group.iloc[10:] if len(group) > 10 else group
+                                )
+
+        if save_changes:
+            chosen_mol_df.to_csv(
+                exp_dpath + 'uncleaned_chosen_mol.csv', index_label='ID')
+            filtered_df.to_csv(chosen_mols_fpath, index_label='ID')
+
+def remove_running_dirs( 
+        experiment_ls: list,
+        experiment_dir: str
+        ):
+    
+    for exp in experiment_ls:
+        exp_dpath = experiment_dir + exp + '/'
+        path = Path(exp_dpath)
+        for item in path.iterdir():
+            if item.is_dir() and '_running' in item.name:
+                print(f"Removing directory: {item}")
+                shutil.rmtree(item)

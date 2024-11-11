@@ -71,6 +71,7 @@ def CalcStats(
 class Analysis:
     def __init__(
         self,
+        results_dir = str(PROJ_DIR) + '/results/rdkit_desc/',
         rdkit_or_mordred: str = "rdkit",
         held_out_stat_json: str = "held_out_stats.json",
         docking_column: str = "Affinity(kcal/mol)",
@@ -95,10 +96,9 @@ class Analysis:
 
         self.rdkit_or_mordred = rdkit_or_mordred.lower()
 
-        if self.rdkit_or_mordred == "rdkit":
-            self.results_dir = PROJ_DIR / "results" / "rdkit_desc"
-        else:
-            self.results_dir = PROJ_DIR / "results" / "mordred_desc"
+        self.results_dir = results_dir
+        self.results_10_dir = self.results_dir + '/finished_results/10_mol_sel/'
+        self.results_50_dir = self.results_dir + '/finished_results/50_mol_sel/'
 
         self.held_out_stat_json = held_out_stat_json
 
@@ -108,6 +108,7 @@ class Analysis:
         self,
         experiment_dirs: list = [],
         perf_stats_json: str = "performance_stats.json",
+        r_type: str = 'r2'
     ):
         """
         Description
@@ -125,13 +126,18 @@ class Analysis:
 
         all_stats = {}
 
+        if r_type != 'r2':
+            r_type = 'Pearson_r'
+
         # Looping through all provided experiments
         for exp in experiment_dirs:
-
+            
             if "_50_" in exp:
                 step = 50
+                results_dir = self.results_50_dir
             else:
                 step = 10
+                results_dir = self.results_10_dir
 
             # Initialising empty lists
             rmse = []
@@ -142,7 +148,7 @@ class Analysis:
             no_mols_ls = []
 
             # Defining the working directory
-            working_dir = self.results_dir / exp
+            working_dir = results_dir + '/' + exp
 
             # For each iteration obtain and save the statistics data
             # If this doesnt work change back to (0, cnt_n_iters())
@@ -156,7 +162,7 @@ class Analysis:
                         data = json.load(perf_stats)
 
                     rmse.append(round(float(data.get("RMSE", 0)), 3))
-                    r2.append(round(float(data.get("r2", 0)), 3))
+                    r2.append(round(float(data.get(r_type, 0)), 3))
                     bias.append(round(float(data.get("Bias", 0)), 3))
                     sdep.append(round(float(data.get("SDEP", 0)), 3))
 
@@ -183,16 +189,20 @@ class Analysis:
         plot_int: bool = False,
         plot_ho: bool = False,
         plot_chembl_int: bool = False,
+        plot_tr_ho: bool = False,
+        set_ylims: bool = True,
         r2_ylim: tuple = (-1, 1),
         bias_ylim: tuple = (-0.5, 0.5),
         rmse_ylim: tuple = (0, 1),
         sdep_ylim: tuple = (0, 1),
+        r_type: str = 'r2'
     ):
 
         # Load performance stats for the selected datasets
         all_int_stats = (
             self._get_stats(
-                experiment_dirs=experiments, perf_stats_json="performance_stats.json"
+                experiment_dirs=experiments, perf_stats_json="performance_stats.json",
+                r_type=r_type
             )
             if plot_int
             else None
@@ -201,20 +211,31 @@ class Analysis:
             self._get_stats(
                 experiment_dirs=experiments,
                 perf_stats_json="/held_out_test/held_out_stats.json",
+                r_type=r_type
             )
             if plot_ho
             else None
         )
+
+        all_tr_ho_stats = (
+            self._get_stats(
+                experiment_dirs=experiments,
+                perf_stats_json="/trimmed_held_out_test/trimmed_held_out_stats.json",
+                r_type=r_type
+            )
+            if plot_tr_ho
+            else None
+        )
+
         all_chembl_stats = (
             self._get_stats(
                 experiment_dirs=experiments,
                 perf_stats_json="chembl_performance_stats.json",
+                r_type=r_type
             )
             if plot_chembl_int
             else None
         )
-
-        print(all_ho_stats[experiments[0]]["rmse"][0])
 
         fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
 
@@ -232,17 +253,20 @@ class Analysis:
 
         # Determine the maximum length of metrics from any of the datasets to pad missing data
         max_length = 0
-        for stats in [all_int_stats, all_ho_stats, all_chembl_stats]:
+        for stats in [all_int_stats, all_ho_stats, all_chembl_stats, all_tr_ho_stats]:
             if stats:
                 max_length = max(
                     max_length, max(len(s["rmse"]) for s in stats.values())
                 )
-
+        
+        colour_ls = []
         for exp in experiments:
             step = 50 if "_50_" in exp else 10
-            exp_name = exp[9:]
+            name = exp.split("_")[-1]
+            exp_name = f"_{name}" 
             method = next((m for m in method_color_map.keys() if exp.endswith(m)), None)
             colour = method_color_map.get(method, "black")
+            colour_ls.append(colour_ls)
             linestyle = linestyles.get("_50_" if "_50_" in exp else "_10_", "-")
 
             print(f"Experiment: {exp}, Color: {colour}, Line Style: {linestyle}")
@@ -331,6 +355,40 @@ class Analysis:
                     label=exp_name,
                 )
 
+            if plot_tr_ho:
+                plot_metric(
+                    ax[0, 0],
+                    all_tr_ho_stats,
+                    "rmse",
+                    linestyle=linestyle,
+                    color=colour,
+                    label=exp_name,
+                )
+                plot_metric(
+                    ax[1, 0],
+                    all_tr_ho_stats,
+                    "r2",
+                    linestyle=linestyle,
+                    color=colour,
+                    label=exp_name,
+                )
+                plot_metric(
+                    ax[1, 1],
+                    all_tr_ho_stats,
+                    "bias",
+                    linestyle=linestyle,
+                    color=colour,
+                    label=exp_name,
+                )
+                plot_metric(
+                    ax[0, 1],
+                    all_tr_ho_stats,
+                    "sdep",
+                    linestyle=linestyle,
+                    color=colour,
+                    label=exp_name,
+                )
+
             if plot_chembl_int:
                 plot_metric(
                     ax[0, 0],
@@ -367,37 +425,24 @@ class Analysis:
 
             ax[0, 0].set_title("RMSE")
             ax[0, 0].set_ylabel("RMSE")
-            ax[0, 0].set_ylim(rmse_ylim[0], rmse_ylim[1])
 
             ax[1, 0].set_title("r2")
             ax[1, 0].set_ylabel("r2")
-            ax[1, 0].set_ylim(r2_ylim[0], r2_ylim[1])
 
             ax[1, 1].set_title("Bias")
             ax[1, 1].set_ylabel("Bias")
-            ax[1, 1].set_ylim(bias_ylim[0], bias_ylim[1])
 
             ax[0, 1].set_title("SDEP")
             ax[0, 1].set_ylabel("SDEP")
-            ax[0, 1].set_ylim(sdep_ylim[0], sdep_ylim[1])
+
+            if set_ylims:
+                ax[0, 0].set_ylim(rmse_ylim[0], rmse_ylim[1])
+                ax[1, 0].set_ylim(r2_ylim[0], r2_ylim[1])
+                ax[1, 1].set_ylim(bias_ylim[0], bias_ylim[1])
+                ax[0, 1].set_ylim(sdep_ylim[0], sdep_ylim[1])
 
             for a in ax.flat:
                 a.set_xlabel("Molecule Count")
-
-        labels = pd.Series([e[12:] for e in experiments])
-        handles = [
-            Line2D([0], [0], color=colours, lw=1)
-            for colours in method_color_map.values()
-        ]
-
-        fig.legend(
-            handles,
-            labels,
-            loc="center left",
-            bbox_to_anchor=(0.75, 0.5),
-            ncol=1,
-            borderaxespad=0.0,
-        )
 
         lines = [
             plt.Line2D([0], [0], color="black", linestyle="--"),
@@ -405,7 +450,7 @@ class Analysis:
         ]
         line_labels = ["50 Molecules", "10 Molecules"]
 
-        fig.legend(
+        leg1 = fig.legend(
             lines,
             line_labels,
             loc="upper left",
@@ -413,6 +458,38 @@ class Analysis:
             ncol=1,
             borderaxespad=0.0,
         )
+
+
+        exp_names = [e.split("_")[-1] for e in experiments]
+        labels = []
+        for e in exp_names:
+            name = f"_{e}"
+            if name not in labels:
+                labels.append(name)
+
+        print(labels)
+        handles = []
+        colour_ls = []
+        for label in labels:
+            colour = method_color_map[label]
+            colour_ls.append(colour)
+            if colour:
+                handle = Line2D([0], [0], color=colour, lw=2)
+                handles.append(handle)
+            else:
+                print(f"Warning: No color found for label {label}")
+
+        leg2 = fig.legend(
+            handles,
+            [label.lstrip('_') for label in labels],
+            loc="center left",
+            bbox_to_anchor=(0.75, 0.5),
+            ncol=1,
+            borderaxespad=0.0,
+        )
+
+        fig.add_artist(leg1)
+        fig.add_artist(leg2)
 
         plt.tight_layout(rect=[0, 0, 0.75, 1])
 
@@ -558,7 +635,7 @@ class Analysis:
 
                 # If not on the diagonal, make a scatter plot for the PCA overlap
                 if i != j:
-               glob     sns.scatterplot(
+                    sns.scatterplot(
                         x=f"PC{j+1}",
                         y=f"PC{i+1}",
                         hue="Source",
@@ -1604,3 +1681,5 @@ class Analysis:
         if save_plot:
             plt.savefig(save_path + filename + ".png", dpi=600, bbox_inches="tight")
         plt.show()
+
+#### FUNCTION TO PLOT CORRELATION BETWEEN MPO AND DOCKING SCORES ####

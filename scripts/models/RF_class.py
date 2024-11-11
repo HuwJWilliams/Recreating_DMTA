@@ -5,9 +5,10 @@ from sklearn.model_selection import (
     KFold,
     RandomizedSearchCV,
     train_test_split,
+    cross_val_score,
 )
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import cross_val_score
+from sklearn.base import clone
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -21,6 +22,101 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import json
 import math
+import sys
+import pickle as pk
+from pathlib import Path
+
+import warnings
+from sklearn.exceptions import DataConversionWarning
+warnings.filterwarnings('ignore', category=DataConversionWarning)
+
+PROJ_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, f"{str(PROJ_DIR)}/scripts/misc/")
+from misc_functions import count_number_iters
+
+
+def PredictNewTestSet(
+                     feats: str,
+                     targs: str,
+                     full_data: str,
+                     test_set_name: str,
+                     experiment_ls: list,
+                     results_dir: str=f"{str(PROJ_DIR)}/results/rdkit_desc/",
+                     docking_column: str = 'Affinity(kcal/mol)'):
+    """
+    Description
+    -----------
+    Test all trained models on a new test set
+
+    Parameters
+    ----------
+    feats (str)             Path to features .csv to predict, make sure ID in file
+    targs (str)             Path to targets .csv to predict, make sure ID in file
+    experiment_ls (list)    List of experiments to do predictions with
+
+    Returns
+    -------
+    """
+
+    rf_class = RF_model(docking_column=docking_column)
+
+    feat_df = pd.read_csv(feats, index_col='ID')
+    targ_df = pd.read_csv(targs, index_col='ID')
+    targ_df = targ_df.values.ravel() if isinstance(targ_df, pd.DataFrame) else targ_df
+
+    for exp in experiment_ls:
+        print(f"Running {exp}")
+        n_iters = count_number_iters(results_dir + exp)
+        for it in range(0, n_iters + 1):
+            print(f"it{it}")
+            it_dir = results_dir + exp + f'/it{it}/'
+            model_fpath = it_dir + 'final_model.pkl'
+            model = joblib.load(model_fpath)
+
+            
+            preds_dir = Path(it_dir + f"{test_set_name}_test/")
+            preds_dir.mkdir(parents=True, exist_ok=True)
+
+            bias, sdep, mse, rmse, r2, r_pearson, p_pearson, true, pred = rf_class._calculate_performance(
+                feature_test = feat_df,
+                target_test = targ_df,
+                best_rf = model
+                )
+            
+
+            performance_dict = {
+                "Bias": round(
+                    float(bias), 4
+                ),
+                "SDEP": round(
+                    float(sdep), 4
+                ),
+                "MSE": round(
+                    float(mse), 4
+                ),
+                "RMSE": round(
+                    float(rmse), 4
+                ),
+                "r2": round(
+                    float(r2), 4
+                ),
+                "Pearson_r": round(
+                    float(r_pearson), 4
+                ),
+                "Pearson_p": round(
+                    float(p_pearson), 4
+                ),
+            }
+
+            with open(f"{preds_dir}/{test_set_name}_stats.json", "w") as file:
+                json.dump(performance_dict, file, indent=4)
+
+            pred_df = pd.DataFrame()
+            pred_df.index = feat_df.index
+            pred_df[f"pred_{docking_column}"] = pred
+            pred_df.to_csv(f"{preds_dir}/{test_set_name}_preds.csv", index_label='ID')
+    
+    return
 
 
 class RF_model:
@@ -54,7 +150,7 @@ class RF_model:
         if cv_type == "kfold":
             self.inner_cv = KFold(n_splits=n_splits, shuffle=True, random_state=rng)
 
-        return self.inner_cv
+        return self.inner_cv, rng
 
     def _calculate_performance(
         self, feature_test: pd.DataFrame, target_test: pd.DataFrame, best_rf: object
@@ -66,9 +162,9 @@ class RF_model:
 
         Parameters
         ----------
-        feature_test (pd.DataFrame)     pd.DataFrame of feature values (x) from the test set
+        feature_test (pd.DataFrame)      pd.DataFrame of feature values (x) from the test set
         target_test (pd.DataFrame)       pd.DataFrame of targets (y) from the test set
-        best_rf (object)                RF model from the current resample
+        best_rf (object)                 RF model from the current resample
 
         Returns
         -------
@@ -100,6 +196,74 @@ class RF_model:
 
         return bias, sdep, mse, rmse, r2, r_pearson, p_pearson, true, pred
 
+    def _get_inner_cv_info(self, hp_search_object, rng: int, feats, targs):
+        all_results = {}
+        cv = hp_search_object.cv_results_
+        param_ls = cv['params']
+
+        # Recreating CV splits
+        n_splits = len([col for col in cv.keys() if 'split' in col and 'test_score' in col])
+        kf = KFold(n_splits, shuffle=True, random_state=rng)
+        cv_splits = list(kf.split(feats))
+
+        # Initialising the prediciton DataFrames
+        all_kf_preds = pd.DataFrame()
+        all_kf_preds.index = feats.index
+
+        # Iterating over each parameter set
+        for param_idx, params in enumerate(param_ls):
+            param_key = f'params_{param_idx}'
+            all_results[param_key] = {
+                'parameters': params,
+                'folds': {},
+                'all_fold_preds': None
+            }
+
+            # Fitting a new model with given set of hyperparameters
+            estimator = clone(hp_search_object.estimator).set_params(**params)
+
+            for train_idx, test_idx in cv_splits:
+                kf_feat_tr = feats.iloc[train_idx] if hasattr(feats, 'iloc') else feats[train_idx]
+                kf_feat_te = feats.iloc[test_idx] if hasattr(feats, 'iloc') else feats[test_idx]
+                kf_targ_tr = targs.iloc[train_idx] if hasattr(targs, 'iloc') else targs[train_idx]
+
+                estimator.fit(kf_feat_tr, kf_targ_tr)
+
+                test_preds = estimator.predict(kf_feat_te)
+                
+                fold_df = pd.DataFrame()
+                fold_df['ID'] = kf_feat_te.index
+                fold_df['preds'] = test_preds
+                fold_df.set_index('ID')
+
+                all_fold_preds = all_results[param_key]['all_fold_preds']
+                all_fold_preds = pd.concat([all_fold_preds, fold_df], ignore_index=True)
+                all_results[param_key]['all_fold_preds'] =all_fold_preds
+
+            pred_ls =all_results[param_key]['all_fold_preds']['preds'].tolist()
+            all_kf_preds[f'Param_set_{param_idx}'] = pred_ls
+            
+        return all_kf_preds
+        
+    def _get_reliability_score(self,
+                               all_kfold_preds,
+                               targs):
+        
+        stats = pd.DataFrame(index=all_kfold_preds.index)
+
+        stats['Mean_Pred'] = all_kfold_preds.mean(axis=1)
+        stats['Docking_Score'] = targs[self.docking_column]
+        stats['Stdev_Pred'] = all_kfold_preds.std(axis=1)
+        stats['Prediction_Error'] = stats['Mean_Pred'].astype(float) - targs[self.docking_column].astype(float)
+        stats['Absolute_Prediction_Error'] = stats['Prediction_Error'].abs()
+
+        max_error = np.max(stats['Absolute_Prediction_Error'])
+
+        stats['Normalised_Error'] = stats['Absolute_Prediction_Error']/max_error if max_error > 0 else stats['Absolute_Prediction_Error']
+        stats['Reliability_Score'] = 1 - (stats['Normalised_Error']* stats['Stdev_Pred'])
+
+        return stats.round(3)
+
     def _fit_model_and_evaluate(
         self,
         n: int,
@@ -109,6 +273,9 @@ class RF_model:
         save_interval_models: bool,
         save_path: str,
         hyper_params: dict,
+        get_full_cv_data: bool=False,
+        get_reliability_score: bool=False,
+
     ):
         """
         Description
@@ -152,7 +319,7 @@ class RF_model:
         # Initialize the model and inner cv and pipeline it to prevent data leakage
         rf = Pipeline([("rf", RandomForestRegressor())])
 
-        self._set_inner_cv(cv_type=self.inner_cv_type, n_splits=self.n_splits)
+        self.inner_cv_, kfold_rng = self._set_inner_cv(cv_type=self.inner_cv_type, n_splits=self.n_splits)
 
         # Setting the search type for hyper parameter optimisation
         if self.search_type == "grid":
@@ -171,9 +338,27 @@ class RF_model:
                 scoring=self.scoring,
                 random_state=rng,
             )
-
+        
         # Training the model
         search.fit(feat_tr, tar_tr)
+
+        # Obtaining full cv data
+        if get_full_cv_data:
+            print("Obtaining full Cross-Validation Data")
+            all_kfold_preds = self._get_inner_cv_info(
+                hp_search_object=search,
+                feats=features,
+                targs=targets,
+                rng=kfold_rng)
+        else:
+            all_kfold_preds = None
+        
+        if get_reliability_score and get_full_cv_data is not None:
+            reliability_scores = self._get_reliability_score(all_kfold_preds=all_kfold_preds,
+                                                             targs=targets,)
+        else: 
+            reliability_scores = None
+
 
         # Obtaining the best model in
         best_pipeline = search.best_estimator_
@@ -189,6 +374,7 @@ class RF_model:
             feature_test=feat_te.iloc[chembl_row_indices],
             best_rf=best_rf,
         )
+
 
         # Isolating the true and predicted values used in performance calculations
         # so analysis can be done on them
@@ -218,13 +404,15 @@ class RF_model:
             true_vals_ls,
             pred_vals_ls,
             cross_val_scores,
+            all_kfold_preds,
+            reliability_scores
         )
 
     def Train_Regressor(
         self,
         search_type: str,
         scoring: str = "neg_mean_squared_error",
-        n_resamples: int = 50,
+        n_resamples: int = 2,
         inner_cv_type: str = "kfold",
         n_splits: int = 5,
         test_size: float = 0.3,
@@ -236,6 +424,8 @@ class RF_model:
         save_final_model: bool = False,
         plot_feat_importance: bool = False,
         batch_size: int = 2,
+        get_full_cv_data: bool=False,
+        get_reliability_score: bool=False,
     ):
         """
         Description
@@ -315,6 +505,8 @@ class RF_model:
                     save_interval_models,
                     save_path,
                     hyper_params,
+                    get_full_cv_data,
+                    get_reliability_score,
                 )
                 results_batch.append(result)
             return results_batch
@@ -344,7 +536,24 @@ class RF_model:
             self.true_vals_ls,
             self.pred_vals_ls,
             self.cv_score_ls,
+            all_kfold_preds_ls,
+            reliability_scores_ls
         ) = zip(*results)
+
+        # Obtaining average reliability scores, if flag to calculate
+        # reliability scores True but fails, prints the error message
+        if get_full_cv_data and get_reliability_score:
+            converted_dfs = []
+            for df in reliability_scores_ls:
+                df_copy = df.copy()
+
+                for col in df_copy.columns:
+                    df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce')
+                converted_dfs.append(df_copy)
+
+            reliability_df = pd.concat(converted_dfs).groupby(level=0).mean()
+        else:
+            reliability_df = pd.DataFrame()
 
         # Putting the best parameters into a dictionary and forcing float type onto them to
         # remove potential issues
@@ -451,6 +660,7 @@ class RF_model:
                 compression="gzip",
             )
 
+
         print("Performance on total training data")
         print(self.performance_dict)
         print("Performance on ChEMBL training data")
@@ -465,7 +675,8 @@ class RF_model:
             self.true_vals_ls,
             self.pred_vals_ls,
             self.cv_score_ls,
-        )
+            reliability_df,
+            )
 
     def AnalyseModel(
         self,

@@ -9,7 +9,6 @@ from pathlib import Path
 from multiprocessing import Pool
 import os
 import random as rand
-import warnings
 
 # Import Openeye Modules
 from openeye import oechem
@@ -35,6 +34,24 @@ def WaitForDocking(
     check_interval: int,
     ascending: bool = True,
 ):
+    """
+    Description
+    -----------
+    Function to check whether or not the docking of provided molecules has completed
+    
+    Parameters
+    ----------
+    dock_csv (str)              Path to docking csv file, where docking scores are held
+    idx_in_batch (list)         List of molecule IDs in the dock_csv file which are being docked
+    scores_col (str)            Name of the column the docking scores are being saved in the data frame
+    check_interval (int)        How often to check if the docking has finished in seconds
+    ascending (bool)            How to sort the docking score files if they already exist,
+                                if scores_col = binding affinity then ascending=True (get lowest score)
+    
+    Returns
+    -------
+    None
+    """
     global PROJ_DIR
 
     while True:
@@ -96,6 +113,21 @@ def WaitForDocking(
 
 
 def GetUndocked(dock_df: pd.DataFrame, idxs_in_batch: list, scores_col: str):
+    """
+    Description
+    -----------
+    Function to obtain which of the molecule IDs provided have not alreeady been docked
+
+    Parameters
+    ----------
+    dock_df (pd.DataFrame)      Data frame containing docking data
+    idx_in_batch (list)         List of molecule IDs in the dock_df which are being docked
+    scores_col (str)            Name of the column the docking scores are being saved in the data frame
+    
+    Returns
+    -------
+    List of undocked molecule
+    """
     df = dock_df.loc[idxs_in_batch]
     df[scores_col] = pd.to_numeric(df[scores_col], errors="coerce")
     undocked = df[df[scores_col].isna()]
@@ -147,7 +179,7 @@ class Run_GNINA:
         center (x,y,z) (float)      X, Y, Z coordinate of the center of the focussed box
         size (x, y, z) (float)      Size of the focussed box in the X, Y, Z dimensions
         exhaustivenedd (int)        Exhaustiveness of the global search
-        num_modes (t1_1_rint)             Number of binding modes to generate
+        num_modes (t1_1_rint)       Number of binding modes to generate
         cpu (int)                   Number of CPUs to use (default keep as 1)
         addH (int)                  Automatically adds hydrogens in ligands (0= off, 1= on)
         seed (int)                  Setting the random seed
@@ -221,7 +253,8 @@ class Run_GNINA:
         -----------
         Prepare molecule by generating 3D coordinates, calculating ionisation state
         at pH 7.4 and saving an image of the molecule.
-            Parameters
+            
+        Parameters
         ----------
         smi (str)           SMILES string of molecule to set to pH 7.4
         molid (str)         ID of molecule to save .sdf file as
@@ -292,6 +325,19 @@ class Run_GNINA:
         return self.sdf_path_ls
 
     def nonallowed_fragment_tautomers(self, molecule):
+        """
+        Description
+        -----------
+        Function to remove tautomeric fragments which are disallowed
+        
+        Parameters
+        ----------
+        molecule (object)       Molecule object
+        
+        Returns
+        -------
+        Either True or False based on whether the molecule has the fragment or not
+        """
 
         fragment_list = ["N=CO", "C=NCO", "C(O)=NC", "c=N", "N=c", "C=n", "n=C"]
 
@@ -305,6 +351,20 @@ class Run_GNINA:
         return True
 
     def _generate_conformers(self, sdf_fpath: str):
+        """
+        Description
+        -----------
+        Function to search through conformational space of a molecule and save each conformer to a 
+        master .sdf file
+
+        Parameters
+        ----------
+        sdf_fpath (str)     Path of the original .sdf file for a given molecule
+
+        Returns
+        -------
+        File path of the sdf file containing all of the conformers made
+        """
         lig_in_fname = Path(sdf_fpath).name
         lig_in_fpath = Path(sdf_fpath).parent
         lig_out_fpath = str(lig_in_fpath) + "/all_confs_" + str(lig_in_fname)
@@ -401,7 +461,23 @@ class Run_GNINA:
 
         return str(lig_out_fpath)
 
-    def _process_mol_wrapper(self, molid_dir, smi, molid):
+    def _process_mol_wrapper(self, molid_dir: str, smi: str, molid: str):
+        """
+        Desctiption
+        -----------
+        Function to wrap the processing of molecules (molecule preparation and conformer search) so that it can
+        be used in multiprocessing
+
+        Parameters
+        ----------
+        molid_dir (str)     Pathway to directory containing molecule information
+        smi (str)           SMILES string of the molecule to process
+        molid (str)         ID of molecule to process
+
+        Returns
+        -------
+        Pathway to .sdf file containing all conformations generated for the given SMILES
+        """
         mol_dir_path = Path(molid_dir)
 
         if mol_dir_path.suffixes == [".tar", ".gz"]:

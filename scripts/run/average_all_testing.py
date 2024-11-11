@@ -2,6 +2,7 @@
 import sys
 from pathlib import Path
 import pandas as pd
+
 PROJ_DIR = Path(__file__).parent.parent.parent
 sys.path.insert(0, PROJ_DIR / "scripts/run/")
 from average_all import AverageAll
@@ -13,8 +14,15 @@ from misc_functions import (
     molid_ls_to_smiles,
 )
 
-avg = AverageAll()
+avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/finished_results/10_mol_sel/')
 
 # %%
+avg._average_experiment(exp_suffix='10_mu', n_iters=150)
 avg._average_experiment(exp_suffix='10_mp', n_iters=150)
+avg._average_experiment(exp_suffix='10_mpo', n_iters=150)
+avg._average_experiment(exp_suffix='10_rmp', n_iters=150)
+avg._average_experiment(exp_suffix='10_rmpo', n_iters=150)
+avg._average_experiment(exp_suffix='10_r', n_iters=150)
+
+
 # %%

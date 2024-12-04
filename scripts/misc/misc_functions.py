@@ -9,6 +9,9 @@ from pathlib import Path
 import json
 from rdkit import Chem
 import shutil
+from PIL import Image, ImageEnhance, ImageFilter
+import imageio
+import cv2
 
 FILE_DIR = Path(__file__)
 PROJ_DIR = FILE_DIR.parent.parent.parent
@@ -59,7 +62,8 @@ def molid2batchno(molid: str, prefix: str, dataset_file: str, chunksize: int = 1
     """
 
     # Extract the molecule number from its ID
-    mol_no = int(molid.replace(prefix, ""))
+    mol_no = molid.replace(prefix, "")
+    mol_no = int(mol_no)
 
     # List and sort files
     file_ls = glob(dataset_file)
@@ -232,8 +236,27 @@ def molid_to_smiles(molid: str, prefix: str, data_fpath: str, chunksize: int = 1
 
 
 def molid_ls_to_smiles(
-    molids: list, prefix: str, data_fpath: str, chunksize: int = 100000
+    molids: list, prefix: str, data_fpath: str, chunksize: int = 100000,
+    smi_col: str='SMILES'
 ):
+    
+    """
+    Description
+    -----------
+    Function to get the smiles for the molecule IDs provided
+
+    Parameters
+    ----------
+    molids (str)        ID list of molecule
+    prefix (str)        Prefix of the molecule ID == 'PMG-'
+    data_fpath (str)    Common filename of dataset
+    chunksize (int)     Number of molecules per batch
+
+    Returns
+    -------
+    List of SMILES strings and batch_no_ls
+    """
+
     batch_df = pd.DataFrame()
     batch_df["ID"] = molids
     batch_df["batch_no"] = [
@@ -256,7 +279,7 @@ def molid_ls_to_smiles(
         batch_fpath = data_fpath.replace("*", str(batch_no))
         batch_df = pd.read_csv(batch_fpath, index_col="ID")
         for molid in molid_list:
-            smi_ls.append(batch_df.loc[molid, "Kekulised_SMILES"])
+            smi_ls.append(batch_df.loc[molid, "SMILES"])
 
     return smi_ls
 
@@ -272,6 +295,7 @@ def get_chembl_molid_smi():
     smi_ls = chembl_df["SMILES"].tolist()
 
     return molids, smi_ls
+
 
 def clean_chosen_mol(
         experiment_ls: list,
@@ -314,6 +338,7 @@ def clean_chosen_mol(
                 exp_dpath + 'uncleaned_chosen_mol.csv', index_label='ID')
             filtered_df.to_csv(chosen_mols_fpath, index_label='ID')
 
+
 def remove_running_dirs( 
         experiment_ls: list,
         experiment_dir: str
@@ -326,3 +351,121 @@ def remove_running_dirs(
             if item.is_dir() and '_running' in item.name:
                 print(f"Removing directory: {item}")
                 shutil.rmtree(item)
+
+
+def get_descs_for_molid(
+        molid_ls: list
+    ):
+
+    columns = pd.read_csv(f"{PROJ_DIR}/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_trimmed.csv",
+                          index_col='ID').columns
+    all_desc_df = pd.DataFrame(columns=columns)
+
+
+    for n, molid in enumerate(molid_ls):
+        if molid.startswith('CHEMBL'):
+            desc_df = pd.read_csv(
+                f"{PROJ_DIR}/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_trimmed.csv", 
+                index_col='ID'
+                )
+            row = desc_df.loc[molid]
+
+        elif molid.startswith('PMG-'):
+            batch_no = molid2batchno(
+                molid, 'PMG-', 
+                dataset_file=f'{PROJ_DIR}/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
+                )
+            
+            desc_df = pd.read_csv(
+                f'{PROJ_DIR}/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc_{batch_no}.csv', 
+                                    index_col='ID'
+                                    )
+            row = desc_df.loc[molid]
+        
+        else:
+            print('Nothing found here')
+        
+        all_desc_df.loc[molid] = row
+
+    return all_desc_df
+
+
+def fig2img(fig):
+    """Convert a Matplotlib figure to a numpy array with RGB channels"""
+    import io
+    from PIL import Image
+    
+    # Save figure to a temporary buffer
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
+    buf.seek(0)
+    
+    # Convert to PIL Image and then to numpy array
+    img = Image.open(buf)
+    return np.array(img)
+
+
+def get_top(df,
+            n: int,
+            column: str,
+            ascending: bool):
+    "Function to get the top n number of molecules from a single or list of dataframes"
+
+    if isinstance(df, pd.DataFrame):
+        return df.sort_values(by=column, ascending=ascending).head(n)
+
+    elif isinstance(df, list):        
+        for x in df:
+            combined_df = pd.concat(
+                [x.sort_values(by=column, ascending=ascending).head(n) for x in df],
+                ignore_index=True
+            )
+        return combined_df.sort_values(by=column, ascending=ascending).head(n)
+    
+    else:
+        raise TypeError("Input must be a DataFrame or a list of DataFrames")
+
+
+def create_gif(image_ls: list,
+               save_path: str,
+               save_fname: str='GIF',
+               fps: int= 1.0,
+               target_size: tuple=(1500, 1500),
+               loop: int=0,
+               quality:int=95):
+    """
+    Description
+    -----------
+    Create GIF from a list of file images
+    
+    Parameters
+    ----------
+    image_ls (list)
+    save_path (str)
+    save_fname (str)
+    duration(int)
+    
+    Returns
+    -------
+    None
+    """
+    
+    save_path = Path(save_path)
+    full_save_path = save_path / f"{save_fname}"
+
+    first_img = Image.open(image_ls[0])
+    if target_size is None:
+        target_size = first_img.size
+    images = []
+    for image in image_ls:
+        img = Image.open(image).resize(target_size, Image.Resampling.LANCZOS)
+        img = img.filter(ImageFilter.SHARPEN)
+
+        images.append(np.array(img))
+        images_array = np.stack(images, axis=0)
+
+    imageio.mimsave(f'{str(full_save_path)}.gif', 
+                    images_array, 
+                    fps=fps, 
+                    loop=loop,
+                    quality=quality)

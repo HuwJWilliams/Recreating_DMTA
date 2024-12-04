@@ -23,8 +23,8 @@ import seaborn as sns
 import json
 import math
 import sys
-import pickle as pk
 from pathlib import Path
+import shutil
 
 import warnings
 from sklearn.exceptions import DataConversionWarning
@@ -75,6 +75,14 @@ def PredictNewTestSet(
 
             
             preds_dir = Path(it_dir + f"{test_set_name}_test/")
+            
+            # Check if the path exists (could be a file or a directory)
+            if preds_dir.exists():
+                if preds_dir.is_file():
+                    preds_dir.unlink()
+                elif preds_dir.is_dir():
+                    shutil.rmtree(preds_dir)
+                    
             preds_dir.mkdir(parents=True, exist_ok=True)
 
             bias, sdep, mse, rmse, r2, r_pearson, p_pearson, true, pred = rf_class._calculate_performance(
@@ -100,10 +108,10 @@ def PredictNewTestSet(
                 "r2": round(
                     float(r2), 4
                 ),
-                "Pearson_r": round(
+                "pearson_r": round(
                     float(r_pearson), 4
                 ),
-                "Pearson_p": round(
+                "pearson_p": round(
                     float(p_pearson), 4
                 ),
             }

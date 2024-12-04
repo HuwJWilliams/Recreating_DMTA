@@ -9,6 +9,9 @@ from pathlib import Path
 from multiprocessing import Pool
 import os
 import random as rand
+import textwrap
+from glob import glob
+import numpy as np
 
 # Import Openeye Modules
 from openeye import oechem
@@ -133,6 +136,62 @@ def GetUndocked(dock_df: pd.DataFrame, idxs_in_batch: list, scores_col: str):
     undocked = df[df[scores_col].isna()]
     return undocked
 
+def CleanFiles(fpath:str=f"{str(PROJ_DIR)}/datasets/PyMolGen/docking/",
+                      fname:str="PMG_docking_*.csv",
+                      docking_column:str="Affinity(kcal/mol)",
+                      contaminants: list=["PD"],
+                      replacement: str="",
+                      index_col:str='ID'):
+    """
+    Description
+    -----------
+    Function to remove any contaminants from files (e.g., 'PD', 'NaN', False, ...)
+    
+    Parameters
+    ----------
+    fpath (str)             Path to docking files
+    fname (str)             Docking file file name. Can be either generic (e.g., * or ?) or specific
+    docking column (str)    Column which to remove contaminants from
+    contaminants (list)     Values to remove
+    replacement (str)       Values to replace contaminants with
+    index_col (str)         Name of index column
+
+    Returns
+    -------
+    None
+    """
+
+    working_path = fpath + fname
+    replace_dict = {value: replacement for value in contaminants}
+
+    if "*" in fname or "?" in fname:
+        fpath_ls = glob(working_path)
+
+    else:
+        fpath_ls = [working_path]
+
+    for path in fpath_ls:
+        working_df = pd.read_csv(path, index_col=index_col)
+
+        contaminant_counts = {contaminant: 0 for contaminant in contaminants}
+
+        for contaminant in contaminants:
+            if contaminant == "NaN":
+                contaminant_counts["NaN"] = working_df.isna().sum().sum()
+            else:
+                contaminant_counts[contaminant] = (working_df == contaminant).sum().sum()
+
+        working_df.replace(replace_dict, inplace=True)
+        if "NaN" in contaminants or np.nan in contaminants:
+            working_df.fillna(replacement, inplace=True)
+
+        working_df.to_csv(path, index_label=index_col)
+
+        print(f"Processed file: {Path(path).name}")
+
+        for contaminant, count in contaminant_counts.items():
+            print(f" - Found and replaced {count} instances of '{contaminant}'.\n")
+        
 
 class Run_GNINA:
     """
@@ -163,6 +222,8 @@ class Run_GNINA:
         cnn_scoring: str = "rescore",
         gnina_path: str = f"{str(PROJ_DIR)}/scripts/docking/gnina",
         env_name: str = "phd_env",
+        use_autobox: bool=False,
+        autobox_ligand_pdb: str=None
     ):
         """
         Description
@@ -228,6 +289,8 @@ class Run_GNINA:
         self.cnn_scoring = cnn_scoring
         self.gnina_path = gnina_path
         self.env_name = env_name
+        self.use_autobox = use_autobox
+        self.autobox_ligand_pdb = autobox_ligand_pdb
 
     def _mol_enhance(self, smi: str, sdf_fpath: str):
         """
@@ -573,8 +636,8 @@ class Run_GNINA:
         -------
         Job submission ID for docking job
         """
-
-        gnina_script = f"""\
+        if not self.use_autobox:
+            gnina_script = textwrap.dedent(f"""\
 #!/bin/bash
 #SBATCH --export=ALL
 #SBATCH --time {run_hrs}:{run_mins}:00
@@ -626,8 +689,59 @@ if [ -f /opt/software/scripts/job_epilogue.sh ]; then
     /opt/software/scripts/job_epilogue.sh
 fi
 #----------------------------------------------------------
-"""
+    """
+            )
 
+        elif self.use_autobox:
+            gnina_script = textwrap.dedent(f"""\
+#!/bin/bash
+#SBATCH --export=ALL
+#SBATCH --time {run_hrs}:{run_mins}:00
+#SBATCH --job-name=dock_{molid}
+#SBATCH --ntasks={self.num_cpu}
+#SBATCH --partition=standard
+#SBATCH --account=palmer-addnm
+#SBATCH --output={mol_dir}slurm-%j.out
+
+#=========================================================
+# Prologue script to record job details
+# Do not change the line below
+#=========================================================
+if [ -f /opt/software/scripts/job_prologue.sh ]; then
+    /opt/software/scripts/job_prologue.sh
+fi
+#----------------------------------------------------------
+
+module purge
+module load anaconda/python-3.9.7
+
+source activate {self.env_name}
+
+{self.gnina_path} \
+    --receptor "{self.receptor_path}" \
+    --out "{mol_dir}{output_filename}" \
+    --log "{mol_dir}{log_filename}" \
+    --autobox_ligand "{self.autobox_ligand_pdb}" \
+    --exhaustiveness {self.exhaustiveness} \
+    --num_modes {self.num_modes} \
+    --cpu {self.num_cpu} \
+    --no_gpu \
+    --addH {self.addH} \
+    --stripH {self.stripH} \
+    --seed {self.seed} \
+    --cnn_scoring "{self.cnn_scoring}"
+
+#=========================================================
+# Epilogue script to record job endtime and runtime
+# Do not change the line below
+#=========================================================
+if [ -f /opt/software/scripts/job_epilogue.sh ]; then
+    /opt/software/scripts/job_epilogue.sh
+fi
+#----------------------------------------------------------
+""")
+        
+        
         script_name = str(Path(mol_dir)) + "/" f"{molid}_docking_script.sh"
 
         with open(script_name, "w") as file:
@@ -718,7 +832,8 @@ fi
         Description
         -----------
         Function to tak the .log files output from GNINA and make a .csv.gz file containing these docking scores
-
+                      smi_ls: list,
+                      molid_ls: list
         Parameters
         ----------
         save_data (bool)        Flag to save the made .csv.gz files

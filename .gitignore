@@ -5,4 +5,6 @@ datasets/
 results/
 !scripts/docking
 !scripts/datasets
-scripts/docking/gnina
+scripts/docking/gninas
+
+

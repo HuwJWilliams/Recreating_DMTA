@@ -8,4 +8,4 @@ git add .
 
 git commit -m "Automatic commit on $(date +\%Y-\%m-\%d \%H:\%M)"
 
-git push -f github stage
+git push -f origin stage

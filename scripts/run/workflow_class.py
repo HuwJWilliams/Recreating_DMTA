@@ -341,10 +341,11 @@ class RecDMTA:
     def _docking_score_retrieval(
         self,
         dock_scores_ls: list,
-        docking_batch_file: list,
+        docking_batch_file: str,
         mols_to_edit_ls: list,
         idxs_in_batch: list,
     ):
+        logger = logging.getLogger(__name__)
 
         da = Dataset_Accessor(
             original_path=docking_batch_file,
@@ -373,10 +374,17 @@ class RecDMTA:
         file_accessed = False
         while not file_accessed:
             try:
-                batch_dock_df = pd.read_csv(docking_batch_file, index_col=0)
-                file_accessed = True
-            except FileNotFoundError as e:
-                print("Waiting for file to be accessable again...")
+                if os.path.exists(docking_batch_file) and os.path.getsize(docking_batch_file) > 0:
+                    batch_dock_df = pd.read_csv(docking_batch_file, index_col=0)
+                    file_accessed = True
+                else:
+                    logger.warning(f"File {docking_batch_file} exists but is empty. Waiting...")
+                    time.sleep(30)
+            except FileNotFoundError:
+                logger.warning("File not found, waiting for it to become accessible...")
+                time.sleep(30)
+            except pd.errors.EmptyDataError:
+                logger.warning("File is empty, waiting for data to be written...")
                 time.sleep(30)
 
         batch_dock_df = batch_dock_df.loc[idxs_in_batch]

@@ -26,9 +26,9 @@
 # Output file
 #SBATCH --output=slurm-%j.out
 
-# Email settings
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
+## Email settings
+## SBATCH --mail-type=END,FAIL
+## SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
 #=======================================================
 
 

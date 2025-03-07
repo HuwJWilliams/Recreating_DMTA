@@ -1,0 +1,5 @@
+sending incremental file list
+Recreating_DMTA/
+rsync error: received SIGINT, SIGTERM, or SIGHUP (code 20) at rsync.c(638) [sender=3.1.2]
+rsync: [receiver] write error: Broken pipe (32)
+rsync error: received SIGINT, SIGTERM, or SIGHUP (code 20) at io.c(511) [receiver=3.1.2]

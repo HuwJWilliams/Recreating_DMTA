@@ -33,7 +33,6 @@ except KeyError:
     print("license file not found, please set $OE_LICENSE")
     sys.exit("Critical Error: license not found")
 
-
 def WaitForDocking(
     dock_csv: str,
     idxs_in_batch: list,
@@ -44,59 +43,63 @@ def WaitForDocking(
     """
     Description
     -----------
-    Function to check whether or not the docking of provided molecules has completed
+    Function to check whether or not the docking of provided molecules has completed.
     
     Parameters
     ----------
-    dock_csv (str)              Path to docking csv file, where docking scores are held
-    idx_in_batch (list)         List of molecule IDs in the dock_csv file which are being docked
-    scores_col (str)            Name of the column the docking scores are being saved in the data frame
-    check_interval (int)        How often to check if the docking has finished in seconds
-    ascending (bool)            How to sort the docking score files if they already exist,
-                                if scores_col = binding affinity then ascending=True (get lowest score)
+    dock_csv (str)              Path to docking CSV file, where docking scores are held.
+    idxs_in_batch (list)         List of molecule IDs in the dock_csv file which are being docked.
+    scores_col (str)            Name of the column the docking scores are being saved in the data frame.
+    check_interval (int)        How often (in seconds) to check if docking has finished.
+    ascending (bool)            Sort order for the docking score (if, e.g., lower is better, use True).
     
     Returns
     -------
     None
     """
+
     global PROJ_DIR
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
+    # Loop until there are no pending molecules
     while True:
         # Read the docking CSV file
-        dock_df = pd.read_csv(dock_csv, index_col="ID", dtype=str)
+        try:
+            dock_df = pd.read_csv(dock_csv, index_col="ID", dtype=str)
+        except Exception as e:
+            logger.error(f"Error reading {dock_csv}: {e}")
+            time.sleep(check_interval)
+            continue
 
-        # Filter the DataFrame for indices in the current batch
+        # Filter for the current batch IDs
         df_with_idx = dock_df[dock_df.index.isin(idxs_in_batch)]
         pending_docking = df_with_idx[df_with_idx[scores_col] == "PD"]
 
         if pending_docking.empty:
-            print("All docking scores present")
+            logger.info("All docking scores present.")
             break
 
-        print(
-            f"Waiting for the following molecules to dock:\n{list(pending_docking.index)}"
-        )
+        logger.info(f"Waiting for the following molecules to dock: {list(pending_docking.index)}")
 
         ids_changed = []
         for ids in pending_docking.index:
-            tar_file = PROJ_DIR / "docking" / "PyMolGen" / f"{ids}.tar.gz"
+            tar_file = Path(PROJ_DIR) / "docking" / "PyMolGen" / f"{ids}.tar.gz"
 
             if tar_file.exists():
-                output_dir = PROJ_DIR / "docking" / "PyMolGen" / f"extracted_{ids}"
+                output_dir = Path(PROJ_DIR) / "docking" / "PyMolGen" / f"extracted_{ids}"
                 output_dir.mkdir(parents=True, exist_ok=True)
 
                 # Extract the tar.gz file
                 command = ["tar", "-xzf", str(tar_file), "-C", str(output_dir)]
                 try:
                     subprocess.run(command, check=True)
-                    print(f"Successfully extracted {tar_file}.")
+                    logger.info(f"Successfully extracted {tar_file}.")
 
                     # Unzip the .csv.gz file
                     gz_file = output_dir / f"{ids}" / f"{ids}_all_scores.csv.gz"
-                    id_dock_scores = pd.read_csv(gz_file, index_col="ID").sort_values(
+                    id_dock_scores = pd.read_csv(str(gz_file), index_col="ID").sort_values(
                         ascending=ascending, by=scores_col
                     )
                     dock_score = id_dock_scores[scores_col].iloc[0]
@@ -105,20 +108,28 @@ def WaitForDocking(
                     dock_df.at[ids, scores_col] = dock_score
                     dock_df.to_csv(dock_csv)  # Save the updated DataFrame
 
-                    # Remove the extracted directory
-                    rm_command = ["rm", "-r", str(output_dir)]
-                    subprocess.run(rm_command, check=True)
-                    print(f"Removed temporary files for {ids}.")
+                    # Remove the extracted directory using pathlib
+                    try:
+                        for child in output_dir.glob("*"):
+                            if child.is_file():
+                                child.unlink()
+                            else:
+                                import shutil
+                                shutil.rmtree(child)
+                        output_dir.rmdir()  # Remove the now empty output_dir
+                    except Exception as rm_err:
+                        logger.error(f"Error removing temporary files for {ids}: {rm_err}")
 
+                    logger.info(f"Removed temporary files for {ids}.")
                     ids_changed.append(ids)
 
                 except subprocess.CalledProcessError as e:
-                    print(f"Failed to extract {tar_file}. Error: {e}")
+                    logger.error(f"Failed to extract {tar_file}. Error: {e}")
 
         if ids_changed:
             pending_docking = pending_docking[~pending_docking.index.isin(ids_changed)]
-            print(f"Processed IDs removed from pending docking:\n{list(ids_changed)}")
-        # Wait for a while before checking again
+            logger.info(f"Processed IDs removed from pending docking: {list(ids_changed)}")
+
         time.sleep(check_interval)
 
 

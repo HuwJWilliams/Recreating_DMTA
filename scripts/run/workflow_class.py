@@ -372,23 +372,23 @@ class RecDMTA:
             )
 
         file_accessed = False
+        p = Path(docking_batch_file)
         while not file_accessed:
             try:
-                if os.path.exists(docking_batch_file) and os.path.getsize(docking_batch_file) > 0:
-                    batch_dock_df = pd.read_csv(docking_batch_file, index_col=0)
+                if p.exists() and p.stat().st_size > 0:
+                    batch_dock_df = pd.read_csv(str(p), index_col=0)
                     file_accessed = True
                 else:
-                    logger.warning(f"File {docking_batch_file} exists but is empty. Waiting...")
+                    logger.warning(f"File {p} exists but is empty. Waiting...")
                     time.sleep(30)
             except FileNotFoundError:
-                logger.warning("File not found, waiting for it to become accessible...")
+                logger.warning(f"File {p} not found. Waiting for it to become accessible...")
                 time.sleep(30)
             except pd.errors.EmptyDataError:
-                logger.warning("File is empty, waiting for data to be written...")
+                logger.warning(f"File {p} is empty. Waiting for data to be written...")
                 time.sleep(30)
 
         batch_dock_df = batch_dock_df.loc[idxs_in_batch]
-
         return batch_dock_df
 
     def RunDocking(

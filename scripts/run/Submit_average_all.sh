@@ -21,14 +21,10 @@
 #SBATCH --time=168:00:00
 #
 # Job name
-#SBATCH --job-name=50_rmp_0.05
+#SBATCH --job-name=analysis
 #
 # Output file
 #SBATCH --output=slurm-%j.out
-
-## Email settings
-## SBATCH --mail-type=END,FAIL
-## SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
 #=======================================================
 
 
@@ -46,15 +42,7 @@ module load anaconda/python-3.9.7
 # Modify the line below to run your program
 source activate phd_env
 
-n_cmpds=50
-sel_method="rmp"
-start_iter=1
-total_iters=30
-run_date="20250308"
-random_frac=0.05
-extra_description="005"
-
-python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py $n_cmpds $sel_method $start_iter $total_iters $run_date $random_frac $extra_description
+python -u /users/yhb18174/Recreating_DMTA/scripts/run/average_all_testing.py
 
 #=========================================================
 # Epilogue script to record job endtime and runtime

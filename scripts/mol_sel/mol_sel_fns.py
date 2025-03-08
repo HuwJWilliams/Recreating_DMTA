@@ -48,8 +48,8 @@ class Molecule_Selector:
 
         self.n_cmpds = n_cmpds
         self.preds_files = glob(f"{preds_dir}{all_preds_prefix}*")
-        print(self.preds_files)
-        print(f"{preds_dir}{all_preds_prefix}*")
+        # print(self.preds_files)
+        # print(f"{preds_dir}{all_preds_prefix}*")
         self.chosen_mol_file = chosen_mol_file
 
         if not Path(self.chosen_mol_file).exists():

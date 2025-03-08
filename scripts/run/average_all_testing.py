@@ -18,7 +18,7 @@ from misc_functions import (
 avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/finished_results/10_mol_sel/')
 
 # %%
-avg._average_experiment(exp_suffix='10_rmp_rmu_2:8', n_iters=150)
+avg._average_experiment(exp_suffix='10_mp', n_iters=150)
 # avg._average_experiment(exp_suffix='10_mp', n_iters=150)
 # avg._average_experiment(exp_suffix='10_mpo', n_iters=150)
 # avg._average_experiment(exp_suffix='10_rmp', n_iters=150)

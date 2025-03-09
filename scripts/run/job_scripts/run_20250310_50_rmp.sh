@@ -48,7 +48,7 @@ source activate phd_env
 
 # Run the Python script
 python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py \
-    <N_CMDS> "<SEL_METHOD>" <START_ITER> <TOTAL_ITERS> "<RUN_DATE>" <RANDOM_FRAC> "<EXTRA_DESCRIPTION>"
+    50 "rmp" 1 30 "20250310" 0.25 "025"
 
 #=========================================================
 # Epilogue script to record job endtime and runtime

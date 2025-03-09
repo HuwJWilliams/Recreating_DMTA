@@ -50,9 +50,9 @@ n_cmpds=50
 sel_method="rmp"
 start_iter=1
 total_iters=30
-run_date="20250308"
-random_frac=0.05
-extra_description="005"
+run_date="20250310"
+random_frac=0.25
+extra_description="025"
 
 python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py $n_cmpds $sel_method $start_iter $total_iters $run_date $random_frac $extra_description
 

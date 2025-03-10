@@ -251,6 +251,9 @@ class RecDMTA:
 
         elif self.selection_method == "test":
             sel_idx = ["PMG-31895", "PMG-27063"]
+            
+        elif ":" in self.selection_method:
+            sel_idx = self.sel.hybrid(sel_method=self.selection_method, frac=self.sel_size)
 
         self.df_select = pd.DataFrame(data=[], columns=[], index=sel_idx)
         self.df_select.index.rename("ID", inplace=True)
@@ -258,6 +261,8 @@ class RecDMTA:
             molid2batchno(molid, self.id_prefix, prev_it_dir + "all_preds*")
             for molid in self.df_select.index
         ]
+
+
 
         table = PrettyTable()
         table.field_names = ["ID"] + list(self.df_select.columns)

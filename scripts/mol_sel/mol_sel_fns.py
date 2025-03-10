@@ -182,6 +182,51 @@ class Molecule_Selector:
         self.update_chosen_mol(mols)
 
         return mols
+    
+    def hybrid(self, sel_method, frac):
+        split_method = sel_method.split("_")
+        sel_methods = split_method[:-1]
+        sel_ratios = split_method[-1].split(":")
+        total_mols = self.n_cmpds
+
+        mols_selected = []
+    
+
+        if len(sel_methods) != len(sel_ratios):
+            raise ValueError("Mismatch between number of selection methods and ratios")
+
+        for method, ratio in zip(sel_methods, sel_ratios):
+            ratio = float(ratio)
+            if ratio < 1:
+                self.n_cmpds = (max(1, int(ratio * total_mols)))
+            else: self.n_cmpds = int(ratio)
+
+            if method == "mp":
+                sel_idx = self.best(column="pred_Affinity(kcal/mol)", ascending=False)
+            elif method == "mpo":
+                sel_idx = self.best(column="MPO", ascending=True)
+            elif method == "mu":
+                sel_idx = self.best(column="Uncertainty", ascending=True)
+            elif method == "rmp":
+                sel_idx = self.sel.random_in_best(
+                    column="pred_Affinity(kcal/mol)", ascending=False, frac=frac
+                )
+            elif method == "rmpo":
+                sel_idx = self.sel.random_in_best(
+                    column="MPO", ascending=True, frac=frac
+                )
+            elif method == "rmpu":
+                sel_idx = self.sel.random_in_best(
+                    column="Uncertainty", ascending=True, frac=frac
+                )
+            elif method == "r":
+                sel_idx = self.random()
+            else:
+                print("Unrecognised selection method...")
+            
+            mols_selected.extend(sel_idx)
+        return mols_selected
+        
 
     def update_chosen_mol(self, mol_ls: list, save: bool = True):
         """

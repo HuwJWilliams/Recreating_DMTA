@@ -21,7 +21,7 @@
 #SBATCH --time=168:00:00
 #
 # Job name
-#SBATCH --job-name=50_rmp_0.05
+#SBATCH --job-name=hybrid
 #
 # Output file
 #SBATCH --output=slurm-%j.out

@@ -61,7 +61,7 @@ class Molecule_Selector:
 
         self.it = iteration
 
-    def random(self):
+    def random(self, n_mols:int=None):
         """
         Description
         -----------
@@ -75,10 +75,11 @@ class Molecule_Selector:
         -------
         List of randomly chosen molecule IDs which are not in the chosen_mol file
         """
-
+        if n_mols is None:
+            n_mols=self.n_cmpds
         mols = []
 
-        while len(mols) < self.n_cmpds:
+        while len(mols) < n_mols:
             file = random.choice(self.preds_files)
             df = pd.read_csv(file, index_col="ID", compression="gzip")
             id = random.choice(df.index.tolist())
@@ -91,7 +92,7 @@ class Molecule_Selector:
 
         return mols
 
-    def best(self, column: str, ascending: bool):
+    def best(self, column: str, ascending: bool, n_mols:int=None):
         """
         Description
         -----------
@@ -108,6 +109,8 @@ class Molecule_Selector:
         -------
         List of best molecules chosen based off of defined column which are not in the chosen_mol file
         """
+        if n_mols is None:
+            n_mols=self.n_cmpds
 
         mols = []
         top_df_ls = [
@@ -121,14 +124,14 @@ class Molecule_Selector:
         for id in full_df.index:
             if id not in list(self.chosen_mol.index):
                 mols.append(id)
-            if len(mols) >= self.n_cmpds:
+            if len(mols) >= n_mols:
                 break
 
         self.update_chosen_mol(mols)
 
         return mols
 
-    def random_in_best(self, column: str, ascending: bool, frac: float):
+    def random_in_best(self, column: str, ascending: bool, frac: float, n_mols: int=None):
         """
         Description
         -----------
@@ -147,6 +150,10 @@ class Molecule_Selector:
         -------
         List of molecules chosen at random within the top % of molecules. Choses molecules not already present in chosen_mol file
         """
+
+        if n_mols is None:
+            n_mols=self.n_mols
+
         mols = []
         total_mols = 0
         df_ls = [
@@ -159,11 +166,12 @@ class Molecule_Selector:
         for dfs in df_ls:
             total_mols += len(dfs)
 
-        n_mols = int(total_mols * frac)
+        head_mols = int(total_mols * frac)
+
         print(n_mols)
 
         top_df_ls = [
-            df.sort_values(by=column, ascending=ascending).head(n_mols) for df in df_ls
+            df.sort_values(by=column, ascending=ascending).head(head_mols) for df in df_ls
         ]
         
         full_df = (
@@ -172,7 +180,7 @@ class Molecule_Selector:
             .head(total_mols)
         )
 
-        while len(mols) < self.n_cmpds:
+        while len(mols) < n_mols:
             id = random.choice(full_df.index.tolist())
             if id not in list(self.chosen_mol.index):
                 mols.append(id)
@@ -185,8 +193,14 @@ class Molecule_Selector:
     
     def hybrid(self, sel_method, frac):
         split_method = sel_method.split("_")
+
+        print(split_method)
         sel_methods = split_method[:-1]
+
+        print(sel_methods)
         sel_ratios = split_method[-1].split(":")
+
+        print(sel_ratios)
         total_mols = self.n_cmpds
 
         mols_selected = []
@@ -196,31 +210,33 @@ class Molecule_Selector:
             raise ValueError("Mismatch between number of selection methods and ratios")
 
         for method, ratio in zip(sel_methods, sel_ratios):
+            print(ratio)
+            print(method)
             ratio = float(ratio)
             if ratio < 1:
-                self.n_cmpds = (max(1, int(ratio * total_mols)))
-            else: self.n_cmpds = int(ratio)
+                n_mols = (max(1, int(ratio * total_mols)))
+            else: n_mols = int(ratio)
 
             if method == "mp":
-                sel_idx = self.best(column="pred_Affinity(kcal/mol)", ascending=False)
+                sel_idx = self.best(column="pred_Affinity(kcal/mol)", ascending=False, n_mols=n_mols)
             elif method == "mpo":
-                sel_idx = self.best(column="MPO", ascending=True)
+                sel_idx = self.best(column="MPO", ascending=True, n_mols=n_mols)
             elif method == "mu":
-                sel_idx = self.best(column="Uncertainty", ascending=True)
+                sel_idx = self.best(column="Uncertainty", ascending=True, n_mols=n_mols)
             elif method == "rmp":
                 sel_idx = self.sel.random_in_best(
-                    column="pred_Affinity(kcal/mol)", ascending=False, frac=frac
+                    column="pred_Affinity(kcal/mol)", ascending=False, frac=frac, n_mols=n_mols
                 )
             elif method == "rmpo":
                 sel_idx = self.sel.random_in_best(
-                    column="MPO", ascending=True, frac=frac
+                    column="MPO", ascending=True, frac=frac, n_mols=n_mols
                 )
             elif method == "rmpu":
                 sel_idx = self.sel.random_in_best(
-                    column="Uncertainty", ascending=True, frac=frac
+                    column="Uncertainty", ascending=True, frac=frac, n_mols=n_mols
                 )
             elif method == "r":
-                sel_idx = self.random()
+                sel_idx = self.random(n_mols=n_mols)
             else:
                 print("Unrecognised selection method...")
             

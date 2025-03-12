@@ -18,11 +18,11 @@ from misc_functions import (
 avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/')
 
 # %%
-avg._average_experiment(exp_suffix='50_rmp_005', n_iters=150)
-avg._average_experiment(exp_suffix='50_rmp_0025', n_iters=150)
+avg._average_experiment(exp_suffix='50_rmp_005', n_iters=30)
+avg._average_experiment(exp_suffix='50_rmp_0025', n_iters=30)
 
-avg._average_experiment(exp_suffix='50_rmp_025', n_iters=150)
-avg._average_experiment(exp_suffix='50_rmp_05', n_iters=150)
+avg._average_experiment(exp_suffix='50_rmp_025', n_iters=30)
+avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
 
 # avg._average_experiment(exp_suffix='10_mp', n_iters=150)
 # avg._average_experiment(exp_suffix='10_mpo', n_iters=150)

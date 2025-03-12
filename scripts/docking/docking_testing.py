@@ -105,6 +105,3 @@ def CleanFiles(fpath: str,
 
 CleanFiles(fpath=f"{PROJ_DIR}/datasets/PyMolGen/docking/")
 # %%
-CalcMPO()
-
-# %%

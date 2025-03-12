@@ -15,7 +15,7 @@
 #SBATCH --account=palmer-addnm
 #
 # No. of tasks required (max. of 40) (1 for a serial job)
-#SBATCH --ntasks=40
+#SBATCH --ntasks=20
 #
 # Specify (hard) runtime (HH:MM:SS)
 #SBATCH --time=168:00:00

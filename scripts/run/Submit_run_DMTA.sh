@@ -48,8 +48,8 @@ source activate phd_env
 
 n_cmpds=50
 sel_method="mp_mu_2:8"
-start_iter=1
-total_iters=30
+start_iter=5
+total_iters=26
 run_date="20250311"
 random_frac=0.1
 extra_description=""

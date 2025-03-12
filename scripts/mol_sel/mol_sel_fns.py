@@ -194,13 +194,8 @@ class Molecule_Selector:
     def hybrid(self, sel_method, frac):
         split_method = sel_method.split("_")
 
-        print(split_method)
         sel_methods = split_method[:-1]
-
-        print(sel_methods)
         sel_ratios = split_method[-1].split(":")
-
-        print(sel_ratios)
         total_mols = self.n_cmpds
 
         mols_selected = []
@@ -210,12 +205,10 @@ class Molecule_Selector:
             raise ValueError("Mismatch between number of selection methods and ratios")
 
         for method, ratio in zip(sel_methods, sel_ratios):
-            print(ratio)
-            print(method)
             ratio = float(ratio)
             if ratio < 1:
                 n_mols = (max(1, int(ratio * total_mols)))
-            else: n_mols = int(ratio)
+            else: n_mols = int((ratio/10)*total_mols)
 
             if method == "mp":
                 sel_idx = self.best(column="pred_Affinity(kcal/mol)", ascending=False, n_mols=n_mols)

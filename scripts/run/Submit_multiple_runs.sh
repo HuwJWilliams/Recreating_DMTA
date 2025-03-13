@@ -1,11 +1,11 @@
 #Define arrays for the variables
 n_cmpds_list=(50 50 50)
-sel_methods=("rmp" "rmp" "rmp")
-start_iters=(1 1 1)
-total_iters=(30 30 30)
-run_dates=(20250310 20250309 20250310)
-random_fracs=("0.5" "0.25" "0.25")
-extra_descriptions=("05" "025" "025")
+sel_methods=("mp_mu_5:5" "mp_mu_2:8" "mp_mu_5:5")
+start_iters=(3 2 2)
+total_iters=(28 29 29)
+run_dates=(20250311 20250312 20250312)
+random_fracs=("0.1" "0.1" "0.1")
+extra_descriptions=("" "" "")
 
 # Generate and submit job scripts for each combination of variables
 # for n_cmpds in "${n_cmpds_list[@]}"; do

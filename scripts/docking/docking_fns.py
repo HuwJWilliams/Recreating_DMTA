@@ -13,6 +13,9 @@ import textwrap
 from glob import glob
 import numpy as np
 import logging
+import shutil
+import portalocker
+import filelock
 
 # Import Openeye Modules
 from openeye import oechem
@@ -26,12 +29,60 @@ PROJ_DIR = Path(__file__).parent.parent.parent
 sys.path.insert(0, f"{PROJ_DIR}/scripts/misc/")
 from misc_functions import molid2batchno
 
+sys.path.insert(0, f"{PROJ_DIR}/scripts/dataset/")
+from dataset_fns import Dataset_Accessor
+
 # Find Openeye licence
 try:
     print("license file found: %s" % os.environ["OE_LICENSE"])
 except KeyError:
     print("license file not found, please set $OE_LICENSE")
     sys.exit("Critical Error: license not found")
+
+def UpdateDockCsv(dock_csv, ids, scores, scores_col: str="Affinity(ckal/mol)"):
+
+    max_retries = 10
+    retry_delay = 10
+
+    for attempt in range(max_retries):
+        try:
+            with open(dock_csv, "r+") as f:
+                portalocker.lcok(f, portalocker.LOCK_EX)
+
+                dock_df = pd.read_csv(f, index_col="ID", dtype=str)
+
+                for id_, score in zip(ids, scores):
+                    if id_ in dock_df.index:
+                        dock_df.at[id_, scores_col] = score
+
+                f.seek(0)
+                dock_df.to_csv(f)
+                f.truncate()
+            
+                return
+        except portalocker.exceptions.LockException:
+            time.sleep(retry_delay)
+
+def SafeExtractTar(tar_file: Path, output_dir: Path):
+    lock_path = tar_file.with_suffix(".lock")
+    lock = filelock.FileLock(lock_path)
+
+    try:
+        with lock:
+            if output_dir.exists():
+                return True
+            
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            command = ["tar", "-xzf", str(tar_file), "-C", str(output_dir)]
+            subprocess.run(command, check=True)
+            return True
+    except Exception as e:
+        print(e)
+
+    finally:
+        if lock_path.exists():
+            lock_path.unlink
 
 def WaitForDocking(
     dock_csv: str,
@@ -88,43 +139,28 @@ def WaitForDocking(
             tar_file = Path(PROJ_DIR) / "docking" / "PyMolGen" / f"{ids}.tar.gz"
 
             if tar_file.exists():
+
+                tar_file = Path(PROJ_DIR) / "docking" / "PyMolGen" / f"{ids}.tar.gz"
                 output_dir = Path(PROJ_DIR) / "docking" / "PyMolGen" / f"extracted_{ids}"
-                output_dir.mkdir(parents=True, exist_ok=True)
 
-                # Extract the tar.gz file
-                command = ["tar", "-xzf", str(tar_file), "-C", str(output_dir)]
-                try:
-                    subprocess.run(command, check=True)
-                    logger.info(f"Successfully extracted {tar_file}.")
-
+                if SafeExtractTar(tar_file=tar_file, output_dir=output_dir):
                     # Unzip the .csv.gz file
                     gz_file = output_dir / f"{ids}" / f"{ids}_all_scores.csv.gz"
-                    id_dock_scores = pd.read_csv(str(gz_file), index_col="ID").sort_values(
-                        ascending=ascending, by=scores_col
-                    )
-                    dock_score = id_dock_scores[scores_col].iloc[0]
 
-                    # Update the docking DataFrame
-                    dock_df.at[ids, scores_col] = dock_score
-                    dock_df.to_csv(dock_csv)  # Save the updated DataFrame
-
-                    # Remove the extracted directory using pathlib
                     try:
-                        for child in output_dir.glob("*"):
-                            if child.is_file():
-                                child.unlink()
-                            else:
-                                import shutil
-                                shutil.rmtree(child)
-                        output_dir.rmdir()  # Remove the now empty output_dir
-                    except Exception as rm_err:
-                        logger.error(f"Error removing temporary files for {ids}: {rm_err}")
+                        id_dock_scores = pd.read_csv(str(gz_file), index_col="ID").sort_values(
+                            ascending=ascending, by=scores_col
+                        )
+                        dock_score = id_dock_scores[scores_col].iloc[0]
 
-                    logger.info(f"Removed temporary files for {ids}.")
-                    ids_changed.append(ids)
+                        # Update the docking DataFrame
+                        UpdateDockCsv(dock_csv=dock_csv, ids=idxs_in_batch, scores=dock_score, scores_col=scores_col)
+                        
+                        shutil.rmtree(output_dir, ignore_errors=True)
+                        ids_changed.append(ids)
 
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Failed to extract {tar_file}. Error: {e}")
+                    except Exception as e:
+                        logger.error(f"Failed to process extracted data for {ids}. Error: {e}")
 
         if ids_changed:
             pending_docking = pending_docking[~pending_docking.index.isin(ids_changed)]
@@ -879,7 +915,19 @@ fi
             #print(f"Making CSV for {molid}")
             combined_df = pd.DataFrame()
 
-            with open(mol_dir + molid + ".log", "r") as file:
+            mol_dir_path = Path(mol_dir)
+            log_file_path = mol_dir_path / f"{molid}.log"
+            tar_file_path = mol_dir_path.with_suffix(".tar.gz")
+
+            extracted = False
+
+            if not log_file_path.exists():
+
+                if tar_file_path.exists():
+                    subprocess.run(["tar", "xzf", str(tar_file_path), "-C", str(mol_dir_path.parent)])
+                    extracted = True
+
+            with log_file_path.open("r") as file:
                 lines = file.readlines()
 
             table_start_indices = []
@@ -963,6 +1011,9 @@ fi
                 docking_df.at[molid, "Affinity(kcal/mol)"] = min_aff
                 docking_df.to_csv(dock_batch_csv, index_label="ID")
 
+            if extracted and mol_dir_path.exists():
+                shutil.rmtree(mol_dir_path, ignore_errors=True)
+
         return self.molid_ls, top_cnn_aff_ls, top_aff_ls
 
     def CompressFiles(self):
@@ -985,14 +1036,22 @@ fi
             mol_dir_path = Path(mol_dir)
             mol_dir_name = str(mol_dir_path.name)
 
-            subprocess.run(
-                [
-                    "tar",
-                    "-czf",
-                    f"{mol_dir_name}.tar.gz",
-                    "--remove-files",
-                    mol_dir_name,
-                ],
-                cwd=self.docking_dir,
-                check=True,
-            )
+            if not mol_dir_path.exists():
+                print(f"Warning: Directory {mol_dir_path} does not exist. Skipping compression.")
+                continue
+                
+            try:
+                subprocess.run(
+                    [
+                        "tar",
+                        "-czf",
+                        f"{mol_dir_name}.tar.gz",
+                        "--remove-files",
+                        mol_dir_name,
+                    ],
+                    cwd=self.docking_dir,
+                    check=True,
+                )
+                
+            except subprocess.CalledProcessError as e:
+                print(f"Error compressing {mol_dir_path}:\n{e}")

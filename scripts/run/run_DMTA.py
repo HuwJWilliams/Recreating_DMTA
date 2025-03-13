@@ -10,7 +10,7 @@ start_iter = int(sys.argv[3])
 total_iters = int(sys.argv[4])
 n_cmpds = int(sys.argv[1])
 selection_method = sys.argv[2]
-if len(sys.argv) == 8: 
+if len(sys.argv) == 8 and sys.argv[7]: 
     run_name = f"{sys.argv[5]}_{n_cmpds}_{selection_method}_{sys.argv[7]}"
 else:
     run_name = f"{sys.argv[5]}_{n_cmpds}_{selection_method}"

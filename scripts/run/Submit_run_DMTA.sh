@@ -47,10 +47,10 @@ module load anaconda/python-3.9.7
 source activate phd_env
 
 n_cmpds=50
-sel_method="mp_mu_5:5"
+sel_method="mp_mu_8:2"
 start_iter=1
 total_iters=30
-run_date="20250312"
+run_date="20250314"
 random_frac=0.1
 extra_description=""
 

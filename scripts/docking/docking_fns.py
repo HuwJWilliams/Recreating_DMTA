@@ -363,8 +363,13 @@ class Run_GNINA:
 
         if not isinstance(smi, str):
             smi= str(smi)
+
         
         mol = Chem.MolFromSmiles(smi)
+        if mol is None:
+            print(smi)
+            print(sdf_fpath)
+
         h_mol = Chem.AddHs(mol)
 
         with open(sdf_fpath, "w") as file:

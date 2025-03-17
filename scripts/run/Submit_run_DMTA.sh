@@ -29,6 +29,9 @@
 ## Email settings
 ## SBATCH --mail-type=END,FAIL
 ## SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
+
+# Exclude Nodes
+#SBATCH --exclude=node012
 #=======================================================
 
 
@@ -47,10 +50,10 @@ module load anaconda/python-3.9.7
 source activate phd_env
 
 n_cmpds=50
-sel_method="mp_mu_8:2"
+sel_method="rmp_rmu_2:8"
 start_iter=1
 total_iters=30
-run_date="20250314"
+run_date="20250316"
 random_frac=0.1
 extra_description=""
 

@@ -217,15 +217,15 @@ class Molecule_Selector:
             elif method == "mu":
                 sel_idx = self.best(column="Uncertainty", ascending=True, n_mols=n_mols)
             elif method == "rmp":
-                sel_idx = self.sel.random_in_best(
+                sel_idx = self.random_in_best(
                     column="pred_Affinity(kcal/mol)", ascending=False, frac=frac, n_mols=n_mols
                 )
             elif method == "rmpo":
-                sel_idx = self.sel.random_in_best(
+                sel_idx = self.random_in_best(
                     column="MPO", ascending=True, frac=frac, n_mols=n_mols
                 )
-            elif method == "rmpu":
-                sel_idx = self.sel.random_in_best(
+            elif method == "rmu":
+                sel_idx = self.random_in_best(
                     column="Uncertainty", ascending=True, frac=frac, n_mols=n_mols
                 )
             elif method == "r":

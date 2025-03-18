@@ -1,9 +1,9 @@
 #Define arrays for the variables
 n_cmpds_list=(50 50 50)
-sel_methods=("mp_mu_5:5" "mp_mu_2:8" "mp_mu_5:5")
-start_iters=(3 2 2)
-total_iters=(28 29 29)
-run_dates=(20250311 20250312 20250312)
+sel_methods=("mp_mu_8:2" "mp_mu_8:2" "rmp_rmu_2:8")
+start_iters=(24 20 15)
+total_iters=(7 11 16)
+run_dates=(20250314 20250316 20250316)
 random_fracs=("0.1" "0.1" "0.1")
 extra_descriptions=("" "" "")
 

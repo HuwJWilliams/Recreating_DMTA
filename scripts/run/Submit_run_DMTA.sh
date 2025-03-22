@@ -51,9 +51,9 @@ source activate phd_env
 
 n_cmpds=50
 sel_method="rmp_rmu_5:5"
-start_iter=2
-total_iters=29
-run_date="20250317"
+start_iter=1
+total_iters=20
+run_date="20250322"
 random_frac=0.1
 extra_description=""
 

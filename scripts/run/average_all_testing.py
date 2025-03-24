@@ -15,7 +15,7 @@ from misc_functions import (
     molid_ls_to_smiles,
 )
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/')
+avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/10_sel')
 
 # %%
 avg._average_experiment(exp_suffix='10_mp', n_iters=150)

@@ -1,17 +1,9 @@
 # %%
 
 import pandas as pd
-import sys
 from rdkit import Chem
-import re
-from pathlib import Path
-import subprocess
-import time
 from pathlib import Path
 from multiprocessing import Pool
-import os
-import random as rand
-import textwrap
 from glob import glob
 import numpy as np
 # from docking_fns import CalcMPO
@@ -31,6 +23,8 @@ import numpy as np
 from glob import glob
 from pathlib import Path
 import shutil
+PROJ_DIR = Path(__file__).parent.parent.parent
+
 
 def CleanFiles(fpath: str, 
                fname: str = "PMG_docking_*.csv",

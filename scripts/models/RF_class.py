@@ -181,7 +181,7 @@ class RF_model:
                                         2. Standard Error of Potential
                                         3. Mean Squared Error
                                         4. Root Mean Squared Error (computed from SDEP and Bias)
-                                        5. Pearson R coefficient
+                                        5. pearson R coefficient
                                         6. Spearman R coefficient
                                         7. r2 score
 
@@ -587,10 +587,10 @@ class RF_model:
                 float(np.mean([perf[3] for perf in self.performance_list])), 4
             ),
             "r2": round(float(np.mean([perf[4] for perf in self.performance_list])), 4),
-            "Pearson_r": round(
+            "pearson_r": round(
                 float(np.mean([perf[5] for perf in self.performance_list])), 4
             ),
-            "Pearson_p": round(
+            "pearson_p": round(
                 float(np.mean([perf[6] for perf in self.performance_list])), 4
             ),
         }
@@ -609,10 +609,10 @@ class RF_model:
                 float(np.mean([perf[3] for perf in self.ChEMBL_perf_list])), 4
             ),
             "r2": round(float(np.mean([perf[4] for perf in self.ChEMBL_perf_list])), 4),
-            "Pearson_r": round(
+            "pearson_r": round(
                 float(np.mean([perf[5] for perf in self.ChEMBL_perf_list])), 4
             ),
-            "Pearson_p": round(
+            "pearson_p": round(
                 float(np.mean([perf[6] for perf in self.ChEMBL_perf_list])), 4
             ),
         }

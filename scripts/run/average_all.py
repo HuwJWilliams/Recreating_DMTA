@@ -4,12 +4,14 @@ import numpy as np
 import sys
 from glob import glob
 import json
-import tqdm
+import joblib
 
 
 PROJ_DIR = Path(__file__).parent.parent.parent
 FILE_DIR = Path(__file__).parent
 sys.path.insert(0, str(PROJ_DIR) + "/scripts/misc/")
+sys.path.insert(0, str(PROJ_DIR) + "/scripts/models/")
+
 
 from misc_functions import (
     count_number_iters,
@@ -17,6 +19,8 @@ from misc_functions import (
     get_sel_mols_between_iters,
     molid_ls_to_smiles,
 )
+
+from RF_class import PredictNewTestSet
 
 
 class AverageAll:
@@ -38,6 +42,11 @@ class AverageAll:
         int_stats = pd.DataFrame()
         chembl_int_stats = pd.DataFrame()
         tr_ho_stats = pd.DataFrame()
+
+        path = f"{PROJ_DIR}/datasets/held_out_data/"
+        ft = path + 'PMG_held_out_desc_top.csv'
+        tg = path + 'PMG_held_out_targ_top.csv'
+        fl = path + 'PMG_rdkit_full_top.csv'
 
         for dir in all_exp_dirs:
             working_dir = str(dir) + f"/it{it}"
@@ -65,16 +74,35 @@ class AverageAll:
                 print(e)
 
             # Load trimmed hold out performance json
-            try:
-                with open(
-                    working_dir + "/trimmed_held_out_test/trimmed_held_out_stats.json", "r"
-                ) as file:
-                    loaded_dict = json.load(file)
-                loaded_df = pd.DataFrame([loaded_dict])
-                tr_ho_stats = pd.concat([tr_ho_stats, loaded_df], axis=0)
+            working_path = Path(working_dir)
+            trimmed_dir_path = working_path / "trimmed_held_out_test"
+            trimmed_stats_path = trimmed_dir_path / "trimmed_held_out_stats.json"
 
-            except Exception as e:
-                print(e)
+            if not trimmed_dir_path.exists():
+                try:
+                    PredictNewTestSet(
+                        feats=ft,
+                        targs=tg,
+                        full_data=fl,
+                        test_set_name = 'trimmed_held_out',
+                        experiment_ls=[working_path.parent.name],
+                        results_dir=self.results_dir,
+                        docking_column=self.docking_column
+                            )
+                except Exception as e:
+                    print(f"Failed to recalculate trimmed test set: {e}")
+                
+            else:
+                try:
+                    with open(
+                        working_dir + "/trimmed_held_out_test/trimmed_held_out_stats.json", "r"
+                    ) as file:
+                        loaded_dict = json.load(file)
+                    loaded_df = pd.DataFrame([loaded_dict])
+                    tr_ho_stats = pd.concat([tr_ho_stats, loaded_df], axis=0)
+
+                except Exception as e:
+                    print(e)
 
             # Load ChEMBL internal performance json
             try:
@@ -98,45 +126,66 @@ class AverageAll:
 
         return avg_int_dict, avg_ho_dict, avg_chembl_int_dict, avg_tr_ho_dict
 
-    def _avg_feat_importance(self, it: int, all_exp_dirs: list):
+    def _avg_feat_importance(self, it: int, all_exp_dirs: list, feats_path: Path = None):
 
         avg_feat_df = pd.DataFrame()
 
         for dir in all_exp_dirs:
-            working_dir = str(dir) + f"/it{it}"
+            working_dir = Path(dir) / f"it{it}"
+            fi_path = working_dir / "feature_importance_df.csv"
+            model_path = working_dir / "final_model.pkl"
+
+            # 🚧 Generate feature_importance_df.csv if missing
+            if not fi_path.exists():
+                if model_path.exists():
+                    try:
+                        model = joblib.load(model_path)
+
+                        # Get feature names
+                        if hasattr(model, "feature_names_in_"):
+                            feature_names = model.feature_names_in_
+                        elif feats_path and feats_path.exists():
+                            feat_df = pd.read_csv(feats_path, index_col="ID")
+                            feature_names = feat_df.columns
+                        else:
+                            raise ValueError(
+                                f"Cannot get feature names for {working_dir}. "
+                                f"Use sklearn >=1.0 or provide feats_path."
+                            )
+
+                        importance_df = pd.DataFrame({
+                            "Feature": feature_names,
+                            "Importance": model.feature_importances_
+                        })
+                        importance_df.to_csv(fi_path, index=False)
+                        print(f"Created feature_importance_df.csv in {working_dir}")
+                    except Exception as e:
+                        print(f"Failed to generate feature importances in {working_dir}: {e}")
+                else:
+                    print(f"Model file missing: {model_path}")
+
+            # 🔄 Now load and average the CSVs
+            try:
+                loaded_df = pd.read_csv(fi_path).sort_index(ascending=True)
+            except Exception as e:
+                print(f"Could not read {fi_path}: {e}")
+                continue
 
             if avg_feat_df.empty:
-                try:
-                    avg_feat_df = pd.read_csv(
-                        working_dir + "/feature_importance_df.csv"
-                    ).sort_index(ascending=True)
-
-                except Exception as e:
-                    print(e)
+                avg_feat_df = loaded_df
             else:
-                loaded_df = pd.read_csv(
-                    working_dir + "/feature_importance_df.csv"
-                ).sort_index(ascending=True)
                 merged_df = pd.merge(
                     avg_feat_df,
                     loaded_df,
-                    left_index=True,
-                    right_index=True,
+                    on="Feature",
                     suffixes=("_df1", "_df2"),
                 )
                 merged_df["Importance"] = merged_df[
-                    [f"Importance_df1", f"Importance_df2"]
+                    ["Importance_df1", "Importance_df2"]
                 ].mean(axis=1)
-                merged_df["Feature"] = merged_df["Feature_df1"]
 
-                avg_feat_df = pd.DataFrame(
-                    {
-                        "Importance": merged_df["Importance"].tolist(),
-                        "Feature": merged_df["Feature"].tolist(),
-                    }
-                )
-
-                avg_feat_df.sort_values(by="Feature", inplace=True)
+                avg_feat_df = merged_df[["Feature", "Importance"]]
+                avg_feat_df = avg_feat_df.sort_values(by="Feature")
 
         return avg_feat_df
     

@@ -468,3 +468,34 @@ def create_gif(image_ls: list,
                     fps=fps, 
                     loop=loop,
                     quality=quality)
+
+import os
+
+def replace_pearson_case_in_jsons(root_dir: str):
+    for dirpath, _, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename.endswith(".json"):
+                file_path = os.path.join(dirpath, filename)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+
+                    updated = json_replace_key_case(data, "Pearson", "pearson")
+
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        json.dump(updated, f, indent=4)
+
+                    print(f"✅ Updated: {file_path}")
+                except Exception as e:
+                    print(f"⚠️  Skipped (error in file {file_path}): {e}")
+
+def json_replace_key_case(obj, old_key, new_key):
+    if isinstance(obj, dict):
+        return {
+            (new_key if k == old_key else k): json_replace_key_case(v, old_key, new_key)
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, list):
+        return [json_replace_key_case(item, old_key, new_key) for item in obj]
+    else:
+        return obj

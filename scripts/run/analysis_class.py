@@ -124,8 +124,8 @@ class Analysis:
         self.rdkit_or_mordred = rdkit_or_mordred.lower()
 
         self.results_dir = results_dir
-        self.results_10_dir = self.results_dir + '/finished_results/10_mol_sel/'
-        self.results_50_dir = self.results_dir + '/finished_results/50_mol_sel/'
+        self.results_10_dir = self.results_dir + '/complete_archive/10_sel/'
+        self.results_50_dir = self.results_dir + '/complete_archive/50_sel/'
 
         self.held_out_stat_json = held_out_stat_json
 
@@ -242,8 +242,19 @@ class Analysis:
         bias_ylim: tuple = (-0.5, 0.5),
         rmse_ylim: tuple = (0, 1),
         sdep_ylim: tuple = (0, 1),
-        r_type: str = 'r2'
+        r_type: str = 'r2',
+        xticks: int=None,
+        yticks: int=None,
+        tick_fontsize: int=10,
+        label_fontsize:int=12,
+        title_fontsize:int=14,
+        legend_fontsize:int=10,
+        font_family: str="Arial",
+        custom_xticks: list=None
     ):
+        plt.rcParams.update({
+            "font.family": font_family
+        })
 
         # Load performance stats for the selected datasets
         all_int_stats = (
@@ -274,8 +285,6 @@ class Analysis:
 
         fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
 
-        linestyles = {"_10_": "-", "_50_": "--"}
-
         # Determine the maximum length of metrics from any of the datasets to pad missing data
         max_length = 0
         for stats in [all_int_stats, all_ho_stats, all_chembl_stats]:
@@ -291,7 +300,7 @@ class Analysis:
             exp_name = f"_{name}" 
             method = next((m for m in self.method_colour_map.keys() if exp.endswith(m)), None)
             colour = self.method_colour_map.get(method, "black")
-            colour_ls.append(colour_ls)
+            colour_ls.append(colour)
             linestyle = self.linestyles.get("_50_" if "_50_" in exp else "_10_", "-")
 
             print(f"Experiment: {exp}, Color: {colour}, Line Style: {linestyle}")
@@ -414,17 +423,17 @@ class Analysis:
                     label=exp_name,
                 )
 
-            ax[0, 0].set_title("RMSE")
-            ax[0, 0].set_ylabel("RMSE")
+            #ax[0, 0].set_title("RMSE", fontsize=title_fontsize)
+            ax[0, 0].set_ylabel("RMSE", fontsize=label_fontsize, labelpad=10)
 
-            ax[1, 0].set_title(r_type)
-            ax[1, 0].set_ylabel(r_type)
+            #ax[1, 0].set_title(r_type, fontsize=title_fontsize)
+            ax[1, 0].set_ylabel(r_type, fontsize=label_fontsize, labelpad=10)
 
-            ax[1, 1].set_title("Bias")
-            ax[1, 1].set_ylabel("Bias")
+            #ax[1, 1].set_title("Bias", fontsize=title_fontsize)
+            ax[1, 1].set_ylabel("Bias", fontsize=label_fontsize, labelpad=10)
 
-            ax[0, 1].set_title("SDEP")
-            ax[0, 1].set_ylabel("SDEP")
+            #ax[0, 1].set_title("SDEP", fontsize=title_fontsize)
+            ax[0, 1].set_ylabel("SDEP", fontsize=label_fontsize, labelpad=10)
 
             if set_ylims:
                 ax[0, 0].set_ylim(rmse_ylim[0], rmse_ylim[1])
@@ -433,7 +442,17 @@ class Analysis:
                 ax[0, 1].set_ylim(sdep_ylim[0], sdep_ylim[1])
 
             for a in ax.flat:
-                a.set_xlabel("Molecule Count")
+                a.set_xlabel("Molecule Count", fontsize=label_fontsize)
+                a.tick_params(axis="both", labelsize=tick_fontsize)
+                
+                if custom_xticks is not None:
+                    a.set_xticks(custom_xticks)
+
+                elif xticks is not None:
+                    a.xaxis.set_major_locator(plt.MaxNLocator(xticks))
+
+                if yticks is not None:
+                    a.yaxis.set_major_locator(plt.MaxNLocator(yticks))
 
         lines = [
             plt.Line2D([0], [0], color="black", linestyle="--"),
@@ -448,6 +467,7 @@ class Analysis:
             bbox_to_anchor=(0.75, 0.75),
             ncol=1,
             borderaxespad=0.0,
+            prop={"size": legend_fontsize}
         )
 
 
@@ -477,6 +497,7 @@ class Analysis:
             bbox_to_anchor=(0.75, 0.5),
             ncol=1,
             borderaxespad=0.0,
+            prop={"size": legend_fontsize}
         )
 
         fig.add_artist(leg1)
@@ -485,7 +506,7 @@ class Analysis:
         plt.tight_layout(rect=[0, 0, 0.75, 1])
 
         if save_plot:
-            plt.savefig(results_dir + "/plots/" + plot_fname + ".png", dpi=600)
+            plt.savefig(results_dir + "/plots/" + plot_fname + ".png", dpi=600, bbox_inches="tight")
 
         plt.show()
 

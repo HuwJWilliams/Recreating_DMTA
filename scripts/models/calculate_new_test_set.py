@@ -18,29 +18,12 @@ PredictNewTestSet(
     targs=tg,
     full_data=fl,
     test_set_name = 'trimmed_held_out',
-    experiment_ls=["20250228_50_rmp_005", "20250227_50_rmp_0025", "20250226_50_rmp_005",  "20250226_50_rmp_0025", 
-"20250307_50_rmp_025", "20250308_50_rmp_05", "20250308_50_rmp_0025", "20250308_50_rmp_005",
-"20250308_50_rmp_005", "20250310_50_rmp_05", "20250309_50_rmp_05",   
-"20250309_50_rmp_025", "20250310_50_rmp_025"
+    experiment_ls=[
+"20241002_10_mu"
+
+
 ],
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/'
+    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/'
 )
 
 # %%
-
-# PredictNewTestSet(
-#     feats=ft,
-#     targs=tg,
-#     full_data=fl,
-#     test_set_name = 'trimmed_held_out',
-#     experiment_ls=['20241011_50_mp', '20241015_50_mp', '20241023_50_mp',
-# '20241011_50_mpo', '20241015_50_mpo', '20241023_50_mpo', 
-# '20241011_50_mu', '20241015_50_mu', '20241023_50_mu',
-# '20241011_50_r', '20241015_50_r', '20241023_50_r', 
-# '20241011_50_rmp', '20241015_50_rmp', '20241023_50_rmp', 
-# '20241011_50_rmpo', '20241015_50_rmpo', '20241023_50_rmpo'  
-
-# ],
-#     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/finished_results/50_mol_sel/'
-# )
-# # %%

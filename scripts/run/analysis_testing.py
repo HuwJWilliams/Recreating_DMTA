@@ -17,38 +17,44 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/results/rdkit_desc/complete_archive/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
 an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
-              docking_column='Experimental_pIC50'
+              held_out_stat_json="held_out_test/held_out_stats.json",
+              docking_column='Affinity(kcal/mol)'
               )
 # %%
-# an.Plot_Perf(
-#     experiments=[
-#         "average_10_mp",
-#         "average_10_rmp",
-#         "average_10_rmpo",
-#         "average_10_mpo",
-#         "average_10_r",
-#         "average_10_mu",
-#         "average_50_mp",
-#         "average_50_rmp",
-#         "average_50_rmpo",
-#         "average_50_mpo",
-#         "average_50_r",
-#         "average_50_mu",
-#     ],
-#     plot_ho = False,
-#     plot_int= True,
-#     plot_chembl_int= False,
-#     plot_fname='all_avg_int_plot_pear_r',
-#     set_ylims=True,
-#     r_type = 'pearson_r',
-#     rmse_ylim=(0, 1),
-#     sdep_ylim=(0, 1),
-#     r2_ylim=(0, 1),
-#     bias_ylim= (-0.1, 0.1),
-# )
+an.Plot_Perf(
+    experiments=[
+        "average_50_mp",
+        "average_50_rmp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+        "average_10_mp",
+        "average_10_rmp",
+        "average_10_rmpo",
+        "average_10_mpo",
+        "average_10_r",
+        "average_10_mu",
+    ],
+    plot_ho = True,
+    plot_int= False,
+    plot_chembl_int= False,
+    plot_fname='all_avg_ho_plot_pear_r',
+    set_ylims=True,
+    r_type = 'pearson_r',
+    rmse_ylim=(0, 1),
+    sdep_ylim=(0, 1),
+    r2_ylim=(0, 1),
+    bias_ylim= (-1, 1),
+    yticks=6,
+    custom_xticks=[0, 500, 1000, 1500]
+    tick_fontsize=16,
+    label_fontsize=18,
+    title_fontsize=18,
+    legend_fontsize=18
+)
 
 # %%
 

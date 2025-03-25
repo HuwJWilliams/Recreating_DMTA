@@ -15,18 +15,12 @@ from misc_functions import (
     molid_ls_to_smiles,
 )
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/10_sel')
+avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/10_sel/')
 
 # %%
-avg._average_experiment(exp_suffix='10_mp', n_iters=150)
-avg._average_experiment(exp_suffix='10_mpo', n_iters=150)
 avg._average_experiment(exp_suffix='10_mu', n_iters=150)
-
-avg._average_experiment(exp_suffix='10_rmp', n_iters=150)
-avg._average_experiment(exp_suffix='10_rmpo', n_iters=150)
-avg._average_experiment(exp_suffix='10_rmu', n_iters=150)
-
-avg._average_experiment(exp_suffix='10_r', n_iters=150)
+# avg._average_experiment(exp_suffix='50_mp_mu_5:5', n_iters=30)
+# avg._average_experiment(exp_suffix='50_mp_mu_8:2', n_iters=30)
 
 # avg._average_experiment(exp_suffix='10_mp', n_iters=150)
 # avg._average_experiment(exp_suffix='10_mpo', n_iters=150)

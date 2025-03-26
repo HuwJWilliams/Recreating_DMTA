@@ -49,7 +49,7 @@ an.Plot_Perf(
     r2_ylim=(0, 1),
     bias_ylim= (-1, 1),
     yticks=6,
-    custom_xticks=[0, 500, 1000, 1500]
+    custom_xticks=[0, 500, 1000, 1500],
     tick_fontsize=16,
     label_fontsize=18,
     title_fontsize=18,

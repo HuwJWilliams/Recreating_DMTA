@@ -95,7 +95,7 @@ class AverageAll:
             else:
                 try:
                     with open(
-                        working_dir + "/trimmed_held_out_test/trimmed_held_out_stats.json", "r"
+                        trimmed_stats_path, "r"
                     ) as file:
                         loaded_dict = json.load(file)
                     loaded_df = pd.DataFrame([loaded_dict])

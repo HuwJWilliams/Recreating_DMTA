@@ -178,7 +178,16 @@ class Analysis:
             
             if "_50_" in exp:
                 step = 50
-                results_dir = self.results_50_dir
+                
+                if "mp_mu" in exp:
+                    results_dir = self.results_dir + "/complete_archive/mp_mu_hybrid/"
+
+                elif "rmp_rmu" in exp:
+                    results_dir = self.results_dir + "/complete_archive/rmp_rmu_hybrid/"
+
+                else:
+                    results_dir = self.results_50_dir
+            
             else:
                 step = 10
                 results_dir = self.results_10_dir
@@ -226,6 +235,8 @@ class Analysis:
                 "pearson_r": pearson
             }
 
+        print(all_stats)
+
         return all_stats
 
     def Plot_Perf(
@@ -250,7 +261,7 @@ class Analysis:
         title_fontsize:int=14,
         legend_fontsize:int=10,
         font_family: str="Arial",
-        custom_xticks: list=None
+        custom_xticks: list=None,
     ):
         plt.rcParams.update({
             "font.family": font_family

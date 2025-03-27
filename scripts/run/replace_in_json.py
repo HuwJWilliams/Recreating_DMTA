@@ -50,15 +50,9 @@ def replace_in_json_files(directory, old_str, new_str):
 
 
 
-# Set your search directory and the strings you want to replace
-search_dir = "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/finished_results/scrambled/"  # Replace with your directory path
+search_dir =  "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/"
 replace_in_json_files(search_dir, "Pearson_r", "pearson_r")
 
-search_dir =  "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/finished_results/10_mol_sel/"
-replace_in_json_files(search_dir, "Pearson_r", "pearson_r")
-
-search_dir =  "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/finished_results/50_mol_sel/"
-replace_in_json_files(search_dir, "Pearson_r", "pearson_r")
 
 print("Replacement done!")
 # %%

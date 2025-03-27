@@ -25,23 +25,34 @@ an = Analysis(results_dir=results_dir,
 # %%
 an.Plot_Perf(
     experiments=[
-        "average_50_mp",
-        "average_50_rmp",
-        "average_50_rmpo",
-        "average_50_mpo",
-        "average_50_r",
-        "average_50_mu",
-        "average_10_mp",
-        "average_10_rmp",
-        "average_10_rmpo",
-        "average_10_mpo",
-        "average_10_r",
-        "average_10_mu",
+        # "average_50_rmp",
+        # "average_50_mp",
+        # "average_50_rmpo",
+        # "average_50_mpo",
+        # "average_50_r",
+        # "average_50_mu",
+
+        # "average_10_mp",
+        # "average_10_rmp",
+        # "average_10_rmpo",
+        # "average_10_mpo",
+        # "average_10_r",
+        # "average_10_mu",
+        
+        # "average_50_mp_mu_2:8",
+        # "average_50_mp_mu_5:5",
+        # "average_50_mp_mu_8:2",
+
+        "average_50_rmp_rmu_2:8",
+        "average_50_rmp_rmu_5:5",
+        "average_50_rmp_rmu_8:2",
+
+
     ],
-    plot_ho = True,
-    plot_int= False,
+    plot_ho = False,
+    plot_int= True,
     plot_chembl_int= False,
-    plot_fname='all_avg_ho_plot_pear_r',
+    plot_fname='diff_pool_ho_plot_pear_r',
     set_ylims=True,
     r_type = 'pearson_r',
     rmse_ylim=(0, 1),
@@ -53,7 +64,8 @@ an.Plot_Perf(
     tick_fontsize=16,
     label_fontsize=18,
     title_fontsize=18,
-    legend_fontsize=18
+    legend_fontsize=18,
+    save_plot=False
 )
 
 # %%

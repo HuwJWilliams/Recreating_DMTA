@@ -17,9 +17,9 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/scrambled'
 an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="held_out_test/held_out_stats.json",
+              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
               docking_column='Affinity(kcal/mol)'
               )
 # %%
@@ -32,11 +32,11 @@ an.Plot_Perf(
         # "average_50_r",
         # "average_50_mu",
 
-        "average_10_rmp",
-        "average_10_mp",
-        "average_10_rmpo",
-        "average_10_mpo",
-        "average_10_r",
+        # "average_10_rmp",
+        # "average_10_mp",
+        # "average_10_rmpo",
+        # "average_10_mpo",
+        # "average_10_r",
         # "average_10_mu",
         
         # "average_50_mp_mu_2:8",
@@ -47,28 +47,48 @@ an.Plot_Perf(
         # "average_50_rmp_rmu_5:5",
         # "average_50_rmp_rmu_8:2",
 
+        # "average_50_rmp_0025",
+        # "average_50_rmp_005",
+        # "average_50_rmp_025",
+        # "average_50_rmp_05",
+
+        # "20241024_10_scramb_mp" ,  
+        # "20241024_10_scramb_r"  ,   
+        # "20241024_10_scramb_mpo"  ,
+        # "20241024_10_scramb_rmp"   ,
+        # "20241024_10_scramb_mu"   ,
+        # "20241024_10_scramb_rmpo" , 
+
+        "20241105_50_scramb_mu"   ,
+        "20241105_50_scramb_rmpo",
+        "20241105_50_scramb_mp"  , 
+        "20241105_50_scramb_r",
+        "20241105_50_scramb_mpo"  ,
+        "20241105_50_scramb_rmp",
 
     ],
     plot_ho = True,
     plot_int= False,
     plot_chembl_int= False,
-    plot_fname='diff_pool_ho_plot_pear_r',
+    plot_fname='sing_trho_plot_pear_r',
     set_ylims=True,
     r_type = 'pearson_r',
-    rmse_ylim=(0, 1),
-    sdep_ylim=(0, 1),
-    r2_ylim=(0, 1),
-    bias_ylim= (-1, 1),
-    yticks=6,
+    rmse_ylim=(0.25, 1.25),
+    sdep_ylim=(0.2, 0.6),
+    # r2_ylim=(0.2, 1),
+    # bias_ylim= (-1.2, 0.1),
+    r2_ylim=(-0.2, 0.8), #scrambled
+    bias_ylim= (-0.5, 0.5), #scrambled
+    yticks=4,
     custom_xticks=[0, 500, 1000, 1500],
-    tick_fontsize=16,
-    label_fontsize=18,
-    title_fontsize=18,
-    legend_fontsize=18,
-    save_plot=False
-)
+    tick_fontsize=20,
+    label_fontsize=24,
+    title_fontsize=20,
+    legend_fontsize=20,
+    save_plot=True,
+    )
 
-# %%
+ # %%
 
 # chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
 # ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'

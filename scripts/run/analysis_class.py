@@ -132,7 +132,7 @@ class Analysis:
         self.docking_column = docking_column
 
         colours = sns.color_palette(cc.glasbey, n_colors=20)
-        self.linestyles = {"_10_": "-", "_50_": "--"}
+        self.linestyles = {"_10_": "--", "_50_": "-"}
         self.method_colour_map = {
                 "_mp": colours[0],
                 "_mu": colours[1],
@@ -144,12 +144,13 @@ class Analysis:
 
                 "_0025": colours[7],
                 "_005": colours[8],
+                "_01": colours[3],
                 "_025": colours[9],
                 "_05": colours[10],
 
                 "_2:8": colours[11],
                 "_5:5": colours[12],
-                "_8:2": colours[13]
+                "_8:2": colours[13],
             }
 
     def _get_stats(
@@ -175,22 +176,27 @@ class Analysis:
 
         # Looping through all provided experiments
         for exp in experiment_dirs:
+
+            step = 50 if "_50_" in exp else 10
+
+            if "_scramb_" in exp:
+                results_dir = self.results_dir
             
-            if "_50_" in exp:
-                step = 50
-                
+            elif "_50_" in exp:
                 if "mp_mu" in exp:
                     results_dir = self.results_dir + "/complete_archive/mp_mu_hybrid/"
 
                 elif "rmp_rmu" in exp:
                     results_dir = self.results_dir + "/complete_archive/rmp_rmu_hybrid/"
 
+                elif "_rmp_0" in exp:
+                    results_dir = self.results_dir + "/complete_archive/diff_pool/"
                 else:
                     results_dir = self.results_50_dir
-            
-            else:
-                step = 10
+
+            elif "_10_" in exp:
                 results_dir = self.results_10_dir
+            
 
             # Initialising empty lists
             rmse = []
@@ -262,6 +268,8 @@ class Analysis:
         legend_fontsize:int=10,
         font_family: str="Arial",
         custom_xticks: list=None,
+        linewidth:int=2,
+
     ):
         plt.rcParams.update({
             "font.family": font_family
@@ -312,11 +320,11 @@ class Analysis:
             method = next((m for m in self.method_colour_map.keys() if exp.endswith(m)), None)
             colour = self.method_colour_map.get(method, "black")
             colour_ls.append(colour)
-            linestyle = self.linestyles.get("_50_" if "_50_" in exp else "_10_", "-")
+            linestyle = self.linestyles.get("_50_" if "_50_" in exp else "_10_", "--")
 
             print(f"Experiment: {exp}, Color: {colour}, Line Style: {linestyle}")
 
-            def plot_metric(ax, stats, metric, linestyle, color, label=None):
+            def plot_metric(ax, stats, metric, linestyle, linewidth, color, label=None):
                 padded_data = np.pad(
                     stats[exp][metric],
                     (0, max_length - len(stats[exp][metric])),
@@ -327,6 +335,7 @@ class Analysis:
                     y=padded_data,
                     legend=False,
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=color,
                     label=label,
                     ax=ax,
@@ -338,6 +347,7 @@ class Analysis:
                     all_int_stats,
                     "rmse",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -346,6 +356,7 @@ class Analysis:
                     all_int_stats,
                     r_type,
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -354,6 +365,7 @@ class Analysis:
                     all_int_stats,
                     "bias",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -362,6 +374,7 @@ class Analysis:
                     all_int_stats,
                     "sdep",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -372,6 +385,7 @@ class Analysis:
                     all_ho_stats,
                     "rmse",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -380,6 +394,7 @@ class Analysis:
                     all_ho_stats,
                     r_type,
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -388,6 +403,7 @@ class Analysis:
                     all_ho_stats,
                     "bias",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -396,6 +412,7 @@ class Analysis:
                     all_ho_stats,
                     "sdep",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -406,6 +423,7 @@ class Analysis:
                     all_chembl_stats,
                     "rmse",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -414,6 +432,7 @@ class Analysis:
                     all_chembl_stats,
                     r_type,
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -422,6 +441,7 @@ class Analysis:
                     all_chembl_stats,
                     "bias",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -430,6 +450,7 @@ class Analysis:
                     all_chembl_stats,
                     "sdep",
                     linestyle=linestyle,
+                    linewidth=linewidth,
                     color=colour,
                     label=exp_name,
                 )
@@ -438,7 +459,11 @@ class Analysis:
             ax[0, 0].set_ylabel("RMSE", fontsize=label_fontsize, labelpad=10)
 
             #ax[1, 0].set_title(r_type, fontsize=title_fontsize)
-            ax[1, 0].set_ylabel(r_type, fontsize=label_fontsize, labelpad=10)
+            if r_type == "pearson_r":
+                ax[1, 0].set_ylabel("Pearson R", fontsize=label_fontsize, labelpad=10)
+            else:
+                ax[1, 0].set_ylabel("R\u00b2", fontsize=label_fontsize, labelpad=10)
+
 
             #ax[1, 1].set_title("Bias", fontsize=title_fontsize)
             ax[1, 1].set_ylabel("Bias", fontsize=label_fontsize, labelpad=10)
@@ -453,21 +478,27 @@ class Analysis:
                 ax[0, 1].set_ylim(sdep_ylim[0], sdep_ylim[1])
 
             for a in ax.flat:
-                a.set_xlabel("Molecule Count", fontsize=label_fontsize)
+                # For top row: remove only x-axis tick labels and x-axis label
+                if a in [ax[0, 0], ax[0, 1]]:
+                    a.set_xlabel("")
+                    a.tick_params(axis="x", labelbottom=False)  # Hide x-axis tick labels only
+                else:
+                    a.set_xlabel("Molecule Count", fontsize=label_fontsize)
+
                 a.tick_params(axis="both", labelsize=tick_fontsize)
-                
+
                 if custom_xticks is not None:
                     a.set_xticks(custom_xticks)
-
                 elif xticks is not None:
                     a.xaxis.set_major_locator(plt.MaxNLocator(xticks))
 
                 if yticks is not None:
                     a.yaxis.set_major_locator(plt.MaxNLocator(yticks))
+                    
 
         lines = [
-            plt.Line2D([0], [0], color="black", linestyle="--"),
             plt.Line2D([0], [0], color="black", linestyle="-"),
+            plt.Line2D([0], [0], color="black", linestyle="--"),
         ]
         line_labels = ["50 Molecules", "10 Molecules"]
 
@@ -1630,7 +1661,7 @@ class Analysis:
             )
 
         for exp, avg_tanimoto_sim_ls, n_mols_chosen, step in results:
-            linestyle = "-" if step == 10 else "--"
+            linestyle = "-" if step == 50 else "--"
             method = next((m for m in self.method_colour_map.keys() if exp.endswith(m)), None)
             colour = self.method_colour_map.get(method, "black")
 
@@ -1663,8 +1694,8 @@ class Analysis:
         )
 
         lines = [
-            plt.Line2D([0], [0], color="black", linestyle="--"),
             plt.Line2D([0], [0], color="black", linestyle="-"),
+            plt.Line2D([0], [0], color="black", linestyle="--"),
         ]
         line_labels = ["50 Molecules", "10 Molecules"]
 
@@ -1785,8 +1816,8 @@ class Analysis:
 
 
         lines = [
-            plt.Line2D([0], [0], color="black", linestyle="--"),
             plt.Line2D([0], [0], color="black", linestyle="-"),
+            plt.Line2D([0], [0], color="black", linestyle="--"),
         ]
         line_labels = ["50 Molecules", "10 Molecules"]
 
@@ -1810,7 +1841,7 @@ class Analysis:
         handles = []
         colour_ls = []
         for label in labels:
-            colour = method_colour_map[label]
+            colour = self.method_colour_map[label]
             colour_ls.append(colour)
             if colour:
                 handle = Line2D([0], [0], color=colour, lw=2)

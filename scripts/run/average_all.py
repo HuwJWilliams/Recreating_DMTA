@@ -197,6 +197,7 @@ class AverageAll:
             preds_file = Path(preds_filename).name
 
             all_preds_df = pd.DataFrame()
+            ho_df = pd.DataFrame()
 
             files_processed = []
 
@@ -211,6 +212,7 @@ class AverageAll:
                 except Exception as e:
                     print(f"An error occurred when averaging predictions:\n{e}")
                 
+                
             if not all_preds_df.empty:
                 avg_df = all_preds_df.groupby(all_preds_df.index).mean()
 
@@ -218,6 +220,24 @@ class AverageAll:
                 avg_df.to_csv(avg_save_path, index_label='ID')
                 print(f"Created average {preds_file}")
                 #print(f"Files processed:\n{files_processed}")
+
+
+        for dir in all_exp_dirs:
+            working_dir = str(dir) + f"/it{it}"
+            try:
+                working_csv = working_dir + "/held_out_test/held_out_test_preds.csv"
+                working_df = pd.read_csv(working_csv, index_col='ID')
+                ho_df = pd.concat([ho_df, working_df])
+
+
+            except Exception as e:
+                print(f"An error occurred when averaging hold out predictions:\n{e}")
+
+        if not ho_df.empty:
+            ho_avg_df = ho_df.groupby(ho_df.index).mean()
+            ho_avg_save_path = f"{average_exp_dir}/held_out_test/held_out_test_preds.csv"
+            ho_avg_df.to_csv(ho_avg_save_path, index_label='ID')
+
 
         return avg_df
 

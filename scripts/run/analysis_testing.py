@@ -17,76 +17,76 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/scrambled'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/'
 an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
+              held_out_stat_json="held_out_test/held_out_stats.json",
               docking_column='Affinity(kcal/mol)'
               )
 # %%
-an.Plot_Perf(
-    experiments=[
-        # "average_50_rmp",
-        # "average_50_mp",
-        # "average_50_rmpo",
-        # "average_50_mpo",
-        # "average_50_r",
-        # "average_50_mu",
+# an.Plot_Perf(
+#     experiments=[
+#         # "average_50_rmp",
+#         # "average_50_mp",
+#         # "average_50_rmpo",
+#         # "average_50_mpo",
+#         # "average_50_r",
+#         # "average_50_mu",
 
-        # "average_10_rmp",
-        # "average_10_mp",
-        # "average_10_rmpo",
-        # "average_10_mpo",
-        # "average_10_r",
-        # "average_10_mu",
+#         # "average_10_rmp",
+#         # "average_10_mp",
+#         # "average_10_rmpo",
+#         # "average_10_mpo",
+#         # "average_10_r",
+#         # "average_10_mu",
         
-        # "average_50_mp_mu_2:8",
-        # "average_50_mp_mu_5:5",
-        # "average_50_mp_mu_8:2",
+#         # "average_50_mp_mu_2:8",
+#         # "average_50_mp_mu_5:5",
+#         # "average_50_mp_mu_8:2",
 
-        # "average_50_rmp_rmu_2:8",
-        # "average_50_rmp_rmu_5:5",
-        # "average_50_rmp_rmu_8:2",
+#         # "average_50_rmp_rmu_2:8",
+#         # "average_50_rmp_rmu_5:5",
+#         # "average_50_rmp_rmu_8:2",
 
-        # "average_50_rmp_0025",
-        # "average_50_rmp_005",
-        # "average_50_rmp_025",
-        # "average_50_rmp_05",
+#         # "average_50_rmp_0025",
+#         # "average_50_rmp_005",
+#         # "average_50_rmp_025",
+#         # "average_50_rmp_05",
 
-        # "20241024_10_scramb_mp" ,  
-        # "20241024_10_scramb_r"  ,   
-        # "20241024_10_scramb_mpo"  ,
-        # "20241024_10_scramb_rmp"   ,
-        # "20241024_10_scramb_mu"   ,
-        # "20241024_10_scramb_rmpo" , 
+#         # "20241024_10_scramb_mp" ,  
+#         # "20241024_10_scramb_r"  ,   
+#         # "20241024_10_scramb_mpo"  ,
+#         # "20241024_10_scramb_rmp"   ,
+#         # "20241024_10_scramb_mu"   ,
+#         # "20241024_10_scramb_rmpo" , 
 
-        "20241105_50_scramb_mu"   ,
-        "20241105_50_scramb_rmpo",
-        "20241105_50_scramb_mp"  , 
-        "20241105_50_scramb_r",
-        "20241105_50_scramb_mpo"  ,
-        "20241105_50_scramb_rmp",
+#         "20241105_50_scramb_mu"   ,
+#         "20241105_50_scramb_rmpo",
+#         "20241105_50_scramb_mp"  , 
+#         "20241105_50_scramb_r",
+#         "20241105_50_scramb_mpo"  ,
+#         "20241105_50_scramb_rmp",
 
-    ],
-    plot_ho = True,
-    plot_int= False,
-    plot_chembl_int= False,
-    plot_fname='sing_trho_plot_pear_r',
-    set_ylims=True,
-    r_type = 'pearson_r',
-    rmse_ylim=(0.25, 1.25),
-    sdep_ylim=(0.2, 0.6),
-    # r2_ylim=(0.2, 1),
-    # bias_ylim= (-1.2, 0.1),
-    r2_ylim=(-0.2, 0.8), #scrambled
-    bias_ylim= (-0.5, 0.5), #scrambled
-    yticks=4,
-    custom_xticks=[0, 500, 1000, 1500],
-    tick_fontsize=20,
-    label_fontsize=24,
-    title_fontsize=20,
-    legend_fontsize=20,
-    save_plot=True,
-    )
+#     ],
+#     plot_ho =True,
+#     plot_int= False,
+#     plot_chembl_int= False,
+#     plot_fname='scramb_ho_plot_pear_r',
+#     set_ylims=True,
+#     r_type = 'pearson_r',
+#     rmse_ylim=(0.25, 1),
+#     sdep_ylim=(0.0, 0.8),
+#     # r2_ylim=(0.2, 1),
+#     # bias_ylim= (-1.2, 0.1),
+#     r2_ylim=(-0.2, 0.8), #scrambled
+#     bias_ylim= (-0.5, 0.5), #scrambled
+#     yticks=4,
+#     custom_xticks=[0, 500, 1000, 1500],
+#     tick_fontsize=20,
+#     label_fontsize=24,
+#     title_fontsize=20,
+#     legend_fontsize=20,
+#     save_plot=True,
+#     )
 
  # %%
 
@@ -109,16 +109,25 @@ an.Plot_Perf(
 #             kdep_sample_ls=['PyMolGen'])
 
 # %%
-# experiment_ls = ["20241002_10_mp", "20241002_10_mpo", '20241002_10_mu', '20241002_10_r', '20241002_10_rmp', '20241002_10_rmpo']
-# mol_sel_ls = ['mp', 'mpo', 'mu', 'r', 'rmp', 'rmpo']
-# for exp, sel in zip(experiment_ls, mol_sel_ls):
-#     an.Prediction_Development(exp,
-#                             prediction_fpath = "/trimmed_held_out_test/trimmed_held_out_preds.csv",
-#                             true_path= "/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_targ_top.csv",
-#                             iter_ls=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150],
-#                             plot_filename=f"10_{sel}_it_preds_top",
-#                             save_plot=True,
-#                             underlay_it0=True)
+experiment_ls = ["average_50_rmp"]
+mol_sel_ls = ['rmp']
+for exp, sel in zip(experiment_ls, mol_sel_ls):
+    an.Prediction_Development(exp,
+                            prediction_fpath = "/held_out_test/held_out_test_preds.csv",
+                            true_path= "/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_targ_trimmed.csv",
+                            iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                            plot_filename=f"50_{sel}_it_preds_top",
+                            save_plot=False,
+                            underlay_it0=True,
+                            title_fontsize=20,
+                            tick_fontsize=16,
+                            label_fontsize=18,
+                            metric_fontsize=12,
+                            legend_fontsize=18,
+                            x_ticks=(-10, -9, -8, -7),
+                            y_ticks=(-10, -9, -8, -7),
+                            br_box_position=(0.95, -0.1)
+                            )
 
 
 # %%

@@ -26,9 +26,11 @@ from misc_functions import (
 # avg._average_experiment(exp_suffix="10_r", n_iters=150)
 # avg._average_experiment(exp_suffix="10_mu", n_iters=150)
 
-# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/')
+avg = AverageAll(
+    results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
+)
 
-# avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
+avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
 # avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
 # avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
 # avg._average_experiment(exp_suffix="50_mp", n_iters=30)
@@ -50,12 +52,15 @@ from misc_functions import (
 # avg._average_experiment(exp_suffix="50_rmp_rmu_8:2", n_iters=30)
 
 # # %%
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
 
-avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
 # avg._average_experiment(exp_suffix='50_rmp_025', n_iters=30)
 # avg._average_experiment(exp_suffix='50_rmp_01', n_iters=30)
 # avg._average_experiment(exp_suffix='50_rmp_005', n_iters=30)
 # avg._average_experiment(exp_suffix='50_rmp_0025', n_iters=30)
 
 # # %%
+ls = [1, 2, 3, 45, 6, 7, 8, 9, 5, 3, 4, 6, 8]
+
+def functi(arg1 = 1, arg2=2)

@@ -1092,13 +1092,21 @@ class Analysis:
         dot_size: int = 3,
         save_plot: bool=True,
         plot_filename: str = "preds_dev_plot.png",
-        tl_box_position: tuple = (0.35, 0.95),
-        br_box_position: tuple = (0.95, 0.05),
+        tl_box_position: tuple = (0.45, 0.92),
+        br_box_position: tuple =(0.95, -0.1),
         underlay_it0: bool=False,
         regression_line_colour: str = 'gold',
         x_equals_y_line_colour: str = 'red',
         it0_dot_colour: str='purple',
-        it_dot_colour: str='teal'
+        it_dot_colour: str='teal',
+        title_fontsize: int=18,
+        tick_fontsize: int=18,
+        label_fontsize: int=18,
+        legend_fontsize: int=18,
+        metric_fontsize=15,
+        x_ticks: int=None,
+        y_ticks: int=None,
+        figure_title: str=None
     ):
         """
         Description
@@ -1131,23 +1139,16 @@ class Analysis:
         # Defining the results directory
         working_dir = str(self.results_dir) + "/" + experiment
 
-        # Counting the number of iterations within the working directory
-        n_its = count_number_iters(working_dir)
-
         n_y_plots = int(np.sqrt(n_plots))
         n_x_plots = n_y_plots
 
         # Reading in the true values
         true_scores = pd.read_csv(true_path, index_col="ID")[self.docking_column]
-
-        # Obtaining the iteration numbers which will be considered.
-        # Evenly picks n_plots number of iterations out of the total data
-        #its_to_plot = np.round(np.linspace(1, n_its, n_plots)).astype(int).tolist()
     
         its_to_plot = iter_ls
 
         # Initialising the subplots
-        fig, ax = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=(12, 12))
+        fig, ax = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=(14,14))
 
         it0_preds_df = pd.read_csv(working_dir + f"/it0/{prediction_fpath}", index_col='ID')
         it0_df = pd.DataFrame()
@@ -1227,19 +1228,31 @@ class Analysis:
 
             avg_pred = np.mean(pred)
 
-            ax[row, col].set_title(f"Iteration {iter} ({iter * step} mols)", fontsize=12)
+            ax[row, col].set_title(f"{iter * step} mols", fontsize=title_fontsize)
 
+
+            # ORIGINAL TEXT BOXES
             # Add text box with metrics
+            # br_textstr = (
+            #     f"Avg Pred: {avg_pred:.2f}\n"
+            #     f"$R^2_{{cod}}$: {cod:.2f}\n"
+            #     f"$R^2_{{pear}}$: {pearson_r2:.2f}\n"
+            #     # f"Angle: {angle_deg}"
+            #     f"Grad: {round(slope, 2)}"
+            # )
+            # tl_textstr = (
+            #     f"RMSE: {rmse:.2f}\n" f"$Bias$: {bias:.2f}\n" f"$sdep$: {sdep:.2f}"
+            # )
+
             br_textstr = (
-                f"Avg Pred: {avg_pred:.2f}\n"
                 f"$R^2_{{cod}}$: {cod:.2f}\n"
                 f"$R^2_{{pear}}$: {pearson_r2:.2f}\n"
-                # f"Angle: {angle_deg}"
-                f"Grad: {round(slope, 2)}"
             )
 
             tl_textstr = (
-                f"RMSE: {rmse:.2f}\n" f"$Bias$: {bias:.2f}\n" f"$sdep$: {sdep:.2f}"
+                f"RMSE: {rmse:.2f}\n"
+                f"Grad: {round(slope, 2)}"
+
             )
 
             ax[row, col].text(
@@ -1247,7 +1260,7 @@ class Analysis:
                 br_box_position[1],
                 br_textstr,
                 transform=ax[row, col].transAxes,
-                fontsize=7,
+                fontsize=metric_fontsize,
                 verticalalignment="bottom",
                 horizontalalignment="right",
             )
@@ -1257,22 +1270,35 @@ class Analysis:
                 tl_box_position[1],
                 tl_textstr,
                 transform=ax[row, col].transAxes,
-                fontsize=7,
+                fontsize=metric_fontsize,
                 verticalalignment="top",
                 horizontalalignment="right",
             )
 
-            # Set axis labels only for bottom and left most plots
-            if row == np.sqrt(n_plots) - 1:  # Bottom row
-                ax[row, col].set_xlabel(self.docking_column)
-            else:
-                ax[row, col].set_xlabel("")
+            ax[row, col].set_aspect('equal', adjustable='box')
 
-            if col == 0:  # Left-most column
-                ax[row, col].set_ylabel(f"pred_{self.docking_column}")
+            # Remove axis labels completely from subplots (but keep ticks)
+            ax[row, col].set_xlabel("")
+            ax[row, col].set_ylabel("")
+
+            # Set tick label font size for edge plots only
+            if row != n_x_plots - 1:  # Not bottom row → hide x tick labels
+                ax[row, col].tick_params(labelbottom=False)
             else:
-                ax[row, col].set_ylabel("")
-        
+                ax[row, col].tick_params(axis='x', labelsize=tick_fontsize)
+
+            if col != 0:  # Not left column → hide y tick labels
+                ax[row, col].tick_params(labelleft=False)
+            else:
+                ax[row, col].tick_params(axis='y', labelsize=tick_fontsize)
+
+            # Apply custom tick positions (for all subplots)
+            if x_ticks is not None:
+                ax[row, col].set_xticks(x_ticks)
+            if y_ticks is not None:
+                ax[row, col].set_yticks(y_ticks)
+
+
         legend_elements = [
             Line2D([0], [0], color='red', linestyle=':', label='x=y'),
             Line2D([0], [0], color='gold', linestyle=':', label='Line of\nBest Fit'),
@@ -1282,12 +1308,18 @@ class Analysis:
 
         legend_elements = [elem for elem in legend_elements if elem is not None]
 
-        fig.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1, 0.94), ncol=1)
+        plt.tight_layout(rect=[0.08, 0.08, 0.92, 0.92], pad=0.25)
+        fig.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(0.95, 0.5), ncol=1, fontsize=legend_fontsize)
 
-        plt.tight_layout(rect=[0, 0, 0.9, 0.96], pad=1)
-        plt.suptitle(f"Prediction Development for {experiment}", fontsize=16, fontweight='bold')
+        # if figure_title is None:
+        #     plt.suptitle(f"Prediction Development for {experiment}", fontsize=title_fontsize, fontweight='bold')
+        # else:
+        #     plt.suptitle(f"{figure_title}", fontsize=title_fontsize, fontweight='bold')
 
-        fig.set_size_inches(12, 10)
+
+        fig.text(0.5, 0.04, self.docking_column, ha='center', fontsize=title_fontsize)
+        fig.text(0.04, 0.5, f"Predicted {self.docking_column}", va='center', rotation='vertical', fontsize=title_fontsize)
+
 
         if save_plot:
             plt.savefig(working_dir + "/" + plot_filename, dpi=600)

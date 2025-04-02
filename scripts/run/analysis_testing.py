@@ -106,28 +106,42 @@ an = Analysis(results_dir=results_dir,
 #             save_extra_data=True,
 #             plot_loadings=True,
 #             kdep_sample_size=0.5,
-#             kdep_sample_ls=['PyMolGen'])
+#             kdep_sample_ls=['PyMolGen'],
+#             tick_fontsize=18,
+#             label_fontsize=18,
+#             axis_fontsize=16,
+#             legend_fontsize=20,
+#            kde_tick_dicts = [
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
+#     {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
+# ])
 
 # %%
-experiment_ls = ["average_50_rmp"]
-mol_sel_ls = ['rmp']
-for exp, sel in zip(experiment_ls, mol_sel_ls):
-    an.Prediction_Development(exp,
-                            prediction_fpath = "/held_out_test/held_out_test_preds.csv",
-                            true_path= "/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_targ_trimmed.csv",
-                            iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                            plot_filename=f"50_{sel}_it_preds_top",
-                            save_plot=False,
-                            underlay_it0=True,
-                            title_fontsize=20,
-                            tick_fontsize=16,
-                            label_fontsize=18,
-                            metric_fontsize=12,
-                            legend_fontsize=18,
-                            x_ticks=(-10, -9, -8, -7),
-                            y_ticks=(-10, -9, -8, -7),
-                            br_box_position=(0.95, -0.1)
-                            )
+# experiment_ls = ["average_50_rmp"]
+# mol_sel_ls = ['rmp']
+# for exp, sel in zip(experiment_ls, mol_sel_ls):
+#     an.Prediction_Development(exp,
+#                             prediction_fpath = "/held_out_test/held_out_test_preds.csv",
+#                             true_path= "/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_targ_trimmed.csv",
+#                             iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                             plot_filename=f"50_{sel}_it_preds_top_aff",
+#                             save_plot=True,
+#                             underlay_it0=True,
+#                             title_fontsize=24,
+#                             tick_fontsize=20,
+#                             label_fontsize=22,
+#                             metric_fontsize=16,
+#                             legend_fontsize=22,
+#                             x_ticks=(-10, -9, -8, -7),
+#                             y_ticks=(-10, -9, -8, -7),
+#                             br_box_position=(0.95, -0.1),
+#                             tl_box_position=(0.6, 0.95),
+#                             figsize=(15,15),
+#                             regression_line_colour='coral'
+#                             )
 
 
 # %%
@@ -162,21 +176,17 @@ for exp, sel in zip(experiment_ls, mol_sel_ls):
 # %%
 # an.MP_Top_Preds_Analysis(
 #     experiments=[
-#         "20241002_10_mp",
-#         "20241002_10_mpo",
-#         "20241002_10_mu",
-#         "20241002_10_r",
-#         "20241002_10_rmp",
-#         "20241002_10_rmpo",
-#         "20241011_50_mp",
-#         "20241011_50_mpo",
-#         "20241011_50_mu",
-#         "20241011_50_r",
-#         "20241011_50_rmp",
-#         "20241011_50_rmpo",
+#         "average_50_mp",
+#         "average_50_mpo",
+#         "average_50_mu",
+#         "average_50_r",
+#         "average_50_rmp",
+#         "average_50_rmpo",
+#         "average_50_rmu"
 #     ],
 #     ascending=False,
 #     filename="Avg_Bottom_Preds_Plot",
+#     use_multiprocessing=False
 # )
 
 # %%
@@ -339,35 +349,35 @@ for exp, sel in zip(experiment_ls, mol_sel_ls):
 # %%
 
 # data = pd.DataFrame()
-an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
-              docking_column='Experimental_pIC50'
-              )
-mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
-                     iter=0,
-                     search_in_top=0,
-                     plot_fname='chembl_test',
-                     show_value='Experimental_pIC50',
-                     save_data=False,
-                     use_external_data=True,
-                     external_data_path='/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/20_random_raw_ChEMBL_data.csv',
-                     num_reoccurring_scaff=0,
-                     num_total_scaff_shown_graph=20)
+# an = Analysis(results_dir=results_dir, 
+#               held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
+#               docking_column='Experimental_pIC50'
+#               )
+# mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
+#                      iter=0,
+#                      search_in_top=0,
+#                      plot_fname='chembl_test',
+#                      show_value='Experimental_pIC50',
+#                      save_data=False,
+#                      use_external_data=True,
+#                      external_data_path='/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/20_random_raw_ChEMBL_data.csv',
+#                      num_reoccurring_scaff=0,
+#                      num_total_scaff_shown_graph=20)
 
-an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
-              docking_column='Affinity(kcal/mol)'
-              )
-mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
-                     iter=0,
-                     search_in_top=0,
-                     plot_fname='chembl_test',
-                     show_value='Affinity(kcal/mol)',
-                     save_data=False,
-                     use_external_data=True,
-                     external_data_path='/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/dock/20_random_docked_ChEMBL_data.csv',
-                     num_reoccurring_scaff=0,
-                     num_total_scaff_shown_graph=20)
+# an = Analysis(results_dir=results_dir, 
+#               held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
+#               docking_column='Affinity(kcal/mol)'
+#               )
+# mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
+#                      iter=0,
+#                      search_in_top=0,
+#                      plot_fname='chembl_test',
+#                      show_value='Affinity(kcal/mol)',
+#                      save_data=False,
+#                      use_external_data=True,
+#                      external_data_path='/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/dock/20_random_docked_ChEMBL_data.csv',
+#                      num_reoccurring_scaff=0,
+#                      num_total_scaff_shown_graph=20)
 # %%
 # mp = an.Scaffold_Analysis(experiment='20241002_10_mp',
 #                      iter=150,
@@ -570,13 +580,27 @@ mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
 # )
 # %%
 
-# an.Dock_Top_Pred(experiment='20241002_10_mp',
-#                  iter=150)
+# an.Dock_Top_Pred(experiment='average_50_mp',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_mpo',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_rmp',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_rmpo',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_mu',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_rmu',
+#                  iter=30)
+# an.Dock_Top_Pred(experiment='average_50_r',
+#                  iter=30)
+
 # %%
-# an.Plot_Top_Pred_Docked(experiment_ls=['20241002_10_mp', '20241002_10_mpo',
-#                                        '20241002_10_rmp', '20241002_10_rmpo',
-#                                        '20241002_10_mu', '20241002_10_r'],
-#                         iter=150,
+# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mpo',
+#                                        'average_50_mu', 'average_50_rmp',
+#                                        'average_50_rmpo', 'average_50_rmu',
+#                                             "average_50_r"],
+#                         iter=30,
 #                         save_plot=True,
 #                         save_structures=True,
 #                         search_in_top=50,
@@ -586,5 +610,5 @@ mpo = an.Scaffold_Analysis(experiment='20241002_10_mpo',
 # df = pd.read_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/20241002_10__it150_structs.csv", index_col='ID')
 # df.sort_values(by='Affinity(kcal/mol)', ascending=True)
 # %%
-an.UniqueFragCount(experiment_ls=['20241002_10_mp'], max_iter=3)
+# an.UniqueFragCount(experiment_ls=['20241002_10_mp'], max_iter=3)
 # %%

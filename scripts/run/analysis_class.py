@@ -573,7 +573,13 @@ class Analysis:
         plot_loadings: bool=False,
         plot_title: str='PCA Plot',
         remove_outliers: bool=True,
-        kdep_sample_ls: list=['PyMolGen']
+        kdep_sample_ls: list=['PyMolGen'],
+        axis_fontsize: int = 12,
+        tick_fontsize: int = 10,
+        label_fontsize: int=12,
+        legend_fontsize: int = 12,
+        kde_tick_dicts: list=None
+
     ):
         """
         Description
@@ -766,13 +772,31 @@ class Analysis:
                     axs[i, j].set_ylabel(f"PC{i+1}")
 
                     # Remove x and y plots from every PCA plot apart from the left and bottom most plots
-                    if i != n_components - 1:
-                        axs[i, j].set_xlabel("")
-                        axs[i, j].set_xticks([])
+                    # Axes label control
+                    axs[i, j].tick_params(axis='both', labelsize=tick_fontsize)
 
-                    if j != 0:
-                        axs[i, j].set_ylabel("")
-                        axs[i, j].set_yticks([])
+                    # For scatter and area plots (not diagonal KDE)
+                    if i != j:
+                        # Remove x-axis labels unless bottom row
+                        if i != n_components - 1:
+                            axs[i, j].set_xlabel("")
+                            axs[i, j].set_xticklabels([])
+
+                        else:
+                            axs[i, j].set_xlabel(f"PC{j+1} ({explained_variance[j]:.2f}% Var)", fontsize=axis_fontsize)
+
+                        # Remove y-axis labels unless leftmost column
+                        if j != 0:
+                            axs[i, j].set_ylabel("")
+                            axs[i, j].set_yticklabels([])
+                        else:
+                            axs[i, j].set_ylabel(f"PC{i+1} ({explained_variance[i]:.2f}% Var)", fontsize=axis_fontsize)
+
+                    # For diagonal KDE plots — always show both axes
+                    else:
+                        axs[i, j].set_xlabel(f"PC{i+1}", fontsize=axis_fontsize)
+                        axs[i, j].set_ylabel("Density Estimate", fontsize=axis_fontsize)
+                        axs[i, i].tick_params(axis='both', labelsize=tick_fontsize)
 
                 # If on the diagonal, make the Kernel Density Estimate Plots for each Principal Component
                 else:
@@ -828,17 +852,25 @@ class Analysis:
                         palette="dark",
                     )
 
+                    if kde_tick_dicts and i < len(kde_tick_dicts):
+                        tick_info = kde_tick_dicts[i]
+                        if "xticks" in tick_info:
+                            axs[i, i].set_xticks(tick_info["xticks"])
+                        if "yticks" in tick_info:
+                            axs[i, i].set_yticks(tick_info["yticks"])
+                            
+
                     axs[i, i].set_xlabel("")
-                    axs[i, i].set_ylabel("Density Estimate")
+                    axs[i, i].set_ylabel("Density Estimate", fontsize=label_fontsize)
 
                 # Adjusting labels and titles, including the variance for each principal component
                 if i == n_components - 1:
                     axs[i, j].set_xlabel(
-                        f"PC{j+1} ({explained_variance[j]:.2f}% Variance)"
+                        f"PC{j+1} ({explained_variance[j]:.2f}% Variance)", fontsize=axis_fontsize
                     )
                 if j == 0:
                     axs[i, j].set_ylabel(
-                        f"PC{i+1} ({explained_variance[i]:.2f}% Variance)"
+                        f"PC{i+1} ({explained_variance[i]:.2f}% Variance)", fontsize=axis_fontsize
                     )
 
         # Define handles and labels for the legend
@@ -875,15 +907,15 @@ class Analysis:
             custom_handles, 
             custom_labels,
             loc="center left", 
-            bbox_to_anchor=(0.75, 0.95), 
-            ncol=1,
+            bbox_to_anchor=(0.40, 0.95), 
+            ncol=3,
             borderaxespad=0.0
         )
 
-        fig.suptitle(plot_title, fontsize=16, y=0.98)
+        #fig.suptitle(plot_title, fontsize=16, y=0.98)
 
         # Adjust layout to make room for the legend
-        plt.tight_layout(rect=[0, 0, 0.9, 0.95])
+        plt.tight_layout(rect=[0, 0, 0.9, 0.92])
 
         if save_plot:
             plt.savefig(
@@ -909,7 +941,7 @@ class Analysis:
 
             # Create a legend mapping numbers to feature names
             legend_labels = [f"{i+1}: {feature}" for i, feature in enumerate(loadings_df.index)]
-            fig.legend(legend_labels, loc="center right", title="Feature Legend", fontsize=10)
+            fig.legend(legend_labels, loc="center right", title="Feature Legend", fontsize=legend_fontsize)
 
             # Add a shared xlabel
             fig.supxlabel("Features (Mapped to Index Numbers)")
@@ -1072,7 +1104,7 @@ class Analysis:
             plt.xlabel("Pose Number")
             plt.ylabel("Best Score")
             plt.title("Best Scores Over Time")
-            plt.legend(loc="upper left", bbox_to_anchor=(1, 1), fontsize="small")
+            plt.legend(loc="upper left", bbox_to_anchor=(1, 1), fontsize=legend_fontsize)
 
             plt.tight_layout()
             plt.savefig(
@@ -1095,7 +1127,7 @@ class Analysis:
         tl_box_position: tuple = (0.45, 0.92),
         br_box_position: tuple =(0.95, -0.1),
         underlay_it0: bool=False,
-        regression_line_colour: str = 'gold',
+        regression_line_colour: str = 'green',
         x_equals_y_line_colour: str = 'red',
         it0_dot_colour: str='purple',
         it_dot_colour: str='teal',
@@ -1106,7 +1138,8 @@ class Analysis:
         metric_fontsize=15,
         x_ticks: int=None,
         y_ticks: int=None,
-        figure_title: str=None
+        figure_title: str=None,
+        figsize:tuple=(14,14)
     ):
         """
         Description
@@ -1148,7 +1181,7 @@ class Analysis:
         its_to_plot = iter_ls
 
         # Initialising the subplots
-        fig, ax = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=(14,14))
+        fig, ax = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=figsize)
 
         it0_preds_df = pd.read_csv(working_dir + f"/it0/{prediction_fpath}", index_col='ID')
         it0_df = pd.DataFrame()
@@ -1228,7 +1261,7 @@ class Analysis:
 
             avg_pred = np.mean(pred)
 
-            ax[row, col].set_title(f"{iter * step} mols", fontsize=title_fontsize)
+            ax[row, col].set_title(f"{iter * step} mols", fontsize=label_fontsize)
 
 
             # ORIGINAL TEXT BOXES
@@ -1246,7 +1279,7 @@ class Analysis:
 
             br_textstr = (
                 f"$R^2_{{cod}}$: {cod:.2f}\n"
-                f"$R^2_{{pear}}$: {pearson_r2:.2f}\n"
+                f"$R_{{pear}}$: {pearson_r2:.2f}\n"
             )
 
             tl_textstr = (
@@ -1300,15 +1333,15 @@ class Analysis:
 
 
         legend_elements = [
-            Line2D([0], [0], color='red', linestyle=':', label='x=y'),
-            Line2D([0], [0], color='gold', linestyle=':', label='Line of\nBest Fit'),
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='teal', markersize=10, label='Working it\n preds'),
+            Line2D([0], [0], color=x_equals_y_line_colour, linestyle='-', label='x=y'),
+            Line2D([0], [0], color=regression_line_colour, linestyle='-', label='Line of\nBest Fit'),
+            Line2D([0], [0], marker='o', color='w', markerfacecolor=it_dot_colour, markersize=10, label='Working it\n preds'),
             Line2D([0], [0], marker='o', color='w', markerfacecolor=it0_dot_colour, markersize=10, label='it0 preds') if underlay_it0 else None,
         ]
 
         legend_elements = [elem for elem in legend_elements if elem is not None]
 
-        plt.tight_layout(rect=[0.08, 0.08, 0.92, 0.92], pad=0.25)
+        plt.tight_layout(rect=[0.08, 0.08, 0.92, 0.92])#,pad=0.1)
         fig.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(0.95, 0.5), ncol=1, fontsize=legend_fontsize)
 
         # if figure_title is None:
@@ -1322,7 +1355,7 @@ class Analysis:
 
 
         if save_plot:
-            plt.savefig(working_dir + "/" + plot_filename, dpi=600)
+            plt.savefig(working_dir + "/" + plot_filename, dpi=600, bbox_inches='tight')
 
         plt.show()
 
@@ -1763,8 +1796,8 @@ class Analysis:
         avg_top_preds = []
         n_mols_chosen = []
 
-        results_10_dir = f'{PROJ_DIR}/results/rdkit_desc/finished_results/10_mol_sel/'
-        results_50_dir = f'{PROJ_DIR}/results/rdkit_desc/finished_results/50_mol_sel/'
+        results_10_dir = f'{PROJ_DIR}/results/rdkit_desc/complete_archive/10_sel/'
+        results_50_dir = f'{PROJ_DIR}/results/rdkit_desc/complete_archive/50_sel/'
 
         results_dir = results_10_dir if "_10_" in exp else results_50_dir
 
@@ -1806,9 +1839,8 @@ class Analysis:
         save_path: str = f"{str(PROJ_DIR)}/results/rdkit_desc/plots/",
         filename: str = "Avg_Top_Preds_Plot",
         ascending: bool = False,
+        use_multiprocessing: bool=True
     ):
-
-        colours = sns.color_palette(cc.glasbey, n_colors=20)
 
         process_func = partial(
             self._process_top_preds_exp,
@@ -1818,14 +1850,23 @@ class Analysis:
             ascending=ascending,
         )
 
-        with Pool() as pool:
-            results = list(
-                tqdm(
-                    pool.imap(process_func, experiments),
-                    total=len(experiments),
-                    desc="Processing Experiments",
+        if use_multiprocessing:
+            with Pool() as pool:
+                results = list(
+                    tqdm(
+                        pool.imap(process_func, experiments),
+                        total=len(experiments),
+                        desc="Processing Experiments (with multiprocessing)",
+                    )
                 )
-            )
+        
+        else:
+            results= [
+                process_func(exp) for exp in tqdm(
+                    experiments, desc="Processing Experiments (no multiprocessing)",
+
+                )
+            ]
 
         fig, ax = plt.subplots()
 

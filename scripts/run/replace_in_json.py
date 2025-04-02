@@ -50,7 +50,7 @@ def replace_in_json_files(directory, old_str, new_str):
 
 
 
-search_dir =  "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/"
+search_dir =  "/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/diff_pool/"
 replace_in_json_files(search_dir, "Pearson_r", "pearson_r")
 
 

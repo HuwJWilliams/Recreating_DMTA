@@ -85,44 +85,85 @@ def PredictNewTestSet(
                     
             preds_dir.mkdir(parents=True, exist_ok=True)
 
-            bias, sdep, mse, rmse, r2, r_pearson, p_pearson, true, pred = rf_class._calculate_performance(
-                feature_test = feat_df,
-                target_test = targ_df,
-                best_rf = model
-                )
-            
+            # Run prediction using the wrapper (includes MPO + Uncertainty)
+            pred_df = rf_class.Predict(
+                feats=feat_df,
+                save_preds=False,
+                final_rf=model,
+                pred_col_name=f"pred_{docking_column}",
+                calc_mpo=True,
+                full_data_fpath=full_data
+            )
 
+            # Save prediction DataFrame (includes MPO and Uncertainty)
+            pred_df.to_csv(f"{preds_dir}/{test_set_name}_preds.csv", index_label="ID")
+
+            # Calculate performance metrics using true vs predicted
+            true_vals = targ_df.astype(float)
+            pred_vals = pred_df[f"pred_{docking_column}"].astype(float)
+            errors = true_vals - pred_vals
+
+            bias = np.mean(errors)
+            sdep = (np.mean((true_vals - pred_vals - (np.mean(true_vals - pred_vals))) ** 2)) ** 0.5
+            mse = mean_squared_error(true_vals, pred_vals)
+            rmse = np.sqrt(mse)
+            r2 = r2_score(true_vals, pred_vals)
+            r_pearson, p_pearson = pearsonr(true_vals, pred_vals)
+
+            # Save performance stats
             performance_dict = {
-                "Bias": round(
-                    float(bias), 4
-                ),
-                "SDEP": round(
-                    float(sdep), 4
-                ),
-                "MSE": round(
-                    float(mse), 4
-                ),
-                "RMSE": round(
-                    float(rmse), 4
-                ),
-                "r2": round(
-                    float(r2), 4
-                ),
-                "pearson_r": round(
-                    float(r_pearson), 4
-                ),
-                "pearson_p": round(
-                    float(p_pearson), 4
-                ),
+                "Bias": round(float(bias), 4),
+                "SDEP": round(float(sdep), 4),
+                "MSE": round(float(mse), 4),
+                "RMSE": round(float(rmse), 4),
+                "r2": round(float(r2), 4),
+                "pearson_r": round(float(r_pearson), 4),
+                "pearson_p": round(float(p_pearson), 4),
             }
 
             with open(f"{preds_dir}/{test_set_name}_stats.json", "w") as file:
                 json.dump(performance_dict, file, indent=4)
 
-            pred_df = pd.DataFrame()
-            pred_df.index = feat_df.index
-            pred_df[f"pred_{docking_column}"] = pred
-            pred_df.to_csv(f"{preds_dir}/{test_set_name}_preds.csv", index_label='ID')
+
+            # Old Way of doing it which doesnt include MPO or uncertainty but definitely works
+            # bias, sdep, mse, rmse, r2, r_pearson, p_pearson, true, pred = rf_class._calculate_performance(
+            #     feature_test = feat_df,
+            #     target_test = targ_df,
+            #     best_rf = model
+            #     )
+            
+
+            # performance_dict = {
+            #     "Bias": round(
+            #         float(bias), 4
+            #     ),
+            #     "SDEP": round(
+            #         float(sdep), 4
+            #     ),
+            #     "MSE": round(
+            #         float(mse), 4
+            #     ),
+            #     "RMSE": round(
+            #         float(rmse), 4
+            #     ),
+            #     "r2": round(
+            #         float(r2), 4
+            #     ),
+            #     "pearson_r": round(
+            #         float(r_pearson), 4
+            #     ),
+            #     "pearson_p": round(
+            #         float(p_pearson), 4
+            #     ),
+            # }
+
+            # with open(f"{preds_dir}/{test_set_name}_stats.json", "w") as file:
+            #     json.dump(performance_dict, file, indent=4)
+
+            # pred_df = pd.DataFrame()
+            # pred_df.index = feat_df.index
+            # pred_df[f"pred_{docking_column}"] = pred
+            # pred_df.to_csv(f"{preds_dir}/{test_set_name}_preds.csv", index_label='ID')
     
     return
 
@@ -829,10 +870,19 @@ class RF_model:
         df = pd.read_csv(
             full_data_fpath, index_col="ID", usecols=["ID", "PFI", "oe_logp"]
         )
-        df[preds_col_name] = preds_df[preds_col_name]
+
+        # Merge predictions with full data to align properly
+        df = df.join(preds_df[[preds_col_name]], how="inner")
+        
+        # Round raw descriptors before MPO calculation for consistency
+        for col in ["oe_logp", "PFI"]:
+            if col in df.columns:
+                df[col] = df[col].round(2)
+
+        # Now compute MPO on the aligned data
         df["MPO"] = [
             -score * 1 / (1 + math.exp(PFI - 8))
-            for score, PFI in zip(preds_df[preds_col_name], df["PFI"])
+            for score, PFI in zip(df[preds_col_name], df["PFI"])
         ]
 
         return df
@@ -867,10 +917,17 @@ class RF_model:
         pd.DataFrame object containing all of the predictions
         """
 
-        if final_rf is not None:
+        if isinstance(final_rf, (str, Path)):
             rf_model = joblib.load(final_rf)
+        elif final_rf is not None:
+            rf_model = final_rf
         else:
             rf_model = self.final_rf
+        # Old version compatible with old PredictNewTest (works)
+        # if final_rf is not None:
+        #     rf_model = joblib.load(final_rf)
+        # else:
+        #     rf_model = self.final_rf
 
         preds_df = pd.DataFrame()
         preds_df[pred_col_name] = rf_model.predict(feats)
@@ -886,6 +943,12 @@ class RF_model:
             )
 
         preds_df["Uncertainty"] = np.std(all_tree_preds, axis=0)
+    
+     # Round numerical prediction outputs to 2 decimal places
+        round_cols = [pred_col_name, "MPO", "Uncertainty"]
+        for col in round_cols:
+            if col in preds_df.columns:
+                preds_df[col] = preds_df[col].round(2)
 
         if save_preds:
             preds_df.to_csv(

@@ -25,68 +25,70 @@ an = Analysis(results_dir=results_dir,
 # %%
 # an.Plot_Perf(
 #     experiments=[
-#         # "average_50_rmp",
-#         # "average_50_mp",
-#         # "average_50_rmpo",
-#         # "average_50_mpo",
-#         # "average_50_r",
-#         # "average_50_mu",
+#         "average_50_rmp",
+        # "average_50_mp",
+        # "average_50_rmpo",
+        # "average_50_mpo",
+        # "average_50_r",
+        # "average_50_mu",
+        # "average_50_rmu",
 
-#         # "average_10_rmp",
-#         # "average_10_mp",
-#         # "average_10_rmpo",
-#         # "average_10_mpo",
-#         # "average_10_r",
-#         # "average_10_mu",
+        # "average_10_rmp",
+        # "average_10_mp",
+        # "average_10_rmpo",
+        # "average_10_mpo",
+        # "average_10_r",
+        # "average_10_mu",
+        # "average_50_rmu",
         
-#         # "average_50_mp_mu_2:8",
-#         # "average_50_mp_mu_5:5",
-#         # "average_50_mp_mu_8:2",
+        # "average_50_mp_mu_2:8",
+        # "average_50_mp_mu_5:5",
+        # "average_50_mp_mu_8:2",
 
-#         # "average_50_rmp_rmu_2:8",
-#         # "average_50_rmp_rmu_5:5",
-#         # "average_50_rmp_rmu_8:2",
+        # "average_50_rmp_rmu_2:8",
+        # "average_50_rmp_rmu_5:5",
+        # "average_50_rmp_rmu_8:2",
 
-#         # "average_50_rmp_0025",
-#         # "average_50_rmp_005",
-#         # "average_50_rmp_025",
-#         # "average_50_rmp_05",
+        # "average_50_rmp_0025",
+        # "average_50_rmp_005",
+        # "average_50_rmp_025",
+        # "average_50_rmp_05",
 
-#         # "20241024_10_scramb_mp" ,  
-#         # "20241024_10_scramb_r"  ,   
-#         # "20241024_10_scramb_mpo"  ,
-#         # "20241024_10_scramb_rmp"   ,
-#         # "20241024_10_scramb_mu"   ,
-#         # "20241024_10_scramb_rmpo" , 
+        # "20241024_10_scramb_mp" ,  
+        # "20241024_10_scramb_r"  ,   
+        # "20241024_10_scramb_mpo"  ,
+        # "20241024_10_scramb_rmp"   ,
+        # "20241024_10_scramb_mu"   ,
+        # "20241024_10_scramb_rmpo" , 
 
-#         "20241105_50_scramb_mu"   ,
-#         "20241105_50_scramb_rmpo",
-#         "20241105_50_scramb_mp"  , 
-#         "20241105_50_scramb_r",
-#         "20241105_50_scramb_mpo"  ,
-#         "20241105_50_scramb_rmp",
+        # "20241105_50_scramb_mu"   ,
+        # "20241105_50_scramb_rmpo",
+        # "20241105_50_scramb_mp"  , 
+        # "20241105_50_scramb_r",
+        # "20241105_50_scramb_mpo"  ,
+        # "20241105_50_scramb_rmp",
 
-#     ],
-#     plot_ho =True,
-#     plot_int= False,
-#     plot_chembl_int= False,
-#     plot_fname='scramb_ho_plot_pear_r',
-#     set_ylims=True,
-#     r_type = 'pearson_r',
-#     rmse_ylim=(0.25, 1),
-#     sdep_ylim=(0.0, 0.8),
-#     # r2_ylim=(0.2, 1),
-#     # bias_ylim= (-1.2, 0.1),
-#     r2_ylim=(-0.2, 0.8), #scrambled
-#     bias_ylim= (-0.5, 0.5), #scrambled
-#     yticks=4,
-#     custom_xticks=[0, 500, 1000, 1500],
-#     tick_fontsize=20,
-#     label_fontsize=24,
-#     title_fontsize=20,
-#     legend_fontsize=20,
-#     save_plot=True,
-#     )
+    # ],
+    # plot_ho =True,
+    # plot_int= False,
+    # plot_chembl_int= False,
+    # plot_fname='rmp_rmu_ho_plot_pear_r',
+    # set_ylims=True,
+    # r_type = 'pearson_r',
+    # rmse_ylim=(0.25, 1.25),
+    # sdep_ylim=(0.2, 0.6),
+    # r2_ylim=(0, 1),
+    # bias_ylim= (-1.2, 0.1),
+    # # r2_ylim=(-0.2, 0.8), #scrambled
+    # # bias_ylim= (-0.5, 0.5), #scrambled
+    # yticks=4,
+    # custom_xticks=[0, 500, 1000, 1500],
+    # tick_fontsize=20,
+    # label_fontsize=24,
+    # title_fontsize=20,
+    # legend_fontsize=20,
+    # save_plot=True,
+    # )
 
  # %%
 
@@ -580,7 +582,7 @@ an = Analysis(results_dir=results_dir,
 # )
 # %%
 
-# an.Dock_Top_Pred(experiment='average_50_mp',
+# an.Dock_Top_Pred(experiment= 'average_mp_mu_2:8',
 #                  iter=30)
 # an.Dock_Top_Pred(experiment='average_50_mpo',
 #                  iter=30)
@@ -595,7 +597,7 @@ an = Analysis(results_dir=results_dir,
 # an.Dock_Top_Pred(experiment='average_50_r',
 #                  iter=30)
 
-# %%
+# #%%
 # an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mpo',
 #                                        'average_50_mu', 'average_50_rmp',
 #                                        'average_50_rmpo', 'average_50_rmu',
@@ -604,11 +606,45 @@ an = Analysis(results_dir=results_dir,
 #                         save_plot=True,
 #                         save_structures=True,
 #                         search_in_top=50,
-#                         plot_name="Top_50_pred_docked_boxplot")
+#                         plot_name="sing_50_pred_docked_boxplot")
+# # %%
+# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mu', "average_50_r",
+#                                        'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2'],
+#                         iter=30,
+#                         save_plot=True,
+#                         save_structures=True,
+#                         search_in_top=50,
+#                         plot_name="mp_mu_50_pred_docked_boxplot")
+# # %%
+# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp_0025', 'average_50_rmp_005',
+#                                        'average_50_rmp_01','average_50_rmp_025',
+#                                        'average_50_rmp_05'],
+#                         iter=30,
+#                         save_plot=True,
+#                         save_structures=True,
+#                         search_in_top=50,
 
-# %%
+#                         plot_name="diff_sel_50_pred_docked_boxplot")
+# # %%
+# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp', 'average_50_rmu', "average_50_r",
+#             'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
+#                         iter=30,
+#                         save_plot=True,
+#                         save_structures=True,
+#                         search_in_top=50,
+#                         plot_name="rmp_rmu_50_pred_docked_boxplot")
+
+#%%
 # df = pd.read_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/20241002_10__it150_structs.csv", index_col='ID')
 # df.sort_values(by='Affinity(kcal/mol)', ascending=True)
 # %%
-# an.UniqueFragCount(experiment_ls=['20241002_10_mp'], max_iter=3)
+# an.UniqueFragCountGrouped(suffix_ls=['_mp',
+#                                      "_mpo",
+#                                      "_mu",
+#                                      "_rmp",
+#                                      "_rmpo",
+#                                      "_rmu",
+#                                      "_r"], max_iter=30)
 # %%
+an.UncertaintyChecker(experiment_ls=['average_50_mp', 'average_50_mpo', 
+                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]])

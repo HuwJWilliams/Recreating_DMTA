@@ -410,15 +410,16 @@ def get_top(df,
             ascending: bool):
     "Function to get the top n number of molecules from a single or list of dataframes"
 
+    print(df)
+
     if isinstance(df, pd.DataFrame):
         return df.sort_values(by=column, ascending=ascending).head(n)
 
     elif isinstance(df, list):        
-        for x in df:
-            combined_df = pd.concat(
-                [x.sort_values(by=column, ascending=ascending).head(n) for x in df],
-                ignore_index=True
-            )
+        combined_df = pd.concat(
+            [x.sort_values(by=column, ascending=ascending).head(n) for x in df],
+            ignore_index=True
+        )
         return combined_df.sort_values(by=column, ascending=ascending).head(n)
     
     else:

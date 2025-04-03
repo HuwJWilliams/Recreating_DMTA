@@ -24,6 +24,10 @@ from io import BytesIO
 from scipy.spatial import ConvexHull
 import random as rand
 import time
+from PIL import Image
+import os
+from collections import defaultdict
+
 
 from rdkit.DataStructs import FingerprintSimilarity
 from rdkit import Chem
@@ -177,26 +181,16 @@ class Analysis:
         # Looping through all provided experiments
         for exp in experiment_dirs:
 
-            step = 50 if "_50_" in exp else 10
-
-            if "_scramb_" in exp:
-                results_dir = self.results_dir
-            
-            elif "_50_" in exp:
-                if "mp_mu" in exp:
-                    results_dir = self.results_dir + "/complete_archive/mp_mu_hybrid/"
-
-                elif "rmp_rmu" in exp:
-                    results_dir = self.results_dir + "/complete_archive/rmp_rmu_hybrid/"
-
-                elif "_rmp_0" in exp:
-                    results_dir = self.results_dir + "/complete_archive/diff_pool/"
-                else:
-                    results_dir = self.results_50_dir
+            if "_50_" in exp:
+                step = 50
+                results_dir = self.results_50_dir
 
             elif "_10_" in exp:
+                step = 10
                 results_dir = self.results_10_dir
-            
+
+            else:
+                print("Error unrecognised experiment entered")
 
             # Initialising empty lists
             rmse = []
@@ -1104,7 +1098,7 @@ class Analysis:
             plt.xlabel("Pose Number")
             plt.ylabel("Best Score")
             plt.title("Best Scores Over Time")
-            plt.legend(loc="upper left", bbox_to_anchor=(1, 1), fontsize=legend_fontsize)
+            plt.legend(loc="upper left", bbox_to_anchor=(1, 1), fontsize=14)
 
             plt.tight_layout()
             plt.savefig(
@@ -2805,7 +2799,12 @@ class Analysis:
                              preds_column:str='pred_Affinity(kcal/mol)',
                              save_plot:bool=False,
                              plot_name:str='Top_pred_docked_boxplot',
-                             save_structures: bool=True):
+                             save_structures: bool=True,
+                             true_yticks: list=[-12, -10.5, -9, -7.5],
+                             pred_yticks: list=[-12, -10.5, -9, -7.5],
+                             tick_fontsize: int=18,
+                             label_fontsize:int=18,
+                             legend_fontsize: int=16):
                 
         """
         Description
@@ -2829,16 +2828,6 @@ class Analysis:
         -------
         
         """
-
-        colours = sns.color_palette(cc.glasbey, n_colors=20)
-        method_colour_map = {
-            "_mp": colours[0],
-            "_mu": colours[1],
-            "_r": colours[2],
-            "_rmp": colours[3],
-            "_rmpo": colours[4],
-            "_mpo": colours[5],
-        }
 
 
         df_list = []
@@ -2865,7 +2854,7 @@ class Analysis:
         full_df = full_df.reset_index()
 
         experiment_colors = [
-            next((color for key, color in method_colour_map.items() if exp.endswith(key)), "gray")
+            next((color for key, color in self.method_colour_map.items() if exp.endswith(key)), "gray")
             for exp in experiment_ls
         ]      
 
@@ -2899,10 +2888,9 @@ class Analysis:
         min_value = np.floor(min_value)
         max_value = np.ceil(max_value)
 
-        y_ticks = np.arange(min_value, max_value, 0.5)
-
-        ax1.set_yticks(y_ticks)
-        ax2.set_yticks(y_ticks)
+        ax1.set_yticks(true_yticks)
+        ax2.set_yticks(pred_yticks)
+    
 
         ax1.set_ylim([min_value, max_value])
         ax2.set_ylim([min_value, max_value])
@@ -2910,19 +2898,30 @@ class Analysis:
         exp_names = [e.split("_")[-1] for e in experiment_ls]
         tick_positions = range(len(exp_names))
         ax2.set_xticks(tick_positions)  # Set tick positions
-        ax2.set_xticklabels(exp_names, rotation=30, fontsize=14)
-        ax1.set_ylabel(ax1.get_ylabel(), fontsize=14)
-        ax2.set_ylabel(ax2.get_ylabel(), fontsize=14)
-        ax2.set_xlabel(ax2.get_xlabel(), fontsize=14)
+        
+        ax1.set_xticklabels([])
+        ax1.tick_params(axis='x', labelbottom=False)  # Keep ticks, just hide the text
+        ax1.tick_params(axis='y', labelsize=tick_fontsize)
+        ax2.tick_params(axis='y', labelsize=tick_fontsize)
+        ax2.set_xticklabels(exp_names, rotation=45, fontsize=tick_fontsize)
+
+        ax1.set_ylabel(docking_column, fontsize=label_fontsize)
+        ax2.set_ylabel(f"Predictted {docking_column}", fontsize=label_fontsize)
+
+        ax1.set_xlabel("")
+        ax2.set_xlabel(ax2.get_xlabel(), fontsize=label_fontsize)
 
         # Formatting Scatterplot
         sns.scatterplot(y=full_df[preds_column], x=full_df[docking_column], ax=ax3, 
                      palette=experiment_colors, hue=full_df['Experiment']
                      )
         ax3.plot([min_value, max_value], [min_value, max_value], color='black', linestyle='--', label='x=y')
-        ax3.set_xlim(min_value, max_value)
-        ax3.set_ylim(min_value, max_value)
+        ax3.set_xticks(true_yticks)
+        ax3.set_yticks(pred_yticks)
+        ax3.tick_params(axis='both', labelsize=label_fontsize)
         ax3.set_aspect('equal', adjustable='box')
+        ax3.set_xlabel(docking_column, fontsize=label_fontsize)
+        ax3.set_ylabel(f"Predicted {docking_column}", fontsize=label_fontsize)
 
         labels = []
         for e in exp_names:
@@ -2944,7 +2943,10 @@ class Analysis:
             y_max = slope * x_max + intercept
             
             # Plot the line of best fit for this experiment (only within the data range)
-            ax3.plot([x_min, x_max], [y_min, y_max], color=method_colour_map[label], lw=2)
+            ax3.plot([x_min, x_max], [y_min, y_max], color=self.method_colour_map[label], lw=2)
+
+        handles, labels = ax3.get_legend_handles_labels()
+        ax3.legend(handles=handles, labels=exp_names, title="Experiment", loc='best', fontsize=legend_fontsize, title_fontsize=label_fontsize)
 
         print(labels)
 
@@ -2961,10 +2963,66 @@ class Analysis:
                 drawn_mols = Draw.MolsToGridImage(mols=mol_ls, 
                                         molsPerRow=5, 
                                         subImgSize=(200,200),
-                                        legends=df.index.astype(str).tolist())
-                drawn_mols.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_{search_in_top}_it{iter}_structs.png")
+                                        legends=df.index.astype(str).tolist(),
+                                        useSVG=False)
+                # drawn_mols = Image.fromarray(drawn_mols)
                 df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_{search_in_top}_it{iter}_structs.csv", index_label='ID')
 
+                if save_structures:
+                    for df, exp in zip(df_list, experiment_ls):
+                        mol_ls = [Chem.MolFromSmiles(smi) for smi in df['SMILES']]
+                        drawn_mols = Draw.MolsToGridImage(mols=mol_ls, 
+                                                    molsPerRow=5, 
+                                                    subImgSize=(200,200),
+                                                    legends=df.index.astype(str).tolist(),
+                                                    useSVG=False)
+                        df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_{search_in_top}_it{iter}_structs.csv", index_label='ID')
+                        
+                    if save_structures:
+                        for df, exp in zip(df_list, experiment_ls):
+                            mol_ls = [Chem.MolFromSmiles(smi) for smi in df['SMILES']]
+                            drawn_mols = Draw.MolsToGridImage(mols=mol_ls, 
+                                                    molsPerRow=5, 
+                                                    subImgSize=(250,250),
+                                                    legends=df.index.astype(str).tolist(),
+                                                    useSVG=False)
+                            df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_{search_in_top}_it{iter}_structs.csv", index_label='ID')
+                            
+                            # Handle the image saving based on type
+                            import io
+                            from PIL import Image
+                            
+                            # Case 1: If it's already a PIL Image
+                            if isinstance(drawn_mols, Image.Image):
+                                img = drawn_mols
+                            # Case 2: If it's an RDKit image with a 'save' method
+                            elif hasattr(drawn_mols, "save"):
+                                buffer = io.BytesIO()
+                                drawn_mols.save(buffer, format='PNG')
+                                buffer.seek(0)
+                                img = Image.open(buffer)
+                            # Case 3: If it's a bytes object
+                            elif hasattr(drawn_mols, "data") and isinstance(drawn_mols.data, bytes):
+                                buffer = io.BytesIO(drawn_mols.data)
+                                img = Image.open(buffer)
+                            # Case 4: If it has numpy array data
+                            elif hasattr(drawn_mols, "data") and hasattr(drawn_mols.data, "__array_interface__"):
+                                img = Image.fromarray(drawn_mols.data)
+                            # Case 5: If it's directly bytes
+                            elif isinstance(drawn_mols, bytes):
+                                buffer = io.BytesIO(drawn_mols)
+                                img = Image.open(buffer)
+                            # Case 6: Fallback for other types
+                            else:
+                                # Attempt to convert to string and then to bytes
+                                try:
+                                    buffer = io.BytesIO(bytes(drawn_mols))
+                                    img = Image.open(buffer)
+                                except:
+                                    raise TypeError(f"Cannot convert drawn_mols of type {type(drawn_mols)} to PIL Image")
+                                
+                            # Save the image
+                            img.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_{search_in_top}_it{iter}_structs.png")
 
     def _count_unique_fragments(self, 
                                 dir,
@@ -3091,3 +3149,157 @@ class Analysis:
         
         print(plot_dict)
         return plot_dict
+
+    def UniqueFragCountGrouped(self, suffix_ls: list, save_plot: bool=False,
+                            save_path: str=f"{PROJ_DIR}/results/rdkit_desc/plots/",
+                            plot_fname: str="unique_frag_count_grouped",
+                            max_iter: int=None,
+                            tick_fontsize: int=18,
+                            label_fontsize: int=20,
+                            legend_fontsize: int=16,
+                            ):
+        """
+        For each method suffix (e.g. '_mp'), find all experiments ending with it,
+        compute average unique fragments over iterations, and plot one line per method.
+        """
+        plot_dict = {}
+        fig = plt.figure(figsize=(16, 8))
+
+        all_experiments = os.listdir(self.results_dir)
+        
+        for suffix in suffix_ls:
+            # Find experiments that end with the given suffix
+            matched_exps = [exp for exp in all_experiments if exp.endswith(suffix) and not exp.startswith("average_")]
+            print(f"\nSuffix: {suffix}, Matching experiments: {matched_exps}")
+            
+            frag_counts_by_iter = defaultdict(list)  # {iter: [counts from each exp]}
+            step = 50 if "_50_" in matched_exps[0] else 10 if "_10_" in matched_exps[0] else 1
+
+            for exp in matched_exps:
+                working_dir = os.path.join(self.results_dir, exp)
+
+                n_iters = max_iter if max_iter is not None else count_number_iters(working_dir)
+
+                for n in range(n_iters + 1):
+                    count = self._count_unique_fragments(dir=working_dir, iter=n)
+                    frag_counts_by_iter[n].append(count)
+
+            # Now average across all experiments in this group
+            avg_counts = []
+            mols_added = []
+            for n in sorted(frag_counts_by_iter.keys()):
+                avg = sum(frag_counts_by_iter[n]) / len(frag_counts_by_iter[n])
+                avg_counts.append(avg)
+                mols_added.append(n * step)
+
+            # Store for possible later use
+            plot_dict[suffix] = {
+                "avg_unique_frags_count": avg_counts,
+                "number_mols_added": mols_added
+            }
+
+            # Get plot style
+            colour = self.method_colour_map.get(suffix, "black")
+            linestyle = self.linestyles.get("_50_" if "_50_" in matched_exps[0] else "_10_", "-")
+
+            # Plot
+            df = pd.DataFrame({
+                "number_mols_added": mols_added,
+                "avg_unique_frags_count": avg_counts
+            })
+            sns.lineplot(data=df, x="number_mols_added", y="avg_unique_frags_count",
+                        linestyle=linestyle, color=colour, label=suffix.strip("_"), legend=False)
+            
+
+        # Add legends
+        lines = [
+            plt.Line2D([0], [0], color="black", linestyle="--", lw=2),
+            plt.Line2D([0], [0], color="black", linestyle="-", lw=2),
+        ]
+        plt.legend(lines, ["50 Molecules", "10 Molecules"], loc="upper left", bbox_to_anchor=(0.75, 0.75))
+
+        method_handles = []
+        for suffix in suffix_ls:
+            color = self.method_colour_map.get(suffix, "black")
+            method_handles.append(plt.Line2D([0], [0], color=color, lw=2))
+
+        plt.legend(method_handles, [s.strip("_") for s in suffix_ls], 
+                   loc="upper left", bbox_to_anchor=(0.75, 0.5),
+                     title="Method", fontsize=legend_fontsize, title_fontsize=label_fontsize)
+
+        plt.ylabel("Avg. Number of Unique Fragments", fontsize=label_fontsize)
+        plt.xlabel("Number of Molecules Added", fontsize=label_fontsize)
+
+        # Set tick label font sizes
+        plt.xticks(fontsize=tick_fontsize)
+        plt.yticks(fontsize=tick_fontsize)
+
+        plt.tight_layout(rect=[0, 0, 0.75, 1])
+
+        if save_plot:
+            Path(save_path).mkdir(parents=True, exist_ok=True)
+            plt.savefig(Path(save_path) / f"{plot_fname}.png", dpi=600)
+
+        plt.show()
+        return plot_dict
+    
+    def UncertaintyChecker(self,
+                           experiment_ls:list,
+                            iter_ls: list,
+                            n_plots: int=16,
+                            prediction_fpath: str = "/held_out_test/held_out_test_preds.csv",
+                            true_path: str = f"{PROJ_DIR}/datasets/held_out_data/PMG_held_out_targ_trimmed.csv",
+                            dot_size: int = 3,
+                            save_plot: bool=True,
+                            plot_filename: str = "preds_dev_plot.png",
+                            title_fontsize: int=18,
+                            tick_fontsize: int=18,
+                            label_fontsize: int=18,
+                            legend_fontsize: int=18,
+                            figsize:tuple=(20, 15),
+                            ):
+        
+        n_y_plots = int(np.sqrt(n_plots))
+        n_x_plots = n_y_plots
+        
+        # Initialising subplots
+        fig, axarr = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=figsize, sharex=True, sharey=True)
+        axarr.flatten()
+        
+        true_df = pd.read_csv(true_path, index_col='ID')
+        true_df = true_df[['Affinity(kcal/mol)']].astype(float)
+
+        for i, it in enumerate(iter_ls):
+            ax = axarr[i]
+            #ax.set_title(f"{it*50} mols")
+
+            for exp in experiment_ls:
+                exp_name = exp.split("_")[-1]
+
+                working_dir = f"{self.results_dir}/{exp}"
+                pred_path = f"{working_dir}/it{it}{prediction_fpath}"
+                print(pred_path)
+                pred_df = pd.read_csv(pred_path, index_col='ID')
+
+                aligned_true = true_df.loc[pred_df.index]
+                true_docking = aligned_true['Affinity(kcal/mol)']
+                
+                pred_docking = pred_df['pred_Affinity(kcal/mol)']
+                uncertainty = pred_df['Uncertainty']
+
+                error = true_docking - pred_docking
+                y_label = "Predicted Docking Error (kcal/mol)"
+
+                ax.scatter(uncertainty, error, label=exp_name, alpha=0.6, s=2)
+
+        for ax in axarr:
+            ax.set_ylabel(y_label, fontsize=label_fontsize)
+            ax.set_xlabel("Uncertainty", fontsize=label_fontsize)
+
+        handles, labels = axarr[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='upper right', bbox_to_anchor=(1.12, 1.0),
+                   fontsize=legend_fontsize, title="Experiments", title_fontsize=label_fontsize)
+        
+        plt.tight_layout()
+        plt.subplots_adjust(right=0.9)
+        plt.show()

@@ -27,16 +27,16 @@ from misc_functions import (
 # avg._average_experiment(exp_suffix="10_mu", n_iters=150)
 
 avg = AverageAll(
-    # results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
+    results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
 )
 
-# avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
-# avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
-# avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
-# avg._average_experiment(exp_suffix="50_mp", n_iters=30)
-# avg._average_experiment(exp_suffix="50_mpo", n_iters=30)
-# avg._average_experiment(exp_suffix="50_r", n_iters=30)
-# avg._average_experiment(exp_suffix="50_mu", n_iters=30)
+avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
+avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
+avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
+avg._average_experiment(exp_suffix="50_mp", n_iters=30)
+avg._average_experiment(exp_suffix="50_mpo", n_iters=30)
+avg._average_experiment(exp_suffix="50_r", n_iters=30)
+avg._average_experiment(exp_suffix="50_mu", n_iters=30)
 
 avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/mp_mu_hybrid/')
 

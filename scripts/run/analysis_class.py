@@ -27,6 +27,7 @@ import time
 from PIL import Image
 import os
 from collections import defaultdict
+from joypy import joyplot
 
 
 from rdkit.DataStructs import FingerprintSimilarity
@@ -3216,7 +3217,7 @@ class Analysis:
             plt.Line2D([0], [0], color="black", linestyle="--", lw=2),
             plt.Line2D([0], [0], color="black", linestyle="-", lw=2),
         ]
-        plt.legend(lines, ["50 Molecules", "10 Molecules"], loc="upper left", bbox_to_anchor=(0.75, 0.75))
+        plt.legend(lines, ["50 Molecules", "10 Molecules"], loc="upper left", bbox_to_anchor=(1.15, 0.5))
 
         method_handles = []
         for suffix in suffix_ls:
@@ -3249,14 +3250,14 @@ class Analysis:
                             n_plots: int=16,
                             prediction_fpath: str = "/held_out_test/held_out_test_preds.csv",
                             true_path: str = f"{PROJ_DIR}/datasets/held_out_data/PMG_held_out_targ_trimmed.csv",
-                            dot_size: int = 3,
+                            dot_size: int = 10,
                             save_plot: bool=True,
-                            plot_filename: str = "preds_dev_plot.png",
+                            plot_name: str = "preds_dev_plot.png",
                             title_fontsize: int=18,
                             tick_fontsize: int=18,
-                            label_fontsize: int=18,
-                            legend_fontsize: int=18,
-                            figsize:tuple=(20, 15),
+                            label_fontsize: int=20,
+                            legend_fontsize: int=20,
+                            figsize:tuple=(14, 14),
                             ):
         
         n_y_plots = int(np.sqrt(n_plots))
@@ -3264,42 +3265,225 @@ class Analysis:
         
         # Initialising subplots
         fig, axarr = plt.subplots(nrows=n_x_plots, ncols=n_y_plots, figsize=figsize, sharex=True, sharey=True)
-        axarr.flatten()
+        axarr = axarr.flatten()
         
         true_df = pd.read_csv(true_path, index_col='ID')
         true_df = true_df[['Affinity(kcal/mol)']].astype(float)
 
         for i, it in enumerate(iter_ls):
             ax = axarr[i]
-            #ax.set_title(f"{it*50} mols")
+            ax.set_title(f"{it * 50} mols", fontsize=label_fontsize)
 
             for exp in experiment_ls:
                 exp_name = exp.split("_")[-1]
+                suffix = "_" + exp_name
+                dot_color = self.method_colour_map.get(suffix, "gray")
 
                 working_dir = f"{self.results_dir}/{exp}"
                 pred_path = f"{working_dir}/it{it}{prediction_fpath}"
-                print(pred_path)
                 pred_df = pd.read_csv(pred_path, index_col='ID')
 
                 aligned_true = true_df.loc[pred_df.index]
                 true_docking = aligned_true['Affinity(kcal/mol)']
-                
                 pred_docking = pred_df['pred_Affinity(kcal/mol)']
                 uncertainty = pred_df['Uncertainty']
+                error = np.abs(true_docking - pred_docking)
 
-                error = true_docking - pred_docking
-                y_label = "Predicted Docking Error (kcal/mol)"
+                sorted_idx = np.argsort(uncertainty)
+                uncertainty = uncertainty.iloc[sorted_idx]
+                error = error.iloc[sorted_idx]
 
-                ax.scatter(uncertainty, error, label=exp_name, alpha=0.6, s=2)
+                ax.scatter(uncertainty, error, label=exp_name, alpha=0.2, s=dot_size, color=dot_color)
 
         for ax in axarr:
-            ax.set_ylabel(y_label, fontsize=label_fontsize)
-            ax.set_xlabel("Uncertainty", fontsize=label_fontsize)
+            ax.set_ylabel("")
+            ax.set_xlabel("")
+            ax.tick_params(labelsize=tick_fontsize)
 
-        handles, labels = axarr[0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc='upper right', bbox_to_anchor=(1.12, 1.0),
-                   fontsize=legend_fontsize, title="Experiments", title_fontsize=label_fontsize)
+        # Global axis labels
+        fig.text(0.5, 0.02, "Uncertainty", ha='center', fontsize=label_fontsize)
+        fig.text(0.02, 0.5, "Prediction Error", va='center', rotation='vertical', fontsize=label_fontsize)
+
+        # Get unique experiment suffixes
+        legend_elements = []
+        used_labels = set()
+
+        for exp in experiment_ls:
+            exp_name = exp.split("_")[-1]
+            suffix = "_" + exp_name
+            color = self.method_colour_map.get(suffix, "gray")
+
+            if exp_name not in used_labels:
+                legend_elements.append(Line2D(
+                    [0], [0], marker='o', color='w', markerfacecolor=color,
+                    markersize=8, label=exp_name, alpha=1.0))
+                used_labels.add(exp_name)
+
+        fig.legend(
+            handles=legend_elements,
+            loc='center left',
+            bbox_to_anchor=(1, 0.5),
+            fontsize=legend_fontsize,
+            title="Experiments",
+            title_fontsize=label_fontsize,
+            handlelength=2,
+            markerscale=2
+        )
+
+        # Adjust layout for global labels and legend
+        plt.tight_layout(rect=[0.05, 0.05, 1, 0.95])  # Left, Bottom, Right, Top
         
-        plt.tight_layout()
-        plt.subplots_adjust(right=0.9)
+        if save_plot:
+            save_path = Path(f"{PROJ_DIR}/results/rdkit_desc/plots/")
+            save_path.mkdir(parents=True, exist_ok=True)
+            plt.savefig(save_path / f"{plot_name}.png", dpi=600)
+
+
+
+
+    def PlotFeatureImportanceAndRidgelines(
+        self,
+        experiment: str,
+        iter_ls: list,
+        importance_fpath: str = "/feature_importance_df.csv",
+        top_n_feats: int = 10,
+        save_data: bool = True,
+        save_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/feature_ridgeline_plots/",
+        filename: str = "feature_importances_and_ridgelines",
+        dpi: int = 500,
+        tick_fontsize: int = 14,
+        label_fontsize: int = 16,
+        title_fontsize: int = 18
+    ):
+
+        Path(self.results_dir, save_path).mkdir(parents=True, exist_ok=True)
+
+        # Step 1: Load top-N feature importances from final iteration
+        final_iter = max(iter_ls)
+        imp_path = f"{self.results_dir}/{experiment}/it{final_iter}{importance_fpath}"
+        try:
+            feat_importance_df = pd.read_csv(imp_path)
+        except Exception as e:
+            print(f"Could not read importance file for iteration {final_iter}: {e}")
+            return
+
+        feat_importance_df = feat_importance_df.sort_values("Importance", ascending=False)
+        top_feats = feat_importance_df.head(top_n_feats).copy()
+        features = top_feats["Feature"].tolist()
+
+        # Step 2: Create consistent color map
+        palette = sns.color_palette("tab10", n_colors=top_n_feats)
+        color_map = dict(zip(features, palette))
+
+        # Step 3: Barplot of feature importances
+        plt.figure(figsize=(10, 8))
+        sns.barplot(
+            data=top_feats,
+            x="Importance",
+            y="Feature",
+            palette=color_map,
+            dodge=False,
+            hue="Feature",
+            legend=False,
+        )
+        plt.title("Top Feature Importances", fontsize=title_fontsize)
+        plt.xlabel("Importance", fontsize=label_fontsize)
+        plt.ylabel("Feature", fontsize=label_fontsize)
+        plt.xticks(fontsize=tick_fontsize)
+        plt.yticks(fontsize=tick_fontsize)
+
+        if save_data:
+            plt.savefig(Path(save_path) / f"{filename}_importance_barplot.png", dpi=dpi)
+            feat_importance_df.to_csv(Path(save_path) /  "feature_importance_df.csv")
+
         plt.show()
+
+        # Step 4: Gather training data across iterations
+        all_data = []
+        exp_suffix = experiment[7:]  # To match other folders like 202*_50_rmp
+
+        for it in iter_ls:
+            glob_path = f"{self.results_dir}/*{exp_suffix}/it{it}/training_data/training_features.csv.gz"
+            training_files = glob(glob_path)
+
+            for f in training_files:
+                try:
+                    df = pd.read_csv(f, compression='gzip')
+                    sub_df = df[features].copy()
+                    sub_df["iteration"] = it
+                    sub_df["source"] = Path(f).parent.parent.name
+                    all_data.append(sub_df)
+                except Exception as e:
+                    print(f"Failed to read {f}: {e}")
+
+        if not all_data:
+            print("No valid training data found.")
+            return
+
+        combined_df = pd.concat(all_data)
+
+        # Step 5: Ridgeline plots for each feature
+        for feat in features:
+            df_plot = combined_df[[feat, "iteration"]].copy()
+            df_plot = df_plot.rename(columns={feat: "value"})
+
+            # Ensure numeric order
+            df_plot["iteration"] = pd.Categorical(
+                df_plot["iteration"].astype(str),
+                categories=[str(it) for it in sorted(iter_ls)],
+                ordered=True
+            )
+            df_plot = df_plot.sort_values("iteration")
+
+            fig, axes = joyplot(
+                data=df_plot,
+                by="iteration",
+                column="value",
+                fade=True,
+                figsize=(10, 6),
+                linewidth=1.5,
+                color=color_map[feat],
+                title=None  # disable default title
+            )
+
+            # Step 6: Overlay full PyMolGen dataset distribution on top
+            pmg_files = glob("/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc_*.csv")
+            pmg_data = []
+            for file in pmg_files:
+                try:
+                    df = pd.read_csv(file)
+                    if feat in df.columns:
+                        pmg_data.append(df[feat].dropna())
+                except Exception as e:
+                    print(f"Failed to read {file}: {e}")
+            if pmg_data:
+                all_values = pd.concat(pmg_data)
+                for ax in axes:
+                    sns.kdeplot(
+                        all_values,
+                        ax=ax,
+                        label="PyMolGen Full" if ax == axes[-1] else None,
+                        color="black",
+                        linewidth=2,
+                        linestyle="--",
+                        alpha=0.7
+                    )
+
+            # Set custom title and font size
+            axes[0].set_title(f"{feat} distribution across iterations", fontsize=title_fontsize)
+            axes[-1].set_xlabel("Feature Value", fontsize=label_fontsize)
+            axes[-1].tick_params(labelsize=tick_fontsize)
+
+            for ax in axes:
+                ax.tick_params(axis='y', labelsize=tick_fontsize)
+
+            fig.text(0.0005, 0.5, 'Iteration', va='center', ha='right', rotation='vertical', fontsize=label_fontsize)
+
+            if pmg_data:
+                axes[-1].legend(fontsize=tick_fontsize)
+
+            if save_data:
+                ridgeline_path = Path(save_path) / f"{feat.replace('/', '_')}_ridgeline{exp_suffix}.png"
+                plt.savefig(ridgeline_path, dpi=dpi)
+
+            plt.show()

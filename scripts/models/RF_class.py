@@ -62,7 +62,8 @@ def PredictNewTestSet(
 
     feat_df = pd.read_csv(feats, index_col='ID')
     targ_df = pd.read_csv(targs, index_col='ID')
-    targ_df = targ_df.values.ravel() if isinstance(targ_df, pd.DataFrame) else targ_df
+    if isinstance(targ_df, pd.DataFrame):
+        targ_df = targ_df.iloc[:, 0]  # Convert to Series but keep index
 
     for exp in experiment_ls:
         print(f"Running {exp}")
@@ -99,7 +100,7 @@ def PredictNewTestSet(
             pred_df.to_csv(f"{preds_dir}/{test_set_name}_preds.csv", index_label="ID")
 
             # Calculate performance metrics using true vs predicted
-            true_vals = targ_df.astype(float)
+            true_vals = targ_df.loc[pred_df.index].astype(float)
             pred_vals = pred_df[f"pred_{docking_column}"].astype(float)
             errors = true_vals - pred_vals
 

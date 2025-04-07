@@ -28,6 +28,7 @@ from PIL import Image
 import os
 from collections import defaultdict
 from joypy import joyplot
+from scipy.stats import gaussian_kde
 
 
 from rdkit.DataStructs import FingerprintSimilarity
@@ -569,10 +570,10 @@ class Analysis:
         plot_title: str='PCA Plot',
         remove_outliers: bool=True,
         kdep_sample_ls: list=['PyMolGen'],
-        axis_fontsize: int = 12,
-        tick_fontsize: int = 10,
-        label_fontsize: int=12,
-        legend_fontsize: int = 12,
+        axis_fontsize: int = 20,
+        tick_fontsize: int = 18,
+        label_fontsize: int=20,
+        legend_fontsize: int = 20,
         kde_tick_dicts: list=None
 
     ):
@@ -763,8 +764,8 @@ class Analysis:
                             )
 
 
-                    axs[i, j].set_xlabel(f"PC{j+1}")
-                    axs[i, j].set_ylabel(f"PC{i+1}")
+                    axs[i, j].set_xlabel(f"PC{j+1}", fontsize=axis_fontsize)
+                    axs[i, j].set_ylabel(f"PC{i+1}", fontsize=axis_fontsize)
 
                     # Remove x and y plots from every PCA plot apart from the left and bottom most plots
                     # Axes label control
@@ -789,9 +790,8 @@ class Analysis:
 
                     # For diagonal KDE plots — always show both axes
                     else:
-                        axs[i, j].set_xlabel(f"PC{i+1}", fontsize=axis_fontsize)
-                        axs[i, j].set_ylabel("Density Estimate", fontsize=axis_fontsize)
-                        axs[i, i].tick_params(axis='both', labelsize=tick_fontsize)
+                        axs[i, i].set_xlabel(f"PC{i+1}", fontsize=axis_fontsize)
+                        axs[i, i].tick_params(axis='both', labelsize=axis_fontsize)
 
                 # If on the diagonal, make the Kernel Density Estimate Plots for each Principal Component
                 else:
@@ -853,10 +853,13 @@ class Analysis:
                             axs[i, i].set_xticks(tick_info["xticks"])
                         if "yticks" in tick_info:
                             axs[i, i].set_yticks(tick_info["yticks"])
+                        
+                        axs[i, i].tick_params(axis='both', labelsize=tick_fontsize)
                             
 
-                    axs[i, i].set_xlabel("")
-                    axs[i, i].set_ylabel("Density Estimate", fontsize=label_fontsize)
+                axs[i, i].set_xlabel("")
+                axs[i, i].set_ylabel("Density", fontsize=label_fontsize)
+                axs[i, i].tick_params(axis='both', labelsize=tick_fontsize)
 
                 # Adjusting labels and titles, including the variance for each principal component
                 if i == n_components - 1:
@@ -879,20 +882,24 @@ class Analysis:
 
         for idx, source in enumerate(pca_df['Source'].unique()):
             # Scatter point handle
-            scatter_handle = plt.scatter([], [], 
-                color=dark_colours[idx], 
-                edgecolor='black', 
-                linewidth=0.5, 
-                marker='o', 
+            scatter_handle = plt.Line2D([], [], 
+                color=dark_colours[idx],
+                marker='o',
+                linestyle='None',
+                markersize=10,          # Bigger marker
+                markeredgecolor='black',
+                markeredgewidth=0.8,
                 label=source
             )
+
             
             # Area patch handle
-            area_handle = plt.Rectangle((0,0), 1, 1, 
-                color=dark_colours[idx], 
-                alpha=0.2, 
+            area_handle = plt.Rectangle((0, 0), 1.5, 1.5,
+                color=dark_colours[idx],
+                alpha=0.2,
                 label=f"{source} area"
             )
+
             
             custom_handles.extend([scatter_handle, area_handle])
             custom_labels.extend([source, f"{source} area"])
@@ -901,16 +908,18 @@ class Analysis:
         fig.legend(
             custom_handles, 
             custom_labels,
-            loc="center left", 
-            bbox_to_anchor=(0.40, 0.95), 
+            loc='upper center',
+            bbox_to_anchor=(0.5, 1.05),  # Pushes legend above plot
             ncol=3,
-            borderaxespad=0.0
+            fontsize=legend_fontsize,
+            frameon=False
         )
+
 
         #fig.suptitle(plot_title, fontsize=16, y=0.98)
 
         # Adjust layout to make room for the legend
-        plt.tight_layout(rect=[0, 0, 0.9, 0.92])
+        plt.tight_layout(rect=[0, 0, 1, 0.93])  # Allows for the legend above
 
         if save_plot:
             plt.savefig(
@@ -3351,12 +3360,13 @@ class Analysis:
         save_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/feature_ridgeline_plots/",
         filename: str = "feature_importances_and_ridgelines",
         dpi: int = 500,
-        tick_fontsize: int = 14,
-        label_fontsize: int = 16,
-        title_fontsize: int = 18
+        tick_fontsize: int = 20,
+        label_fontsize: int = 24,
+        title_fontsize: int = 26
     ):
-
         Path(self.results_dir, save_path).mkdir(parents=True, exist_ok=True)
+        all_data = []
+        exp_suffix = experiment[7:]
 
         # Step 1: Load top-N feature importances from final iteration
         final_iter = max(iter_ls)
@@ -3386,29 +3396,28 @@ class Analysis:
             hue="Feature",
             legend=False,
         )
-        plt.title("Top Feature Importances", fontsize=title_fontsize)
         plt.xlabel("Importance", fontsize=label_fontsize)
         plt.ylabel("Feature", fontsize=label_fontsize)
         plt.xticks(fontsize=tick_fontsize)
         plt.yticks(fontsize=tick_fontsize)
 
         if save_data:
-            plt.savefig(Path(save_path) / f"{filename}_importance_barplot.png", dpi=dpi)
-            feat_importance_df.to_csv(Path(save_path) /  "feature_importance_df.csv")
+            plt.savefig(Path(save_path) / f"{filename}_importance{exp_suffix}_barplot.png", dpi=dpi)
+            feat_importance_df.to_csv(Path(save_path) / "feature_importance_df.csv")
 
         plt.show()
 
-        # Step 4: Gather training data across iterations
-        all_data = []
-        exp_suffix = experiment[7:]  # To match other folders like 202*_50_rmp
-
         for it in iter_ls:
+            if it == 0:
+                continue
+
             glob_path = f"{self.results_dir}/*{exp_suffix}/it{it}/training_data/training_features.csv.gz"
             training_files = glob(glob_path)
 
             for f in training_files:
                 try:
                     df = pd.read_csv(f, compression='gzip')
+                    df = df[df['ID'].astype(str).str.startswith('PMG-')]
                     sub_df = df[features].copy()
                     sub_df["iteration"] = it
                     sub_df["source"] = Path(f).parent.parent.name
@@ -3422,65 +3431,95 @@ class Analysis:
 
         combined_df = pd.concat(all_data)
 
+        # Step 4b: Preload all PyMolGen data for use in each feature loop
+        pmg_files = glob(f"{PROJ_DIR}/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc_*.csv")
+        pmg_raw_data = {}
+        for file in pmg_files:
+            try:
+                df = pd.read_csv(file)
+                for col in df.columns:
+                    if col not in pmg_raw_data:
+                        pmg_raw_data[col] = []
+                    pmg_raw_data[col].append(df[col].dropna())
+            except Exception as e:
+                print(f"Failed to read {file}: {e}")
+
         # Step 5: Ridgeline plots for each feature
+        plot_iters = [it for it in iter_ls if it != 0] + ["PyMolGen"]
+
         for feat in features:
             df_plot = combined_df[[feat, "iteration"]].copy()
             df_plot = df_plot.rename(columns={feat: "value"})
+            df_plot = df_plot.dropna(subset=["value"])
 
-            # Ensure numeric order
+            if feat in pmg_raw_data:
+                all_values = pd.concat(pmg_raw_data[feat]).dropna()
+                all_values = pd.to_numeric(all_values, errors='coerce').dropna()
+                if not all_values.empty:
+                    pmg_df = pd.DataFrame({"value": all_values, "iteration": "PyMolGen"})
+                    df_plot = pd.concat([df_plot, pmg_df], ignore_index=True)
+                else:
+                    print(f"No PyMolGen data for feature: {feat}")
+            else:
+                print(f"{feat} not found in PyMolGen descriptors")
+
+            if df_plot.empty or df_plot["value"].nunique() <= 1:
+                print(f"Skipping {feat}: no variation or all NaNs.")
+                continue
+
+            ordered_iters = [str(it) for it in sorted(plot_iters, key=lambda x: (x != "PyMolGen", x), reverse=True)]
+
             df_plot["iteration"] = pd.Categorical(
                 df_plot["iteration"].astype(str),
-                categories=[str(it) for it in sorted(iter_ls)],
+                categories=ordered_iters,
                 ordered=True
             )
+
             df_plot = df_plot.sort_values("iteration")
 
-            fig, axes = joyplot(
-                data=df_plot,
-                by="iteration",
-                column="value",
-                fade=True,
-                figsize=(10, 6),
-                linewidth=1.5,
-                color=color_map[feat],
-                title=None  # disable default title
-            )
+            for group in df_plot["iteration"].unique():
+                group_mask = df_plot["iteration"] == group
+                values = df_plot.loc[group_mask, "value"]
+                if values.nunique() == 1:
+                    scale = values.abs() * 0.00001
+                    jitter_std = np.maximum(scale, 0.001)
+                    df_plot.loc[group_mask, "value"] += np.random.normal(0, jitter_std, size=len(values))
 
-            # Step 6: Overlay full PyMolGen dataset distribution on top
-            pmg_files = glob("/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc_*.csv")
-            pmg_data = []
-            for file in pmg_files:
-                try:
-                    df = pd.read_csv(file)
-                    if feat in df.columns:
-                        pmg_data.append(df[feat].dropna())
-                except Exception as e:
-                    print(f"Failed to read {file}: {e}")
-            if pmg_data:
-                all_values = pd.concat(pmg_data)
-                for ax in axes:
-                    sns.kdeplot(
-                        all_values,
-                        ax=ax,
-                        label="PyMolGen Full" if ax == axes[-1] else None,
-                        color="black",
-                        linewidth=2,
-                        linestyle="--",
-                        alpha=0.7
-                    )
+            fig, ax = plt.subplots(figsize=(10, 6))
 
-            # Set custom title and font size
-            axes[0].set_title(f"{feat} distribution across iterations", fontsize=title_fontsize)
-            axes[-1].set_xlabel("Feature Value", fontsize=label_fontsize)
-            axes[-1].tick_params(labelsize=tick_fontsize)
+            y_ticks = []
+            y_labels = []
+            x_vals = np.linspace(df_plot["value"].min(), df_plot["value"].max(), 500)
 
-            for ax in axes:
-                ax.tick_params(axis='y', labelsize=tick_fontsize)
+            for i, it in enumerate(ordered_iters):
+                subset = df_plot[df_plot["iteration"] == it]["value"]
+                if subset.empty:
+                    continue
 
-            fig.text(0.0005, 0.5, 'Iteration', va='center', ha='right', rotation='vertical', fontsize=label_fontsize)
+                values = subset.values
 
-            if pmg_data:
-                axes[-1].legend(fontsize=tick_fontsize)
+                if np.unique(values).size == 1:
+                    val = values[0]
+                    bump_y = np.exp(-0.5 * ((x_vals - val) / 0.2) ** 2)
+                    bump_y = bump_y / bump_y.max() * 0.9
+                    ax.fill_between(x_vals, i, i + bump_y, color=color_map[feat], alpha=0.7)
+                    ax.plot(x_vals, i + bump_y, color="black", linewidth=1)
+                else:
+                    kde = gaussian_kde(values)
+                    y_vals = kde(x_vals)
+                    y_scaled = y_vals / y_vals.max() * 0.9
+                    ax.fill_between(x_vals, i, i + y_scaled, color=color_map[feat], alpha=0.7)
+                    ax.plot(x_vals, i + y_scaled, color="black", linewidth=1)
+
+                y_ticks.append(i + 0.5)
+                y_labels.append(str(it))
+
+            ax.set_yticks(y_ticks)
+            ax.set_yticklabels(y_labels, fontsize=tick_fontsize)
+            ax.set_xlabel("Feature Value", fontsize=label_fontsize)
+            ax.set_ylabel("Iteration", fontsize=label_fontsize)
+            ax.tick_params(axis="x", labelsize=tick_fontsize)
+            plt.tight_layout()
 
             if save_data:
                 ridgeline_path = Path(save_path) / f"{feat.replace('/', '_')}_ridgeline{exp_suffix}.png"

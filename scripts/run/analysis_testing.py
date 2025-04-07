@@ -17,109 +17,43 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
 an = Analysis(results_dir=results_dir, 
-              held_out_stat_json="held_out_test/held_out_stats.json",
+            #   held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
+            held_out_stat_json="held_out_test/held_out_stats.json",
+
               docking_column='Affinity(kcal/mol)'
               )
 # %%
-# an.Plot_Perf(
-#     experiments=[
-#         "average_50_rmp",
-        # "average_50_mp",
-        # "average_50_rmpo",
-        # "average_50_mpo",
-        # "average_50_r",
-        # "average_50_mu",
-        # "average_50_rmu",
 
-        # "average_10_rmp",
-        # "average_10_mp",
-        # "average_10_rmpo",
-        # "average_10_mpo",
-        # "average_10_r",
-        # "average_10_mu",
-        # "average_50_rmu",
-        
-        # "average_50_mp_mu_2:8",
-        # "average_50_mp_mu_5:5",
-        # "average_50_mp_mu_8:2",
+chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
+ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
+prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
 
-        # "average_50_rmp_rmu_2:8",
-        # "average_50_rmp_rmu_5:5",
-        # "average_50_rmp_rmu_8:2",
-
-        # "average_50_rmp_0025",
-        # "average_50_rmp_005",
-        # "average_50_rmp_025",
-        # "average_50_rmp_05",
-
-        # "20241024_10_scramb_mp" ,  
-        # "20241024_10_scramb_r"  ,   
-        # "20241024_10_scramb_mpo"  ,
-        # "20241024_10_scramb_rmp"   ,
-        # "20241024_10_scramb_mu"   ,
-        # "20241024_10_scramb_rmpo" , 
-
-        # "20241105_50_scramb_mu"   ,
-        # "20241105_50_scramb_rmpo",
-        # "20241105_50_scramb_mp"  , 
-        # "20241105_50_scramb_r",
-        # "20241105_50_scramb_mpo"  ,
-        # "20241105_50_scramb_rmp",
-
-    # ],
-    # plot_ho =True,
-    # plot_int= False,
-    # plot_chembl_int= False,
-    # plot_fname='rmp_rmu_ho_plot_pear_r',
-    # set_ylims=True,
-    # r_type = 'pearson_r',
-    # rmse_ylim=(0.25, 1.25),
-    # sdep_ylim=(0.2, 0.6),
-    # r2_ylim=(0, 1),
-    # bias_ylim= (-1.2, 0.1),
-    # # r2_ylim=(-0.2, 0.8), #scrambled
-    # # bias_ylim= (-0.5, 0.5), #scrambled
-    # yticks=4,
-    # custom_xticks=[0, 500, 1000, 1500],
-    # tick_fontsize=20,
-    # label_fontsize=24,
-    # title_fontsize=20,
-    # legend_fontsize=20,
-    # save_plot=True,
-    # )
-
- # %%
-
-# chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
-# ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
-# prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
-
-# an.PCA_Plot(train=chembl_feats,
-#             validation=ho_feats,
-#             prediction=prediction,
-#             source_ls=['ChEMBL', 
-#                        'Held_Out', 
-#                        'PyMolGen'],
-#             n_components=5,
-#             plot_scatter=True,
-#             plot_area=True,
-#             save_extra_data=True,
-#             plot_loadings=True,
-#             kdep_sample_size=0.5,
-#             kdep_sample_ls=['PyMolGen'],
-#             tick_fontsize=18,
-#             label_fontsize=18,
-#             axis_fontsize=16,
-#             legend_fontsize=20,
-#            kde_tick_dicts = [
-#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
-#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
-#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
-#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
-#     {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
-# ])
+an.PCA_Plot(train=chembl_feats,
+            validation=ho_feats,
+            prediction=prediction,
+            source_ls=['ChEMBL', 
+                       'Held_Out', 
+                       'PyMolGen'],
+            n_components=5,
+            plot_scatter=True,
+            plot_area=True,
+            save_extra_data=True,
+            plot_loadings=True,
+            kdep_sample_size=0.5,
+            kdep_sample_ls=['PyMolGen'],
+            tick_fontsize=18,
+            label_fontsize=18,
+            axis_fontsize=16,
+            legend_fontsize=20,
+           kde_tick_dicts = [
+    {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
+    {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
+    {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
+    {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
+    {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
+])
 
 # %%
 # experiment_ls = ["average_50_rmp"]
@@ -145,7 +79,77 @@ an = Analysis(results_dir=results_dir,
 #                             regression_line_colour='coral'
 #                             )
 
+# %%
+# an.Plot_Perf(
+#     experiments=[
+#         "average_50_rmp",
+#         "average_50_mp",
+#         "average_50_rmpo",
+#         "average_50_mpo",
+#         "average_50_r",
+#         "average_50_mu",
+#         "average_50_rmu",
 
+#         "average_10_rmp",
+#         "average_10_mp",
+#         "average_10_rmpo",
+#         "average_10_mpo",
+#         "average_10_r",
+#         "average_10_mu",
+#         "average_50_rmu",
+        
+#         # "average_50_mp_mu_2:8",
+#         # "average_50_mp_mu_5:5",
+#         # "average_50_mp_mu_8:2",
+
+#         # "average_50_rmp_rmu_2:8",
+#         # "average_50_rmp_rmu_5:5",
+#         # "average_50_rmp_rmu_8:2",
+
+#         # "average_50_rmp_0025",
+#         # "average_50_rmp_005",
+#         # "average_50_rmp",
+#         # "average_50_rmp_025",
+#         # "average_50_rmp_05",
+#         # "average_50_r",
+
+#         # "20241024_10_scramb_mp" ,  
+#         # "20241024_10_scramb_r"  ,   
+#         # "20241024_10_scramb_mpo"  ,
+#         # "20241024_10_scramb_rmp"   ,
+#         # "20241024_10_scramb_mu"   ,
+#         # "20241024_10_scramb_rmpo" , 
+
+#         # "20241105_50_scramb_mu"   ,
+#         # "20241105_50_scramb_rmpo",
+#         # "20241105_50_scramb_mp"  , 
+#         # "20241105_50_scramb_r",
+#         # "20241105_50_scramb_mpo"  ,
+#         # "20241105_50_scramb_rmp",
+
+#     ],
+#     plot_ho =False,
+#     plot_int= True,
+#     plot_chembl_int= False,
+#     plot_fname='sing_int_plot_pear_r',
+#     set_ylims=True,
+#     r_type = 'pearson_r',
+#     rmse_ylim=(0.25, 1.25),
+#     sdep_ylim=(0.2, 0.6),
+#     r2_ylim=(-0.2, 1),
+#     bias_ylim= (-1.2, 0.1),
+#     # r2_ylim=(-0.2, 0.8), #scrambled
+#     # bias_ylim= (-0.5, 0.5), #scrambled
+#     yticks=4,
+#     custom_xticks=[0, 500, 1000, 1500],
+#     tick_fontsize=20,
+#     label_fontsize=24,
+#     title_fontsize=20,
+#     legend_fontsize=20,
+#     save_plot=True,
+#     )
+
+ # %%
 # %%
 # molids_a = get_sel_mols_between_iters(experiment_dir='/users/yhb18174/Recreating_DMTA/results/rdkit_desc/finished_results/10_mol_sel/20241002_10_mp',
 #                            start_iter = 1,
@@ -647,29 +651,31 @@ an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp_0025', 'average_50_rmp_00
 #                                      "_r"], max_iter=30,
 #                                      save_plot=True)
 # %%
-an.UncertaintyChecker(experiment_ls=['average_50_mu'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_mu')
-an.UncertaintyChecker(experiment_ls=['average_50_mp'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_mp')
-an.UncertaintyChecker(experiment_ls=['average_50_rmp'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_rmp')
+# an.UncertaintyChecker(experiment_ls=['average_50_mu'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_mu')
+# an.UncertaintyChecker(experiment_ls=['average_50_mp'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_mp')
+# an.UncertaintyChecker(experiment_ls=['average_50_rmp'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_rmp')
+
+# # %%
+# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                )
+
+# # # %%
+# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                )
+# # %%
+# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                            #    )
 
 # %%
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-
-# %%
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-# %%
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )

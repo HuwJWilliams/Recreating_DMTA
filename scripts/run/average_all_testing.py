@@ -38,21 +38,21 @@ avg._average_experiment(exp_suffix="50_mpo", n_iters=30)
 avg._average_experiment(exp_suffix="50_r", n_iters=30)
 avg._average_experiment(exp_suffix="50_mu", n_iters=30)
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/mp_mu_hybrid/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/mp_mu_hybrid/')
 
 avg._average_experiment(exp_suffix="50_mp_mu_2:8", n_iters=30)
 avg._average_experiment(exp_suffix="50_mp_mu_5:5", n_iters=30)
 avg._average_experiment(exp_suffix="50_mp_mu_8:2", n_iters=30)
 
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/rmp_rmu_hybrid/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/rmp_rmu_hybrid/')
 
 avg._average_experiment(exp_suffix="50_rmp_rmu_2:8", n_iters=30)
 avg._average_experiment(exp_suffix="50_rmp_rmu_5:5", n_iters=30)
 avg._average_experiment(exp_suffix="50_rmp_rmu_8:2", n_iters=30)
 
 # # %%
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
 
 avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
 avg._average_experiment(exp_suffix='50_rmp_025', n_iters=30)

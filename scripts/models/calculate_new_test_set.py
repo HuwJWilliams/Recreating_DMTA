@@ -26,7 +26,7 @@ PredictNewTestSet(
     feats=ft,
     targs=tg,
     full_data=fl,
-    test_set_name = 'held_out_test',
+    test_set_name = 'held_out',
     experiment_ls=all_experiments,
     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/'
 )
@@ -36,33 +36,33 @@ PredictNewTestSet(
     feats=tft,
     targs=ttg,
     full_data=tfl,
-    test_set_name = 'trimmed_held_out_test',
+    test_set_name = 'trimmed_held_out',
     experiment_ls=all_experiments,
     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/'
 )
 
 
 # %%
-experiments = glob('/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/202*')
-all_experiments = [str(Path(path).name) for path in experiments]
-PredictNewTestSet(
-    feats=ft,
-    targs=tg,
-    full_data=fl,
-    test_set_name = 'held_out_test',
-    experiment_ls=all_experiments,
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/'
-)
+# experiments = glob('/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/202*')
+# all_experiments = [str(Path(path).name) for path in experiments]
+# PredictNewTestSet(
+#     feats=ft,
+#     targs=tg,
+#     full_data=fl,
+#     test_set_name = 'held_out',
+#     experiment_ls=all_experiments,
+#     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/'
+# )
 
-# %%
-PredictNewTestSet(
-    feats=tft,
-    targs=ttg,
-    full_data=tfl,
-    test_set_name = 'trimmed_held_out_test',
-    experiment_ls=all_experiments,
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/'
-)
+# # %%
+# PredictNewTestSet(
+#     feats=tft,
+#     targs=ttg,
+#     full_data=tfl,
+#     test_set_name = 'trimmed_held_out',
+#     experiment_ls=all_experiments,
+#     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/10_sel/'
+# )
 
 
 # %%
@@ -83,49 +83,49 @@ from misc_functions import (
     molid_ls_to_smiles,
 )
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/10_sel/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/10_sel/')
 
-# # %%
-avg._average_experiment(exp_suffix="10_rmp", n_iters=150)
-avg._average_experiment(exp_suffix="10_rmu", n_iters=150)
-avg._average_experiment(exp_suffix="10_rmpo", n_iters=150)
-avg._average_experiment(exp_suffix="10_mp", n_iters=150)
-avg._average_experiment(exp_suffix="10_mpo", n_iters=150)
-avg._average_experiment(exp_suffix="10_r", n_iters=150)
-avg._average_experiment(exp_suffix="10_mu", n_iters=150)
+# # # %%
+# avg._average_experiment(exp_suffix="10_rmp", n_iters=150)
+# avg._average_experiment(exp_suffix="10_rmu", n_iters=150)
+# avg._average_experiment(exp_suffix="10_rmpo", n_iters=150)
+# avg._average_experiment(exp_suffix="10_mp", n_iters=150)
+# avg._average_experiment(exp_suffix="10_mpo", n_iters=150)
+# avg._average_experiment(exp_suffix="10_r", n_iters=150)
+# avg._average_experiment(exp_suffix="10_mu", n_iters=150)
 
 avg = AverageAll(
     results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
 )
 
 avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
-avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
-avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
-avg._average_experiment(exp_suffix="50_mp", n_iters=30)
-avg._average_experiment(exp_suffix="50_mpo", n_iters=30)
-avg._average_experiment(exp_suffix="50_r", n_iters=30)
-avg._average_experiment(exp_suffix="50_mu", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mp", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mpo", n_iters=30)
+# avg._average_experiment(exp_suffix="50_r", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mu", n_iters=30)
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/mp_mu_hybrid/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/mp_mu_hybrid/')
 
-avg._average_experiment(exp_suffix="50_mp_mu_2:8", n_iters=30)
-avg._average_experiment(exp_suffix="50_mp_mu_5:5", n_iters=30)
-avg._average_experiment(exp_suffix="50_mp_mu_8:2", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mp_mu_2:8", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mp_mu_5:5", n_iters=30)
+# avg._average_experiment(exp_suffix="50_mp_mu_8:2", n_iters=30)
 
 
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/rmp_rmu_hybrid/')
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/rmp_rmu_hybrid/')
 
-avg._average_experiment(exp_suffix="50_rmp_rmu_2:8", n_iters=30)
-avg._average_experiment(exp_suffix="50_rmp_rmu_5:5", n_iters=30)
-avg._average_experiment(exp_suffix="50_rmp_rmu_8:2", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmp_rmu_2:8", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmp_rmu_5:5", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmp_rmu_8:2", n_iters=30)
 
-# # %%
-avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
+# # # %%
+# avg = AverageAll(results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/diff_pool/')
 
-avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
-avg._average_experiment(exp_suffix='50_rmp_025', n_iters=30)
-avg._average_experiment(exp_suffix='50_rmp_01', n_iters=30)
-avg._average_experiment(exp_suffix='50_rmp_005', n_iters=30)
-avg._average_experiment(exp_suffix='50_rmp_0025', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_05', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_025', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_01', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_005', n_iters=30)
+# avg._average_experiment(exp_suffix='50_rmp_0025', n_iters=30)
 
-# # %%
+# # # %%

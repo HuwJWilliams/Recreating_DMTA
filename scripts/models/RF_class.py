@@ -102,6 +102,8 @@ def PredictNewTestSet(
             # Calculate performance metrics using true vs predicted
             true_vals = targ_df.loc[pred_df.index].astype(float)
             pred_vals = pred_df[f"pred_{docking_column}"].astype(float)
+            print(true_vals.head(10))
+            print(pred_vals.head(10))
             errors = true_vals - pred_vals
 
             bias = np.mean(errors)
@@ -122,6 +124,9 @@ def PredictNewTestSet(
                 "pearson_p": round(float(p_pearson), 4),
             }
 
+            print(performance_dict)
+            print(f"{preds_dir}/{test_set_name}")
+                  
             with open(f"{preds_dir}/{test_set_name}_stats.json", "w") as file:
                 json.dump(performance_dict, file, indent=4)
 

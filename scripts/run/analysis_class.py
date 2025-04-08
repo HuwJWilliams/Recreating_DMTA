@@ -919,7 +919,16 @@ class Analysis:
         #fig.suptitle(plot_title, fontsize=16, y=0.98)
 
         # Adjust layout to make room for the legend
-        plt.tight_layout(rect=[0, 0, 1, 0.93])  # Allows for the legend above
+        plt.tight_layout()  # Allows for the legend above
+       
+        plt.subplots_adjust(
+            left=0.1,
+            bottom=0.2,  # try 0.25 or 0.3 if still clipped
+            right=0.85,
+            top=0.95,
+            wspace=0.4,
+            hspace=0.4
+        )
 
         if save_plot:
             plt.savefig(
@@ -952,10 +961,12 @@ class Analysis:
             
             # Adjust layout
             plt.tight_layout()
-            plt.subplots_adjust(right=0.85)  # Leave space for the legend
+            plt.subplots_adjust(left=0.1, bottom=0.2, right=0.85, top=0.95, wspace=0.4, hspace=0.4)
+              # Leave space for the legend
             plt.savefig(
                 save_fpath + plot_fname + '_loadings.png',
                 dpi=600,
+                bbox_inches='tight'
                 )
 
 
@@ -2863,6 +2874,17 @@ class Analysis:
         full_df = pd.concat(df_list, axis=0)
         full_df = full_df.reset_index()
 
+            # Calculate statistical metrics
+        stats_data = {
+            'Mean Docking Score': full_df[docking_column].mean(),
+            'Range Docking Score': (full_df[docking_column].min(), full_df[docking_column].max()),
+            'Std Dev Docking Score': full_df[docking_column].std(),
+            'Mean Predicted Score': full_df[preds_column].mean(),
+            'Range Predicted Score': (full_df[preds_column].min(), full_df[preds_column].max()),
+            'Std Dev Predicted Score': full_df[preds_column].std()
+        }
+        stats_df = pd.DataFrame([stats_data])
+
         experiment_colors = [
             next((color for key, color in self.method_colour_map.items() if exp.endswith(key)), "gray")
             for exp in experiment_ls
@@ -2964,6 +2986,8 @@ class Analysis:
 
         if save_plot:
             plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
+            stats_df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}_stats.csv", index=False)
+
 
         plt.show()
 

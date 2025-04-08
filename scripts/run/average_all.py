@@ -5,6 +5,7 @@ import sys
 from glob import glob
 import json
 import joblib
+from scipy.stats import pearsonr
 
 
 PROJ_DIR = Path(__file__).parent.parent.parent

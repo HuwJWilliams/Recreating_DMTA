@@ -18,7 +18,7 @@
 #SBATCH --ntasks=40
 #
 # Specify (hard) runtime (HH:MM:SS)
-#SBATCH --time=1:00:00
+#SBATCH --time=48:00:00
 #
 # Job name
 #SBATCH --job-name=calc_new_test

@@ -26,34 +26,34 @@ an = Analysis(results_dir=results_dir,
               )
 # %%
 
-chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
-ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
-prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
+# chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
+# ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
+# prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
 
-an.PCA_Plot(train=chembl_feats,
-            validation=ho_feats,
-            prediction=prediction,
-            source_ls=['ChEMBL', 
-                       'Held_Out', 
-                       'PyMolGen'],
-            n_components=5,
-            plot_scatter=True,
-            plot_area=True,
-            save_extra_data=True,
-            plot_loadings=True,
-            kdep_sample_size=0.5,
-            kdep_sample_ls=['PyMolGen'],
-            tick_fontsize=18,
-            label_fontsize=20,
-            axis_fontsize=18,
-            legend_fontsize=20,
-           kde_tick_dicts = [
-    {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
-    {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
-    {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
-    {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
-    {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
-])
+# an.PCA_Plot(train=chembl_feats,
+#             validation=ho_feats,
+#             prediction=prediction,
+#             source_ls=['ChEMBL', 
+#                        'Held_Out', 
+#                        'PyMolGen'],
+#             n_components=5,
+#             plot_scatter=True,
+#             plot_area=True,
+#             save_extra_data=True,
+#             plot_loadings=True,
+#             kdep_sample_size=0.5,
+#             kdep_sample_ls=['PyMolGen'],
+#             tick_fontsize=18,
+#             label_fontsize=20,
+#             axis_fontsize=18,
+#             legend_fontsize=20,
+#            kde_tick_dicts = [
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
+#     {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
+# ])
 
 # %%
 # experiment_ls = ["average_50_rmp"]
@@ -80,8 +80,8 @@ an.PCA_Plot(train=chembl_feats,
 #                             )
 
 # %%
-# an.Plot_Perf(
-#     experiments=[
+an.Plot_Perf(
+    experiments=[
         # "average_50_rmp",
         # "average_50_mp",
         # "average_50_rmpo",
@@ -98,9 +98,9 @@ an.PCA_Plot(train=chembl_feats,
         # "average_10_mu",
         # "average_50_rmu",
         
-        # "average_50_mp_mu_2:8",
-        # "average_50_mp_mu_5:5",
-        # "average_50_mp_mu_8:2",
+        "average_50_mp_mu_2:8",
+        "average_50_mp_mu_5:5",
+        "average_50_mp_mu_8:2",
 
         # "average_50_rmp_rmu_2:8",
         # "average_50_rmp_rmu_5:5",
@@ -128,27 +128,27 @@ an.PCA_Plot(train=chembl_feats,
         # "20241105_50_scramb_mpo"  ,
         # "20241105_50_scramb_rmp",
 
-    # ],
-    # plot_ho =True,
-    # plot_int= False,
-    # plot_chembl_int= False,
-    # plot_fname='diff_pool_trho_plot_pear_r',
-    # set_ylims=True,
-    # r_type = 'pearson_r',
-    # rmse_ylim=(0.25, 1.25),
-    # sdep_ylim=(0.2, 0.6),
-    # r2_ylim=(-0.2, 1),
-    # bias_ylim= (-1.2, 0.1),
-    # # r2_ylim=(-0.2, 0.8), #scrambled
-    # # bias_ylim= (-0.5, 0.5), #scrambled
-    # yticks=4,
-    # custom_xticks=[0, 500, 1000, 1500],
-    # tick_fontsize=20,
-    # label_fontsize=24,
-    # title_fontsize=20,
-    # legend_fontsize=20,
-    # save_plot=True,
-    # )
+    ],
+    plot_ho =True,
+    plot_int= False,
+    plot_chembl_int= False,
+    plot_fname='diff_pool_trho_plot_pear_r',
+    set_ylims=True,
+    r_type = 'pearson_r',
+    rmse_ylim=(0.25, 1.25),
+    sdep_ylim=(0.2, 0.6),
+    r2_ylim=(-0.2, 1),
+    bias_ylim= (-1.2, 0.1),
+    # r2_ylim=(-0.2, 0.8), #scrambled
+    # bias_ylim= (-0.5, 0.5), #scrambled
+    yticks=4,
+    custom_xticks=[0, 500, 1000, 1500],
+    tick_fontsize=20,
+    label_fontsize=24,
+    title_fontsize=20,
+    legend_fontsize=20,
+    save_plot=True,
+    )
 
  # %%
 # %%
@@ -679,4 +679,29 @@ an.PCA_Plot(train=chembl_feats,
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                             #    )
 
+# %%
+
+an.PlotFeatureImportanceEigenVectors(experiment='average_50_mp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               top_n_feats=10
+                               )
+
+# %%
+an.PlotFeatureImportanceEigenVectors(experiment='average_50_mu',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+                               )
+# %%
+an.PlotFeatureImportanceEigenVectors(experiment='average_50_rmp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+                               )
+# %%
+# an.PlotFeatureImportanceEigenVectors3D(experiment='average_50_mp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                save_data=False
+#                                )
+# %%
+
+an.PlotFeatureLoadingEvolution(experiment='average_50_rmp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+                               )
 # %%

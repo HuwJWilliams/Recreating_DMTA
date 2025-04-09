@@ -225,11 +225,18 @@ class AverageAll:
 
         for dir in all_exp_dirs:
             working_dir = str(dir) + f"/it{it}"
+                
             try:
-                working_csv = working_dir + "/held_out_test/held_out_test_preds.csv"
+                # Use Path chaining instead of string concat
+                working_csv = Path(working_dir) / "held_out_test" / "held_out_test_preds.csv"
+
+                # Fall back if that file doesn't exist
+                if not working_csv.exists():
+                    working_csv = Path(working_dir) / "held_out_test" / "held_out_preds.csv"
+
+                # Load and concatenate
                 working_df = pd.read_csv(working_csv, index_col='ID')
                 ho_df = pd.concat([ho_df, working_df])
-
 
             except Exception as e:
                 print(f"An error occurred when averaging hold out predictions:\n{e}")

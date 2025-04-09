@@ -29,6 +29,7 @@ import os
 from collections import defaultdict
 from joypy import joyplot
 from scipy.stats import gaussian_kde
+from matplotlib.patches import Patch, PathPatch
 
 
 from rdkit.DataStructs import FingerprintSimilarity
@@ -41,6 +42,7 @@ import colorcet as cc
 
 FILE_DIR = Path(__file__).parent
 PROJ_DIR = Path(__file__).parent.parent.parent
+
 
 # Misc
 sys.path.insert(0, str(PROJ_DIR) + "/scripts/misc/")
@@ -262,7 +264,7 @@ class Analysis:
         label_fontsize:int=12,
         title_fontsize:int=14,
         legend_fontsize:int=10,
-        font_family: str="Arial",
+        font_family: str= "DejaVu Sans",
         custom_xticks: list=None,
         linewidth:int=2,
 
@@ -485,6 +487,7 @@ class Analysis:
 
                 if custom_xticks is not None:
                     a.set_xticks(custom_xticks)
+                    a.tick_params(axis='x', labelrotation=45)  # rotate x-axis tick labels
                 elif xticks is not None:
                     a.xaxis.set_major_locator(plt.MaxNLocator(xticks))
 
@@ -714,7 +717,7 @@ class Analysis:
 
         # Initialise PCA subplots
         fig, axs = plt.subplots(
-            nrows=n_components, ncols=n_components, figsize=(15, 15)
+            nrows=n_components, ncols=n_components, figsize=(20, 20)
         )
 
         # Filling in the subplots
@@ -764,34 +767,33 @@ class Analysis:
                             )
 
 
-                    axs[i, j].set_xlabel(f"PC{j+1}", fontsize=axis_fontsize)
-                    axs[i, j].set_ylabel(f"PC{i+1}", fontsize=axis_fontsize)
+                    # --- Common tick settings for all subplots
+                    axs[i, j].tick_params(axis='both', labelsize=tick_fontsize, pad=6)
 
-                    # Remove x and y plots from every PCA plot apart from the left and bottom most plots
-                    # Axes label control
-                    axs[i, j].tick_params(axis='both', labelsize=tick_fontsize)
+                    if i == j:
+                        # Diagonal (KDE)
+                        axs[i, i].set_xlabel(f"PC{i+1}", fontsize=axis_fontsize, labelpad=10)
+                        axs[i, i].set_ylabel("Density", fontsize=label_fontsize, labelpad=10)
 
-                    # For scatter and area plots (not diagonal KDE)
-                    if i != j:
-                        # Remove x-axis labels unless bottom row
-                        if i != n_components - 1:
+                        if kde_tick_dicts and i < len(kde_tick_dicts):
+                            tick_info = kde_tick_dicts[i]
+                            if "xticks" in tick_info:
+                                axs[i, i].set_xticks(tick_info["xticks"])
+                            if "yticks" in tick_info:
+                                axs[i, i].set_yticks(tick_info["yticks"])
+                    else:
+                        # Off-diagonal (scatter or area)
+                        if i == n_components - 1:
+                            axs[i, j].set_xlabel(f"PC{j+1} ({explained_variance[j]:.2f}% Var)", fontsize=axis_fontsize, labelpad=10)
+                        else:
                             axs[i, j].set_xlabel("")
                             axs[i, j].set_xticklabels([])
 
+                        if j == 0:
+                            axs[i, j].set_ylabel(f"PC{i+1} ({explained_variance[i]:.2f}% Var)", fontsize=axis_fontsize, labelpad=10)
                         else:
-                            axs[i, j].set_xlabel(f"PC{j+1} ({explained_variance[j]:.2f}% Var)", fontsize=axis_fontsize)
-
-                        # Remove y-axis labels unless leftmost column
-                        if j != 0:
                             axs[i, j].set_ylabel("")
                             axs[i, j].set_yticklabels([])
-                        else:
-                            axs[i, j].set_ylabel(f"PC{i+1} ({explained_variance[i]:.2f}% Var)", fontsize=axis_fontsize)
-
-                    # For diagonal KDE plots — always show both axes
-                    else:
-                        axs[i, i].set_xlabel(f"PC{i+1}", fontsize=axis_fontsize)
-                        axs[i, i].tick_params(axis='both', labelsize=axis_fontsize)
 
                 # If on the diagonal, make the Kernel Density Estimate Plots for each Principal Component
                 else:
@@ -858,17 +860,17 @@ class Analysis:
                             
 
                 axs[i, i].set_xlabel("")
-                axs[i, i].set_ylabel("Density", fontsize=label_fontsize)
+                axs[i, i].set_ylabel("Density", fontsize=label_fontsize, labelpad=10)
                 axs[i, i].tick_params(axis='both', labelsize=tick_fontsize)
 
                 # Adjusting labels and titles, including the variance for each principal component
                 if i == n_components - 1:
                     axs[i, j].set_xlabel(
-                        f"PC{j+1} ({explained_variance[j]:.2f}% Variance)", fontsize=axis_fontsize
+                        f"PC{j+1} ({explained_variance[j]:.2f}% Variance)", fontsize=axis_fontsize, labelpad=10
                     )
                 if j == 0:
                     axs[i, j].set_ylabel(
-                        f"PC{i+1} ({explained_variance[i]:.2f}% Variance)", fontsize=axis_fontsize
+                        f"PC{i+1} ({explained_variance[i]:.2f}% Variance)", fontsize=axis_fontsize, labelpad=10
                     )
 
         # Define handles and labels for the legend
@@ -918,16 +920,14 @@ class Analysis:
 
         #fig.suptitle(plot_title, fontsize=16, y=0.98)
 
-        # Adjust layout to make room for the legend
-        plt.tight_layout()  # Allows for the legend above
-       
+        plt.tight_layout()
         plt.subplots_adjust(
             left=0.1,
-            bottom=0.2,  # try 0.25 or 0.3 if still clipped
-            right=0.85,
-            top=0.95,
-            wspace=0.4,
-            hspace=0.4
+            right=0.9,
+            top=0.93,
+            bottom=0.3,
+            wspace=0.6,
+            hspace=0.6
         )
 
         if save_plot:
@@ -948,7 +948,7 @@ class Analysis:
 
             for n in range(1, n_components + 1):
                 sns.barplot(x=abs_loadings_df.index, y=abs_loadings_df[f'PC{n}'], ax=ax[n-1])
-                ax[n-1].set_ylabel(f"PC{n} Loadings")
+                ax[n-1].set_ylabel(f"PC{n} Loadings", labelpad=10)
 
             ax[n-1].set_xticklabels(range(1, len(abs_loadings_df) + 1), rotation=90)
 
@@ -3550,3 +3550,349 @@ class Analysis:
                 plt.savefig(ridgeline_path, dpi=dpi)
 
             plt.show()
+
+
+    def PlotFeatureImportanceEigenVectors(self,
+                                        experiment: str,
+                                        iter_ls: list,
+                                        importance_fpath: str = "feature_importance_df.csv",
+                                        top_n_feats: int = 10,
+                                        save_data: bool = True,
+                                        save_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/feature_ridgeline_plots/",
+                                        filename: str = "feature_importances_eigen_vectors",
+                                        dpi: int = 500,
+                                        tick_fontsize: int = 20,
+                                        label_fontsize: int = 24,
+                                        title_fontsize: int = 26):
+        
+        top_feats = []
+        seen_feats = set()
+        exp_suffix = experiment[7:]
+
+
+        for it in iter_ls:
+            if it == 0:
+                working_path = f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+            else:
+                working_path = Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{it}" / str(importance_fpath)
+
+            working_df = pd.read_csv(working_path, usecols=["Feature", "Importance"]).sort_values(by='Importance', ascending=False).head(top_n_feats)
+
+            for feat in working_df['Feature']:
+                if feat not in seen_feats:
+                    top_feats.append(feat)
+                    seen_feats.add(feat)
+
+        importance_df = pd.DataFrame(index=top_feats)
+
+        for it in iter_ls:
+            if it == 0:
+                working_path = f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+            else:
+                working_path = Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{it}" / str(importance_fpath)
+
+            working_df = pd.read_csv(working_path, usecols=["Feature", "Importance"])
+            working_df = working_df[working_df["Feature"].isin(top_feats)].set_index("Feature")
+            working_df = working_df.loc[top_feats]
+            importance_df[f"it{it}"] = working_df['Importance']
+
+        # Prepare the data
+        X = importance_df.fillna(0).values
+        X = X - X.mean(axis=0)  # center the data
+
+        # PCA
+        pca = PCA(n_components=2)
+        pca.fit(X)
+        loadings = pca.components_.T  # shape (n_features, 2)
+        explained_var = pca.explained_variance_ratio_ * 100
+
+
+        # Color palette — choose any you'd like
+        colors = sns.color_palette("tab20", n_colors=len(importance_df))
+
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(10, 10))
+        circle = plt.Circle((0, 0), 1, color='lightgrey', fill=False, linestyle='--')
+        ax.add_patch(circle)
+
+        # Draw each arrow and label with a color
+        for i, (feature, color) in enumerate(zip(importance_df.index, colors)):
+            ax.arrow(0, 0, loadings[i, 0], loadings[i, 1],
+                    head_width=0.03, head_length=0.05,
+                    fc=color, ec=color, length_includes_head=True)
+            # ax.text(loadings[i, 0]*1.15, loadings[i, 1]*1.15, feature,
+            #         fontsize=11, ha='center', va='center', color=color)
+
+        # Axes and style
+        ax.set_xlim(-1.1, 1.1)
+        ax.set_ylim(-1.1, 1.1)
+        ax.axhline(0, color='gray', linestyle='--', lw=0.8)
+        ax.axvline(0, color='gray', linestyle='--', lw=0.8)
+        ax.set_aspect('equal')
+        ax.set_xlabel(f'PC1 ({round(explained_var[0], 2)} % Variance)', fontsize=label_fontsize)
+        ax.set_ylabel(f'PC2 ({round(explained_var[1], 2)} % Variance)', fontsize=label_fontsize)
+        ax.set_title('PCA Circular Loadings Plot', fontsize=title_fontsize)
+        ax.tick_params(axis='both', labelsize=tick_fontsize)
+
+
+        # Add legend
+        legend_elements = [Patch(facecolor=color, edgecolor=color, label=feature)
+                        for feature, color in zip(importance_df.index, colors)]
+        ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1.05, 0.5), title="Features")
+        legend = ax.legend(
+            handles=legend_elements,
+            loc='center left',
+            bbox_to_anchor=(1.05, 0.5),
+            title="Features",
+            fontsize=16,
+            title_fontsize=18 
+        )
+
+        plt.tight_layout()
+
+        if save_data:
+            plt.savefig(save_path + f'/{filename}{exp_suffix}.png', dpi=dpi)
+        plt.show()
+
+
+    def PlotFeatureImportanceEigenVectors3D(self,
+                                    experiment: str,
+                                    iter_ls: list,
+                                    importance_fpath: str = "feature_importance_df.csv",
+                                    top_n_feats: int = 10,
+                                    save_data: bool = True,
+                                    save_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/feature_ridgeline_plots/",
+                                    filename: str = "feature_importances_eigen_vectors_3D",
+                                    dpi: int = 500,
+                                    tick_fontsize: int = 14,
+                                    label_fontsize: int = 16,
+                                    title_fontsize: int = 18,
+                                    legend_fontsize: int = 14,
+                                    legend_title_fontsize: int = 16):
+
+        import seaborn as sns
+        from sklearn.decomposition import PCA
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Patch
+
+        top_feats = []
+        seen_feats = set()
+        exp_suffix = experiment[7:]
+
+        # Collect top features across iterations
+        for it in iter_ls:
+            if it == 0:
+                working_path = f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+            else:
+                working_path = Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{it}" / str(importance_fpath)
+
+            working_df = pd.read_csv(working_path, usecols=["Feature", "Importance"]).sort_values(by='Importance', ascending=False).head(top_n_feats)
+
+            for feat in working_df['Feature']:
+                if feat not in seen_feats:
+                    top_feats.append(feat)
+                    seen_feats.add(feat)
+
+        # Create importance matrix
+        importance_df = pd.DataFrame(index=top_feats)
+
+        for it in iter_ls:
+            if it == 0:
+                working_path = f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+            else:
+                working_path = Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{it}" / str(importance_fpath)
+
+            working_df = pd.read_csv(working_path, usecols=["Feature", "Importance"])
+            working_df = working_df[working_df["Feature"].isin(top_feats)].set_index("Feature")
+            working_df = working_df.loc[top_feats]
+            importance_df[f"it{it}"] = working_df['Importance']
+
+        # PCA
+        X = importance_df.fillna(0).values
+        X = X - X.mean(axis=0)
+
+        pca = PCA(n_components=3)
+        pca.fit(X)
+        loadings = pca.components_.T  # shape: (n_features, 3)
+        explained_var = pca.explained_variance_ratio_ * 100
+
+        # 3D Plot
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Color palette
+        colors = sns.color_palette("tab20", n_colors=len(importance_df))
+
+        # Plot each arrow and label
+        for i, (feature, color) in enumerate(zip(importance_df.index, colors)):
+            ax.quiver(
+                0, 0, 0,
+                loadings[i, 0],
+                loadings[i, 1],
+                loadings[i, 2],
+                color=color,
+                arrow_length_ratio=0.1,
+                linewidth=2
+            )
+            ax.text(
+                loadings[i, 0]*1.15,
+                loadings[i, 1]*1.15,
+                loadings[i, 2]*1.15,
+                feature,
+                color=color,
+                fontsize=10
+            )
+
+        # Axes styling
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.set_zlim(-1, 1)
+        ax.set_xlabel(f"PC1 ({explained_var[0]:.2f}% Variance)", fontsize=label_fontsize)
+        ax.set_ylabel(f"PC2 ({explained_var[1]:.2f}% Variance)", fontsize=label_fontsize)
+        ax.set_zlabel(f"PC3 ({explained_var[2]:.2f}% Variance)", fontsize=label_fontsize)
+        ax.set_title("3D PCA Loadings Plot", fontsize=title_fontsize)
+        ax.tick_params(axis='both', labelsize=tick_fontsize)
+
+        # Legend
+        legend_elements = [Patch(facecolor=color, edgecolor=color, label=feature)
+                        for feature, color in zip(importance_df.index, colors)]
+        ax.legend(handles=legend_elements,
+                loc='center left',
+                bbox_to_anchor=(1.05, 0.5),
+                title="Features",
+                fontsize=legend_fontsize,
+                title_fontsize=legend_title_fontsize)
+
+        plt.tight_layout()
+
+        # Save
+        if save_data:
+            Path(save_path).mkdir(parents=True, exist_ok=True)
+            plt.savefig(f"{save_path}/{filename}{exp_suffix}.png", dpi=dpi)
+
+        plt.show()
+
+    def PlotFeatureLoadingEvolution(self,
+                                    experiment: str,
+                                    iter_ls: list,
+                                    importance_fpath: str = "feature_importance_df.csv",
+                                    top_n_feats: int = 10,
+                                    save_data: bool = False,
+                                    save_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/feature_loading_evolution/",
+                                    filename: str = "feature_loading_shift_subplots",
+                                    dpi: int = 500,
+                                    tick_fontsize: int = 14,
+                                    label_fontsize: int = 16,
+                                    title_fontsize: int = 18):
+        import matplotlib.pyplot as plt
+        from sklearn.decomposition import PCA
+        import seaborn as sns
+        import pandas as pd
+        from pathlib import Path
+        import numpy as np
+
+        exp_suffix = experiment[7:]
+
+        # --- Step 1: Build importance matrix
+        importance_df = pd.DataFrame()
+        for it in iter_ls:
+            path = (f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+                    if it == 0 else Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{it}" / importance_fpath)
+            df = pd.read_csv(path, usecols=["Feature", "Importance"]).set_index("Feature")
+            df.columns = [f"it{it}"]
+            importance_df = importance_df.join(df, how="outer")
+
+        importance_df = importance_df.fillna(0)
+
+        # --- Step 2: Top N features
+        top_feats = importance_df.mean(axis=1).sort_values(ascending=False).head(top_n_feats).index.tolist()
+
+        # --- Step 3: Collect loadings
+        feature_loadings = {feat: [] for feat in top_feats}
+
+        for i, current_iter in enumerate(iter_ls):
+            path = (f"{PROJ_DIR}/results/rdkit_desc/init_RF_model/it0/feature_importance_df.csv"
+                    if current_iter == 0 else Path(self.results_dir) / "complete_archive/50_sel" / experiment / f"it{current_iter}" / importance_fpath)
+
+            df = pd.read_csv(path, usecols=["Feature", "Importance"])
+            df = df[df["Feature"].isin(top_feats)].set_index("Feature").reindex(top_feats).fillna(0)
+            row = df.values.flatten()
+            noisy_matrix = row + np.random.normal(0, 1e-6, size=(5, len(row)))
+
+            pca = PCA(n_components=2)
+            pca.fit(noisy_matrix)
+            explained_var = pca.explained_variance_ratio_ * 100
+            loadings = pca.components_.T
+
+            for j, feat in enumerate(top_feats):
+                feature_loadings[feat].append((loadings[j], explained_var))
+
+        # --- Step 4: Plot
+        n_cols = 3
+        n_rows = int(np.ceil(len(top_feats) / n_cols))
+        fig, axs = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows), gridspec_kw={'wspace':0.4, 'hspace':0.4})
+        axs = axs.flatten()
+        colors = sns.color_palette("tab10", n_colors=len(top_feats))
+
+        for idx, (feat, color) in enumerate(zip(top_feats, colors)):
+            ax = axs[idx]
+            trail = np.array([pt[0] for pt in feature_loadings[feat]])
+            explained_var = feature_loadings[feat][-1][1]
+
+            for t, (vec, _) in enumerate(feature_loadings[feat]):
+                tip_x, tip_y = vec
+                ax.arrow(0, 0, tip_x, tip_y,
+                        head_width=0.02,
+                        head_length=0.03,
+                        fc=color, ec=color,
+                        alpha = 0.3 + 0.7 * (t / (len(feature_loadings[feat]) - 1)),
+                        linewidth=1.5,
+                        length_includes_head=True)
+
+                # Dynamically offset text away from the arrow tip (moved inside the loop)
+                norm = np.linalg.norm([tip_x, tip_y])
+                if norm == 0:
+                    norm = 1
+                unit_vec = np.array([tip_x, tip_y]) / norm
+                label_pos = np.array([tip_x, tip_y]) + unit_vec * 0.08
+
+                ax.text(label_pos[0], label_pos[1],
+                        str(iter_ls[t]), fontsize=10, color='black',
+                        ha='center', va='center')
+
+            ax.axhline(0, color='gray', linestyle='--')
+            ax.axvline(0, color='gray', linestyle='--')
+            ax.set_aspect('equal')
+            ax.set_xlim(-1.1, 1.1)
+            ax.set_ylim(-1.1, 1.1)
+            ax.set_title(feat, fontsize=title_fontsize)
+            ax.set_xlabel(f"PC1 ({explained_var[0]:.2f}% Var)", fontsize=label_fontsize)
+            ax.set_ylabel(f"PC2 ({explained_var[1]:.2f}% Var)", fontsize=label_fontsize)
+            ax.tick_params(axis='both', labelsize=tick_fontsize)
+
+        # Remove any unused subplots
+        for j in range(len(top_feats), len(axs)):
+            fig.delaxes(axs[j])
+
+        # Add legend for feature colors (placed outside on the right)
+        legend_patches = [
+            plt.Line2D([0], [0], color=color, lw=3, label=feat)
+            for feat, color in zip(top_feats, colors)
+        ]
+
+        fig.legend(
+            handles=legend_patches,
+            title="Features",
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),  # Push legend slightly to the right
+            fontsize=14,
+            title_fontsize=16
+        )
+
+        plt.tight_layout(rect=[0, 0, 0.88, 1])  # Leave space on right for legend
+        
+        if save_data:
+            Path(save_path).mkdir(parents=True, exist_ok=True)
+            plt.savefig(f"{save_path}/{filename}{exp_suffix}.png", dpi=dpi)
+
+        plt.show()

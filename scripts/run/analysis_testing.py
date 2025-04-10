@@ -98,9 +98,9 @@ an.Plot_Perf(
         # "average_10_mu",
         # "average_50_rmu",
         
-        "average_50_mp_mu_2:8",
-        "average_50_mp_mu_5:5",
-        "average_50_mp_mu_8:2",
+        # "average_50_mp_mu_2:8",
+        # "average_50_mp_mu_5:5",
+        # "average_50_mp_mu_8:2",
 
         # "average_50_rmp_rmu_2:8",
         # "average_50_rmp_rmu_5:5",

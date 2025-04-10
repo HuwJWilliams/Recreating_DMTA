@@ -152,7 +152,7 @@ class Molecule_Selector:
         """
 
         if n_mols is None:
-            n_mols=self.n_mols
+            n_mols=self.n_cmpds
 
         mols = []
         total_mols = 0

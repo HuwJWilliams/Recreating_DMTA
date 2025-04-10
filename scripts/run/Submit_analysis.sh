@@ -42,7 +42,10 @@ module load anaconda/python-3.9.7
 # Modify the line below to run your program
 source activate phd_env
 
-python -u /users/yhb18174/Recreating_DMTA/scripts/run/analysis_testing.py
+# python -u /users/yhb18174/Recreating_DMTA/scripts/run/analysis_testing.py
+
+python -u /users/yhb18174/Recreating_DMTA/scripts/run/make_all_plots.py
+
 
 #=========================================================
 # Epilogue script to record job endtime and runtime

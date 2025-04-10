@@ -249,6 +249,9 @@ class RecDMTA:
         elif self.selection_method == "rmpo":
             sel_idx = self.sel.random_in_best(column="MPO", ascending=True, frac=self.sel_size)
 
+        elif self.selection_method == "rmu":
+            sel_idx = self.sel.random_in_best(column="Uncertainty", ascending=False, frac=self.sel_size)
+
         elif self.selection_method == "test":
             sel_idx = ["PMG-31895", "PMG-27063"]
             

@@ -24,7 +24,6 @@ ROOT_DIR = Path(__file__).parent
 
 class Dataset_Formatter:
     def __init__(self, run_dir: str = str(ROOT_DIR)):
-        return
 
         self.run_dir = run_dir
         self.lilly_smi_df = None

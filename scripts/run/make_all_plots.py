@@ -77,6 +77,7 @@ plot_ls_ref = ["sing", "mp_mu", "rmp_rmu", "diff_pool"]
 
 #%%
 for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
+    break
     ho_an.Plot_Perf(
         experiments=plot_ls,
         plot_ho =True,
@@ -143,52 +144,60 @@ for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
         )
 
 # %%
-ho_an.UniqueFragCountGrouped(suffix_ls=['_mp',
-                                        "_mpo",
-                                        "_mu",
-                                        "_rmp",
-                                        "_rmpo",
-                                        "_rmu",
-                                        "_r"], 
-                                        max_iter=30,
-                                     save_plot=True)
-# %%
-ho_an.UncertaintyChecker(experiment_ls=['average_50_mu'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_mu')
-ho_an.UncertaintyChecker(experiment_ls=['average_50_mp'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_mp')
-ho_an.UncertaintyChecker(experiment_ls=['average_50_rmp'],
-                                     iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                                     save_plot=True,
-                                     plot_name='uncertainty_checker_50_rmp')
-# %%
-
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
+    
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/'
+an = Analysis(results_dir=results_dir, 
+              held_out_stat_json="held_out_test/held_out_stats.json",
+              docking_column='Affinity(kcal/mol)'
+              )
 
 # %%
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
+# an.UniqueFragCountGrouped(suffix_ls=['_mp',
+#                                         "_mpo",
+#                                         "_mu",
+#                                         "_rmp",
+#                                         "_rmpo",
+#                                         "_rmu",
+#                                         "_r"], 
+#                                         max_iter=30,
+#                                      save_plot=True)
+# %%
+# an.UncertaintyChecker(experiment_ls=['average_50_mu'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_mu')
+# an.UncertaintyChecker(experiment_ls=['average_50_mp'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_mp')
+# an.UncertaintyChecker(experiment_ls=['average_50_rmp'],
+#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                      save_plot=True,
+#                                      plot_name='uncertainty_checker_50_rmp')
+# %%
+
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
+
+# %%
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                                )
 # %%
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                                )
 
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_2:8',
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_2:8',
                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                                )
 
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_5:5',
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_5:5',
                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                                )
 
-ho_an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_8:2',
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_8:2',
                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
                                )
 

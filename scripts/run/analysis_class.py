@@ -239,7 +239,7 @@ class Analysis:
                 "pearson_r": pearson
             }
 
-        print(all_stats)
+        #print(all_stats)
 
         return all_stats
 
@@ -3199,7 +3199,8 @@ class Analysis:
         plot_dict = {}
         fig = plt.figure(figsize=(16, 8))
 
-        all_experiments = os.listdir(self.results_dir)
+        parent_dir = f"{self.results_dir}" #/complete_archive/50_sel/"
+        all_experiments = os.listdir(parent_dir)
         
         for suffix in suffix_ls:
             # Find experiments that end with the given suffix
@@ -3210,7 +3211,7 @@ class Analysis:
             step = 50 if "_50_" in matched_exps[0] else 10 if "_10_" in matched_exps[0] else 1
 
             for exp in matched_exps:
-                working_dir = os.path.join(self.results_dir, exp)
+                working_dir = os.path.join(parent_dir, exp)
 
                 n_iters = max_iter if max_iter is not None else count_number_iters(working_dir)
 
@@ -3890,7 +3891,7 @@ class Analysis:
         )
 
         plt.tight_layout(rect=[0, 0, 0.88, 1])  # Leave space on right for legend
-        
+
         if save_data:
             Path(save_path).mkdir(parents=True, exist_ok=True)
             plt.savefig(f"{save_path}/{filename}{exp_suffix}.png", dpi=dpi)

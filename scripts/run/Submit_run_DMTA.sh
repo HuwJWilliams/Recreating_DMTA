@@ -50,14 +50,16 @@ module load anaconda/python-3.9.7
 source activate phd_env
 
 n_cmpds=50
-sel_method="mp_mu_8:2"
-start_iter=9
-total_iters=22
-run_date="20250317"
+sel_method="rmu"
+start_iter=1
+total_iters=30
+run_date="20250410"
 random_frac=0.1
 extra_description=""
 
 python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py $n_cmpds $sel_method $start_iter $total_iters $run_date $random_frac $extra_description
+tar -czvf users/yhb18174/Recreating_DMTA/docking/PyMolGen_updated.tar.gz -C /users/yhb18174/Recreating_DMTA/docking PyMolGen
+rm -r /users/yhb18174/Recreating_DMTA/docking/PyMolGen/
 
 #=========================================================
 # Epilogue script to record job endtime and runtime

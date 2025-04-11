@@ -65,5 +65,5 @@ run = RecDMTA(
 )
 
 run.RunIterations(
-    held_out_test_feats=held_out_test_feats, held_out_test_targs=held_out_test_targ
+    held_out_test_feats=held_out_test_feats, held_out_test_targs=held_out_test_targs
 )

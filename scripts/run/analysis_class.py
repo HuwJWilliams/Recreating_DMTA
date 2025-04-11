@@ -2784,7 +2784,7 @@ class Analysis:
         df['SMILES'] = smi_ls
         df['Batch_No'] = df_select['batch_no']
         df[preds_column] = df.merge(preds_df[['ID', preds_column]], on='ID', how='left')[preds_column]
-        df[docking_column] = 'NaN'
+        df[docking_column] = np.nan
 
 
         with Pool() as pool:
@@ -2804,6 +2804,8 @@ class Analysis:
 
         # Set the 'ID' column as the index in df
         df.set_index('ID', inplace=True)
+        df[docking_column] = pd.to_numeric(df[docking_column], errors='coerce')
+        df[preds_column] = pd.to_numeric(df[preds_column], errors='coerce')
 
         return df
     
@@ -3292,6 +3294,7 @@ class Analysis:
                             label_fontsize: int=20,
                             legend_fontsize: int=20,
                             figsize:tuple=(14, 14),
+                            plot_pred=False
                             ):
         
         n_y_plots = int(np.sqrt(n_plots))
@@ -3896,4 +3899,183 @@ class Analysis:
             Path(save_path).mkdir(parents=True, exist_ok=True)
             plt.savefig(f"{save_path}/{filename}{exp_suffix}.png", dpi=dpi)
 
+        plt.show()
+
+    def PlotUncertaintyEvolution(self,
+                                    experiment_ls: list,
+                                    n_iters: int = 30,
+                                    step: int = 50,
+                                    n_bins: int = 3,
+                                    generic_pred_filename: str = "all_preds_*.csv.gz", 
+                                    save_path: str=f"{PROJ_DIR}/results/rdkit_desc/plots/Uncertainty_evolution.png",
+                                    save_plot: bool=False,
+                                    tick_fontsize:int=18,
+                                    label_fontsize:int=20,
+                                    legend_fontsize:int=16):
+
+        import re
+        glob_best_pred = float('inf')
+        glob_worst_pred = float('-inf')
+
+        #Compute global min/max for binning
+        for exp in experiment_ls:
+            for it in range(n_iters + 1):
+                pred_file_ls = glob(self.results_dir + f"/complete_archive/50_sel/{exp}/it{it}/" + generic_pred_filename)
+                for file in pred_file_ls:
+                    working_df = pd.read_csv(file, index_col='ID')
+                    if 'pred_Affinity(kcal/mol)' in working_df.columns:
+                        best_pred = working_df['pred_Affinity(kcal/mol)'].min()
+                        worst_pred = working_df['pred_Affinity(kcal/mol)'].max()
+                        if best_pred < glob_best_pred:
+                            glob_best_pred = best_pred
+                        if worst_pred > glob_worst_pred:
+                            glob_worst_pred = worst_pred
+
+        print(f"Global best pred: {glob_best_pred}")
+        print(f"Global worst pred: {glob_worst_pred}")
+
+        bin_edges = np.linspace(glob_best_pred, glob_worst_pred, n_bins + 1)
+        bin_labels = [f"{bin_edges[i]:.2f} to {bin_edges[i+1]:.2f}" for i in range(n_bins)]
+
+        glob_uncert_dict = {}
+
+        # Aggregate uncertainty values binned by predicted affinity
+        for exp in experiment_ls:
+            print(f"\nAnalysing Experiment: {exp}")
+            exp_binned_uncert_dict = {}
+
+            for it in range(n_iters + 1):
+                print(f"  Iteration {it}")
+                it_binned_uncert_dict = {}
+
+                pred_file_ls = glob(self.results_dir + f"/complete_archive/50_sel/{exp}/it{it}/" + generic_pred_filename)
+                for file in pred_file_ls:
+                    file_number = re.findall(r'\d+', file)[0]
+                    working_df = pd.read_csv(file, index_col='ID')
+
+                    if 'pred_Affinity(kcal/mol)' not in working_df.columns or 'Uncertainty' not in working_df.columns:
+                        print(f" Skipping file (missing column): {file}")
+                        continue
+
+                    working_df['bin'] = pd.cut(
+                        working_df['pred_Affinity(kcal/mol)'],
+                        bins=bin_edges,
+                        include_lowest=True
+                    )
+
+                    uncertainty_bin_means = working_df.groupby('bin')['Uncertainty'].mean().tolist()
+                    it_binned_uncert_dict[file_number] = uncertainty_bin_means
+
+                uncert_bin_array = np.array(list(it_binned_uncert_dict.values()))
+                uncert_bin_means_across_files = np.nanmean(uncert_bin_array, axis=0).tolist()
+
+                if isinstance(uncert_bin_means_across_files, float):
+                    uncert_bin_means_across_files = [uncert_bin_means_across_files]
+
+                n_mols = it * step
+                exp_binned_uncert_dict[n_mols] = uncert_bin_means_across_files
+
+            glob_uncert_dict[exp] = exp_binned_uncert_dict
+
+
+        # Create a single figure for all experiments
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1))]  # Extend if needed
+        seen_experiments = set()
+
+        # Loop over experiments and plot on the same figure
+        for exp in experiment_ls:
+            mol_counts = sorted(glob_uncert_dict[exp].keys())
+            n_bins = len(glob_uncert_dict[exp][mol_counts[0]])
+
+            # Build trajectories
+            uncert_bin_trajectories = [[] for _ in range(n_bins)]
+            for n_mols in mol_counts:
+                uncert_vals = glob_uncert_dict[exp][n_mols]
+                for i in range(n_bins):
+                    uncert_bin_trajectories[i].append(uncert_vals[i])
+
+            # Choose color for this experiment
+            plot_color = 'black'
+            exp_suffix = next((key for key in self.method_colour_map if exp.endswith(key)), None)
+            exp_label = exp_suffix if exp_suffix else exp.split("_")[-1]
+            if exp_suffix in self.method_colour_map:
+                plot_color = self.method_colour_map[exp_suffix]
+
+            # Keep track of experiment for legend (avoid duplicates)
+            seen_experiments.add(exp_label)
+
+            # Plot each bin's line for this experiment
+            for i, bin_vals in enumerate(uncert_bin_trajectories):
+                linestyle = line_styles[i % len(line_styles)]
+                ax.plot(
+                    mol_counts, bin_vals,
+                    color=plot_color,
+                    linestyle=linestyle,
+                    linewidth=2
+                )
+
+        # Create first legend for bin styles
+        bin_lines = [
+            plt.Line2D([0], [0], color="black", linestyle=line_styles[i])
+            for i in range(n_bins)
+        ]
+        bin_labels = [f"{bin_edges[i]:.2f} to {bin_edges[i+1]:.2f}" for i in range(n_bins)]
+
+        leg1 = fig.legend(
+            bin_lines,
+            bin_labels,
+            title="Affinity Bins",
+            loc="upper left",
+            bbox_to_anchor=(1, 0.95),
+            ncol=1,
+            borderaxespad=0.0,
+            prop={"size": legend_fontsize}
+        )
+
+        # Create second legend for experiment colors
+        exp_names = [e.split("_")[-1] for e in experiment_ls]
+        labels = []
+        for e in exp_names:
+            name = f"_{e}"
+            if name not in labels:
+                labels.append(name)
+
+        handles = []
+        for label in labels:
+            if label in self.method_colour_map:
+                colour = self.method_colour_map[label]
+                handle = Line2D([0], [0], color=colour, lw=2)
+                handles.append(handle)
+            else:
+                print(f"Warning: No color found for label {label}")
+
+        leg2 = fig.legend(
+            handles,
+            [label.lstrip('_') for label in labels],
+            title="Experiment",
+            loc="center left",
+            bbox_to_anchor=(1, 0.6),
+            ncol=1,
+            borderaxespad=0.0,
+            prop={"size": legend_fontsize}
+        )
+
+        # Make sure both legends appear
+        fig.add_artist(leg1)
+        fig.add_artist(leg2)
+
+        # Final plot formatting
+        ax.set_xlabel("Number of Molecules", fontsize=label_fontsize)
+        ax.set_ylabel("Mean Uncertainty", fontsize=label_fontsize)
+        ax.tick_params(axis='x', labelsize=tick_fontsize)
+        ax.tick_params(axis='y', labelsize=tick_fontsize)
+
+        # Adjust layout to make room for legends
+        plt.tight_layout(rect=[0, 0, 0.95, 1])
+
+        # Save the plot if required
+        if save_plot:
+            plt.savefig(save_path, dpi=500)
         plt.show()

@@ -681,19 +681,19 @@ an.Plot_Perf(
 
 # %%
 
-an.PlotFeatureImportanceEigenVectors(experiment='average_50_mp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               top_n_feats=10
-                               )
+# an.PlotFeatureImportanceEigenVectors(experiment='average_50_mp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+#                                top_n_feats=10
+#                                )
 
 # %%
-an.PlotFeatureImportanceEigenVectors(experiment='average_50_mu',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-                               )
+# an.PlotFeatureImportanceEigenVectors(experiment='average_50_mu',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+#                                )
 # %%
-an.PlotFeatureImportanceEigenVectors(experiment='average_50_rmp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-                               )
+# an.PlotFeatureImportanceEigenVectors(experiment='average_50_rmp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+#                                )
 # %%
 # an.PlotFeatureImportanceEigenVectors3D(experiment='average_50_mp',
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
@@ -701,7 +701,11 @@ an.PlotFeatureImportanceEigenVectors(experiment='average_50_rmp',
 #                                )
 # %%
 
-an.PlotFeatureLoadingEvolution(experiment='average_50_rmp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-                               )
+# an.PlotFeatureLoadingEvolution(experiment='average_50_rmp',
+#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+                            #    )
+# %%
+
+an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_2:8', 'average_50_mp_mu_2:8'],
+                         n_iters=1)
 # %%

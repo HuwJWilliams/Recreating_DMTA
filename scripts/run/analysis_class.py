@@ -3920,7 +3920,7 @@ class Analysis:
         #Compute global min/max for binning
         for exp in experiment_ls:
             for it in range(n_iters + 1):
-                pred_file_ls = glob(self.results_dir + f"/complete_archive/50_sel/{exp}/it{it}/" + generic_pred_filename)
+                pred_file_ls = glob(self.results_dir + f"/{exp}/it{it}/" + generic_pred_filename)
                 for file in pred_file_ls:
                     working_df = pd.read_csv(file, index_col='ID')
                     if 'pred_Affinity(kcal/mol)' in working_df.columns:
@@ -3948,7 +3948,7 @@ class Analysis:
                 print(f"  Iteration {it}")
                 it_binned_uncert_dict = {}
 
-                pred_file_ls = glob(self.results_dir + f"/complete_archive/50_sel/{exp}/it{it}/" + generic_pred_filename)
+                pred_file_ls = glob(self.results_dir + f"/{exp}/it{it}/" + generic_pred_filename)
                 for file in pred_file_ls:
                     file_number = re.findall(r'\d+', file)[0]
                     working_df = pd.read_csv(file, index_col='ID')
@@ -3977,11 +3977,13 @@ class Analysis:
 
             glob_uncert_dict[exp] = exp_binned_uncert_dict
 
+        print(glob_uncert_dict)
+
 
         # Create a single figure for all experiments
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1))]  # Extend if needed
+        line_styles = ['-', '--', ':', '-.', (0, (3, 1, 1, 1))]  # Extend if needed
         seen_experiments = set()
 
         # Loop over experiments and plot on the same figure
@@ -4056,11 +4058,14 @@ class Analysis:
             [label.lstrip('_') for label in labels],
             title="Experiment",
             loc="center left",
-            bbox_to_anchor=(1, 0.6),
+            bbox_to_anchor=(1, 0.5),
             ncol=1,
             borderaxespad=0.0,
             prop={"size": legend_fontsize}
         )
+
+
+        plt.tight_layout(rect=[0, 0, 0.95, 1])
 
         # Make sure both legends appear
         fig.add_artist(leg1)
@@ -4072,8 +4077,8 @@ class Analysis:
         ax.tick_params(axis='x', labelsize=tick_fontsize)
         ax.tick_params(axis='y', labelsize=tick_fontsize)
 
-        # Adjust layout to make room for legends
-        plt.tight_layout(rect=[0, 0, 0.95, 1])
+        # Move this AFTER legends are added
+        plt.tight_layout(rect=[0, 0, 0.95, 1])  # Adjust layout to leave room for legends
 
         # Save the plot if required
         if save_plot:

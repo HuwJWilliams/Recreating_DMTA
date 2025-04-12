@@ -20,16 +20,18 @@ fl = path +  "PMG_rdkit_full.csv"
 # %%
 
 # %%
-experiments = glob('/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/202*')
-all_experiments = [str(Path(path).name) for path in experiments]
-PredictNewTestSet(
-    feats=ft,
-    targs=tg,
-    full_data=fl,
-    test_set_name = 'held_out',
-    experiment_ls=all_experiments,
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/'
-)
+# experiments = glob('/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/202*')
+# all_experiments = [str(Path(path).name) for path in experiments]
+
+all_experiments = ["20250410_50_rmu"]
+# PredictNewTestSet(
+#     feats=ft,
+#     targs=tg,
+#     full_data=fl,
+#     test_set_name = 'held_out',
+#     experiment_ls=all_experiments,
+#     results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/'
+# )
 
 # %%
 PredictNewTestSet(
@@ -38,7 +40,7 @@ PredictNewTestSet(
     full_data=tfl,
     test_set_name = 'trimmed_held_out',
     experiment_ls=all_experiments,
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/'
+    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/'
 )
 
 
@@ -94,11 +96,11 @@ from misc_functions import (
 # avg._average_experiment(exp_suffix="10_r", n_iters=150)
 # avg._average_experiment(exp_suffix="10_mu", n_iters=150)
 
-avg = AverageAll(
-    results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
-)
+# avg = AverageAll(
+#     results_dir=str(PROJ_DIR) + "/results/rdkit_desc/complete_archive/50_sel/"
+# )
 
-avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
+# avg._average_experiment(exp_suffix="50_rmp", n_iters=30)
 # avg._average_experiment(exp_suffix="50_rmu", n_iters=30)
 # avg._average_experiment(exp_suffix="50_rmpo", n_iters=30)
 # avg._average_experiment(exp_suffix="50_mp", n_iters=30)

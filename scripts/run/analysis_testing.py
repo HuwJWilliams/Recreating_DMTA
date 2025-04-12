@@ -121,24 +121,24 @@ an.Plot_Perf(
         # "20241024_10_scramb_mu"   ,
         # "20241024_10_scramb_rmpo" , 
 
-        # "20241105_50_scramb_mu"   ,
-        # "20241105_50_scramb_rmpo",
-        # "20241105_50_scramb_mp"  , 
-        # "20241105_50_scramb_r",
-        # "20241105_50_scramb_mpo"  ,
-        # "20241105_50_scramb_rmp",
-
+        "20241105_50_scramb_mu"   ,
+        "20241105_50_scramb_rmpo",
+        "20241105_50_scramb_mp"  , 
+        "20241105_50_scramb_r",
+        "20241105_50_scramb_mpo"  ,
+        "20241105_50_scramb_rmp",
+        "20250410_50_scramb_rmu"
     ],
-    plot_ho =True,
-    plot_int= False,
+    plot_ho =False,
+    plot_int= True,
     plot_chembl_int= False,
-    plot_fname='diff_pool_trho_plot_pear_r',
+    plot_fname='scramb_int_plot_pear_r',
     set_ylims=True,
     r_type = 'pearson_r',
     rmse_ylim=(0.25, 1.25),
-    sdep_ylim=(0.2, 0.6),
+    sdep_ylim=(0.5, 1),
     r2_ylim=(-0.2, 1),
-    bias_ylim= (-1.2, 0.1),
+    bias_ylim= (-0.5, 0.0.5),
     # r2_ylim=(-0.2, 0.8), #scrambled
     # bias_ylim= (-0.5, 0.5), #scrambled
     yticks=4,
@@ -706,6 +706,6 @@ an.Plot_Perf(
                             #    )
 # %%
 
-an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_2:8', 'average_50_mp_mu_2:8'],
-                         n_iters=1)
+an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu"],
+                         n_iters=30, save_plot=True)
 # %%

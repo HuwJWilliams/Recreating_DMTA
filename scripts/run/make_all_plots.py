@@ -212,5 +212,5 @@ an = Analysis(results_dir=results_dir,
 #                                 plot_name=f"{ref}_pred_docked_boxplot")
 
 
-an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_2:8', 'average_50_mp_mu_2:8', "average_50_mp", "average_50_mu"],
+an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu", "average_50_r"],
                          n_iters=30, save_plot=True)

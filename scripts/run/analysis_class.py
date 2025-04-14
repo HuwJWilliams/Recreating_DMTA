@@ -3981,7 +3981,7 @@ class Analysis:
 
 
         # Create a single figure for all experiments
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(14, 8))
 
         line_styles = ['-', '--', ':', '-.', (0, (3, 1, 1, 1))]  # Extend if needed
         seen_experiments = set()
@@ -4030,7 +4030,7 @@ class Analysis:
             bin_labels,
             title="Affinity Bins",
             loc="upper left",
-            bbox_to_anchor=(1, 0.95),
+            bbox_to_anchor=(1.01, 0.95),
             ncol=1,
             borderaxespad=0.0,
             prop={"size": legend_fontsize}
@@ -4058,14 +4058,11 @@ class Analysis:
             [label.lstrip('_') for label in labels],
             title="Experiment",
             loc="center left",
-            bbox_to_anchor=(1, 0.5),
+            bbox_to_anchor=(1.01, 0.5),
             ncol=1,
             borderaxespad=0.0,
             prop={"size": legend_fontsize}
         )
-
-
-        plt.tight_layout(rect=[0, 0, 0.95, 1])
 
         # Make sure both legends appear
         fig.add_artist(leg1)
@@ -4077,10 +4074,10 @@ class Analysis:
         ax.tick_params(axis='x', labelsize=tick_fontsize)
         ax.tick_params(axis='y', labelsize=tick_fontsize)
 
-        # Move this AFTER legends are added
-        plt.tight_layout(rect=[0, 0, 0.95, 1])  # Adjust layout to leave room for legends
+        plt.subplots_adjust(right=0.75)
 
         # Save the plot if required
         if save_plot:
-            plt.savefig(save_path, dpi=500)
+            # Make sure figure has enough space for the legends when saving
+            plt.savefig(save_path,bbox_extra_artists=(leg1, leg2), bbox_inches='tight', dpi=500)  # Add bbox_inches='tight'
         plt.show()

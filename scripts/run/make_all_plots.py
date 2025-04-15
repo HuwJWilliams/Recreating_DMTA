@@ -176,30 +176,30 @@ an = Analysis(results_dir=results_dir,
 #                                      plot_name='uncertainty_checker_50_rmp')
 # %%
 
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
 
-# # %%
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
-# # %%
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
+# %%
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
+# %%
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
 
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_2:8',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_2:8',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
 
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_5:5',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_5:5',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
 
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_8:2',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                )
+an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_8:2',
+                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                               )
 
 #%%
 # for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
@@ -212,5 +212,5 @@ an = Analysis(results_dir=results_dir,
 #                                 plot_name=f"{ref}_pred_docked_boxplot")
 
 
-an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu", "average_50_r"],
-                         n_iters=30, save_plot=True)
+# an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu", "average_50_r"],
+                        #  n_iters=30, save_plot=True)

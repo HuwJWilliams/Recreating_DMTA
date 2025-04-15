@@ -2854,6 +2854,7 @@ class Analysis:
 
 
         df_list = []
+        stats_df_list = []
 
         for exp in experiment_ls:
             print(f"Processing {exp}")
@@ -2871,21 +2872,25 @@ class Analysis:
                             )
             exp_docking_df['Experiment'] = exp
             df_list.append(exp_docking_df)
+            stats_data = {
+            "Experiment" : exp,
+            'Mean Docking Score': exp_docking_df[docking_column].mean(),
+            'Min Docking Score': exp_docking_df[docking_column].min(),
+            'Max Docking Score': exp_docking_df[docking_column].max(),            
+            'Std Dev Docking Score': exp_docking_df[docking_column].std(),
+            'Mean Predicted Score': exp_docking_df[preds_column].mean(),
+            'Min Pred_Docking Score': exp_docking_df[preds_column].min(),
+            'Max Pred_Docking Score': exp_docking_df[preds_column].max(),            
+            'Std Dev Predicted Score': exp_docking_df[preds_column].std()
+        }
+            stats_df = pd.DataFrame([stats_data])
+            stats_df_list.append(stats_df)
+
 
         
         full_df = pd.concat(df_list, axis=0)
+        full_stats_df = pd.concat(stats_df_list, axis=0)
         full_df = full_df.reset_index()
-
-            # Calculate statistical metrics
-        stats_data = {
-            'Mean Docking Score': full_df[docking_column].mean(),
-            'Range Docking Score': (full_df[docking_column].min(), full_df[docking_column].max()),
-            'Std Dev Docking Score': full_df[docking_column].std(),
-            'Mean Predicted Score': full_df[preds_column].mean(),
-            'Range Predicted Score': (full_df[preds_column].min(), full_df[preds_column].max()),
-            'Std Dev Predicted Score': full_df[preds_column].std()
-        }
-        stats_df = pd.DataFrame([stats_data])
 
         experiment_colors = [
             next((color for key, color in self.method_colour_map.items() if exp.endswith(key)), "gray")
@@ -2988,7 +2993,7 @@ class Analysis:
 
         if save_plot:
             plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
-            stats_df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}_stats.csv", index=False)
+            full_stats_df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}_stats.csv", index=False)
 
 
         plt.show()
@@ -3530,14 +3535,37 @@ class Analysis:
                     val = values[0]
                     bump_y = np.exp(-0.5 * ((x_vals - val) / 0.2) ** 2)
                     bump_y = bump_y / bump_y.max() * 0.9
-                    ax.fill_between(x_vals, i, i + bump_y, color=color_map[feat], alpha=0.7)
+
+                    if it == "PyMolGen":
+                        ax.fill_between(
+                            x_vals, i, i + bump_y,
+                            facecolor="#999999",
+                            edgecolor="black",
+                            hatch="//",
+                            linewidth=0.5
+                        )
+                    else:
+                        ax.fill_between(x_vals, i, i + bump_y, color=color_map[feat], alpha=0.7)
+
                     ax.plot(x_vals, i + bump_y, color="black", linewidth=1)
                 else:
                     kde = gaussian_kde(values)
                     y_vals = kde(x_vals)
                     y_scaled = y_vals / y_vals.max() * 0.9
-                    ax.fill_between(x_vals, i, i + y_scaled, color=color_map[feat], alpha=0.7)
+
+                    if it == "PyMolGen":
+                        ax.fill_between(
+                            x_vals, i, i + y_scaled,
+                            facecolor="#999999",
+                            edgecolor="black",
+                            hatch="//",
+                            linewidth=0.5
+                        )
+                    else:
+                        ax.fill_between(x_vals, i, i + y_scaled, color=color_map[feat], alpha=0.7)
+
                     ax.plot(x_vals, i + y_scaled, color="black", linewidth=1)
+
 
                 y_ticks.append(i + 0.5)
                 y_labels.append(str(it))

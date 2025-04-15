@@ -79,76 +79,70 @@ an = Analysis(results_dir=results_dir,
 #                             regression_line_colour='coral'
 #                             )
 
-# %%
-an.Plot_Perf(
-    experiments=[
-        # "average_50_rmp",
-        # "average_50_mp",
-        # "average_50_rmpo",
-        # "average_50_mpo",
-        # "average_50_r",
-        "average_50_mu",
-        # "average_50_rmu",
+# # %%
+# an.Plot_Perf(
+#     experiments=[
+#         # "average_50_rmp",
+#         # "average_50_mp",
+#         # "average_50_rmpo",
+#         # "average_50_mpo",
+#         # "average_50_r",
+#         "average_50_mu",
+#         # "average_50_rmu",
 
-        # "average_10_rmp",
-        # "average_10_mp",
-        # "average_10_rmpo",
-        # "average_10_mpo",
-        # "average_10_r",
-        # "average_10_mu",
-        # "average_50_rmu",
+#         # "average_10_rmp",
+#         # "average_10_mp",
+#         # "average_10_rmpo",
+#         # "average_10_mpo",
+#         # "average_10_r",
+#         # "average_10_mu",
+#         # "average_50_rmu",
         
-        # "average_50_mp_mu_2:8",
-        # "average_50_mp_mu_5:5",
-        # "average_50_mp_mu_8:2",
+#         # "average_50_mp_mu_2:8",
+#         # "average_50_mp_mu_5:5",
+#         # "average_50_mp_mu_8:2",
 
-        # "average_50_rmp_rmu_2:8",
-        # "average_50_rmp_rmu_5:5",
-        # "average_50_rmp_rmu_8:2",
+#         # "average_50_rmp_rmu_2:8",
+#         # "average_50_rmp_rmu_5:5",
+#         # "average_50_rmp_rmu_8:2",
 
-        "average_50_mp",
-        "average_50_rmp_0025",
-        "average_50_rmp_005",
-        "average_50_rmp",
-        "average_50_rmp_025",
-        "average_50_rmp_05",
-        "average_50_r",
+#         "average_50_mp",
+#         "average_50_rmp_0025",
+#         "average_50_rmp_005",
+#         "average_50_rmp",
+#         "average_50_rmp_025",
+#         "average_50_rmp_05",
+#         "average_50_r",
 
-        # "20241024_10_scramb_mp" ,  
-        # "20241024_10_scramb_r"  ,   
-        # "20241024_10_scramb_mpo"  ,
-        # "20241024_10_scramb_rmp"   ,
-        # "20241024_10_scramb_mu"   ,
-        # "20241024_10_scramb_rmpo" , 
-
-        # "20241105_50_scramb_mu"   ,
-        # "20241105_50_scramb_rmpo",
-        # "20241105_50_scramb_mp"  , 
-        # "20241105_50_scramb_r",
-        # "20241105_50_scramb_mpo"  ,
-        # "20241105_50_scramb_rmp",
-        # "20250410_50_scramb_rmu"
-    ],
-    plot_ho =False,
-    plot_int= True,
-    plot_chembl_int= False,
-    plot_fname='test_plot',
-    set_ylims=True,
-    r_type = 'pearson_r',
-    rmse_ylim=(0.25, 1.25),
-    sdep_ylim=(0.5, 1),
-    r2_ylim=(-0.2, 1),
-    bias_ylim= (-0.5, 0.5),
-    # r2_ylim=(-0.2, 0.8), #scrambled
-    # bias_ylim= (-0.5, 0.5), #scrambled
-    yticks=4,
-    custom_xticks=[0, 500, 1000, 1500],
-    tick_fontsize=20,
-    label_fontsize=24,
-    title_fontsize=20,
-    legend_fontsize=20,
-    save_plot=True,
-    )
+#         # "20241024_10_scramb_mp" ,  
+#         # "20241024_10_scramb_r"  ,   False
+#         # "20241105_50_scramb_rmpo",
+#         # "20241105_50_scramb_mp"  , 
+#         # "20241105_50_scramb_r",
+#         # "20241105_50_scramb_mpo"  ,
+#         # "20241105_50_scramb_rmp",
+#         # "20250410_50_scramb_rmu"
+#     ],
+#     plot_ho =True,
+#     plot_int= False,
+#     plot_chembl_int= False,
+#     plot_fname='test_plot',
+#     set_ylims=True,
+#     r_type = 'pearson_r',
+#     rmse_ylim=(0.25, 1.25),
+#     sdep_ylim=(0.0, 0.6),
+#     r2_ylim=(-0.2, 1),
+#     bias_ylim= (-1.2, 0),
+#     # r2_ylim=(-0.2, 0.8), #scrambled
+#     # bias_ylim= (-0.5, 0.5), #scrambled
+#     yticks=4,
+#     custom_xticks=[0, 500, 1000, 1500],
+#     tick_fontsize=20,
+#     label_fontsize=24,
+#     title_fontsize=20,
+#     legend_fontsize=20,
+#     save_plot=True,
+#     )
 
  # %%
 # %%
@@ -603,41 +597,40 @@ an.Plot_Perf(
 #                  iter=30)
 
 #%%
-# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mpo',
-#                                        'average_50_mu', 'average_50_rmp',
-#                                        'average_50_rmpo', 'average_50_rmu',
-#                                             "average_50_r"],
-#                         iter=30,
-#                         save_plot=True,
-#                         save_structures=True,
-#                         search_in_top=50,
-#                         plot_name="sing_50_pred_docked_boxplot")
+an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mpo',
+                                       'average_50_mu', 'average_50_rmp',
+                                       'average_50_rmpo', 'average_50_rmu',
+                                            "average_50_r"],
+                        iter=30,
+                        save_plot=True,
+                        save_structures=True,
+                        search_in_top=50,
+                        plot_name="sing_50_pred_docked_boxplot")
 # #%%
-# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mu', "average_50_r",
-#                                        'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2'],
-#                         iter=30,
-#                         save_plot=True,
-#                         save_structures=True,
-#                         search_in_top=50,
-#                         plot_name="mp_mu_50_pred_docked_boxplot")
+an.Plot_Top_Pred_Docked(experiment_ls=['average_50_mp', 'average_50_mu', "average_50_r",
+                                       'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2'],
+                        iter=30,
+                        save_plot=True,
+                        save_structures=True,
+                        search_in_top=50,
+                        plot_name="mp_mu_50_pred_docked_boxplot")
 # #%%
-# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp_0025', 'average_50_rmp_005',
-#                                        'average_50_rmp_01','average_50_rmp_025',
-#                                        'average_50_rmp_05', "average_50_r"],
-#                         iter=30,
-#                         save_plot=True,
-#                         save_structures=True,
-#                         search_in_top=50,
-
-#                         plot_name="diff_sel_50_pred_docked_boxplot")
+an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp_0025', 'average_50_rmp_005',
+                                       'average_50_rmp_01','average_50_rmp_025',
+                                       'average_50_rmp_05', "average_50_r"],
+                        iter=30,
+                        save_plot=True,
+                        save_structures=True,
+                        search_in_top=50,
+                        plot_name="diff_sel_50_pred_docked_boxplot")
 # #%
-# an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp', 'average_50_rmu', "average_50_r",
-#             'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
-#                         iter=30,
-#                         save_plot=True,
-#                         save_structures=True,
-#                         search_in_top=50,
-#                         plot_name="rmp_rmu_50_pred_docked_boxplot")
+an.Plot_Top_Pred_Docked(experiment_ls=['average_50_rmp', 'average_50_rmu', "average_50_r",
+            'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
+                        iter=30,
+                        save_plot=True,
+                        save_structures=True,
+                        search_in_top=50,
+                        plot_name="rmp_rmu_50_pred_docked_boxplot")
 
 #%%
 # df = pd.read_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/20241002_10__it150_structs.csv", index_col='ID')
@@ -701,11 +694,8 @@ an.Plot_Perf(
 #                                )
 # %%
 
-# an.PlotFeatureLoadingEvolution(experiment='average_50_rmp',
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-                            #    )
-# %%
+# an.PlotFeatureLoadingEvolution(experiment='False# %%
 
-an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu"],
-                         n_iters=30, save_plot=True)
+# an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu"],
+#                          n_iters=30, save_plot=True)
 # %%

@@ -17,7 +17,7 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel'
 an = Analysis(results_dir=results_dir, 
               held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
             # held_out_stat_json="held_out_test/held_out_stats.json",

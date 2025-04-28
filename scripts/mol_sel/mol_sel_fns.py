@@ -52,12 +52,13 @@ class Molecule_Selector:
         # print(f"{preds_dir}{all_preds_prefix}*")
         self.chosen_mol_file = chosen_mol_file
 
-        if not Path(self.chosen_mol_file).exists():
-            self.chosen_mol = pd.DataFrame(columns=["Iteration"])
-            self.chosen_mol.index.name = "ID"
-            self.chosen_mol.to_csv(self.chosen_mol_file, index_label="ID")
-        else:
-            self.chosen_mol = pd.read_csv(chosen_mol_file, index_col="ID")
+        if chosen_mol_file:
+            if not Path(self.chosen_mol_file).exists():
+                self.chosen_mol = pd.DataFrame(columns=["Iteration"])
+                self.chosen_mol.index.name = "ID"
+                self.chosen_mol.to_csv(self.chosen_mol_file, index_label="ID")
+            else:
+                self.chosen_mol = pd.read_csv(chosen_mol_file, index_col="ID")
 
         self.it = iteration
 

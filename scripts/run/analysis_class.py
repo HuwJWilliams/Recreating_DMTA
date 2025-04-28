@@ -71,6 +71,10 @@ from docking_fns import (
 sys.path.insert(0, str(PROJ_DIR) + "/scripts/dataset/")
 from dataset_functions import Dataset_Accessor
 
+# Mol Sel
+sys.path.insert(0, str(PROJ_DIR) + "/scripts/mol_se/l")
+from mol_sel_fns import Molecule_Selector
+
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 
@@ -4109,3 +4113,60 @@ class Analysis:
             # Make sure figure has enough space for the legends when saving
             plt.savefig(save_path,bbox_extra_artists=(leg1, leg2), bbox_inches='tight', dpi=500)  # Add bbox_inches='tight'
         plt.show()
+
+    def analyseHits(
+            self,
+            experiment_ls: list,
+            docking_results_path: str=f"{PROJ_DIR}/datasets/PyMolGen/docking/PMG_docking_*.csv",
+            docking_column: str="Affinity(kcal/mol)",
+            preds_column: str="pred_Affinity(kcal/mol)",
+            percentile: float=0.01,
+            preds_file: str="all_preds_*.csv.gz",
+            top_n: int=50
+    ):
+        
+        experiment_hits = {}
+        docking_results_ls = glob(docking_results_path)
+
+        global_docking_df = pd.DataFrame()
+        total_len = 0
+
+        for docking_file in docking_results_ls:
+            df = pd.read_csv(docking_file, index_col="ID")
+            df = df.sort_values(by=docking_column)
+            total_len += len(df)
+            df = df.head(len(df) * (percentile *2))
+            global_docking_df = pd.concat([global_docking_df, df])
+
+        final_top_n = int(total_len * percentile)
+
+        global_docking_df = global_docking_df.head(final_top_n)
+        
+        for exp in experiment_ls:
+            exp_path = self.results_dir + exp
+            n_its = count_number_iters(exp_path)
+            total_hits = 0
+            it_hits = []
+            hit_ids = []
+            for it in range(n_its):
+                it_hit = 0
+                it_hit_ids = []
+                it_path = exp_path + f'/it{it}/'
+                preds_files = glob(it_path + preds_file)
+
+                
+                best_mols = best(column=preds_column, ascending=True, n_mols=top_n)
+                for mol in best_mols:
+                    if mol in global_docking_df.index:
+                        it_hit_ids.append(mol)
+                        it_hit += 1
+
+                it_hits.append(it_hit)
+                hit_ids.append(it_hit_ids)
+                total_hits += it_hit
+            
+            experiment_hits[exp] = {
+                "total_hits": total_hits,
+                "it_hits": it_hits,
+                "hit_ids": hit_ids
+            }

@@ -9,7 +9,7 @@
 #SBATCH --export=ALL
 #
 # Run in the standard partition (queue)
-#SBATCH --partition=standard
+#SBATCH --partition=dev
 #
 # Specify project account
 #SBATCH --account=palmer-addnm

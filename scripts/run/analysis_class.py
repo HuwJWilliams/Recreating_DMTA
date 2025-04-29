@@ -71,9 +71,6 @@ from docking_fns import (
 sys.path.insert(0, str(PROJ_DIR) + "/scripts/dataset/")
 from dataset_functions import Dataset_Accessor
 
-# Mol Sel
-sys.path.insert(0, str(PROJ_DIR) + "/scripts/mol_se/l")
-from mol_sel_fns import Molecule_Selector
 
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
@@ -4117,56 +4114,224 @@ class Analysis:
     def analyseHits(
             self,
             experiment_ls: list,
+            it_ls: list,
+            top_n: int=None,
             docking_results_path: str=f"{PROJ_DIR}/datasets/PyMolGen/docking/PMG_docking_*.csv",
             docking_column: str="Affinity(kcal/mol)",
             preds_column: str="pred_Affinity(kcal/mol)",
             percentile: float=0.01,
             preds_file: str="all_preds_*.csv.gz",
-            top_n: int=50
     ):
-        
-        experiment_hits = {}
+        self.experiment_hits = {}
         docking_results_ls = glob(docking_results_path)
 
         global_docking_df = pd.DataFrame()
-        total_len = 0
 
         for docking_file in docking_results_ls:
             df = pd.read_csv(docking_file, index_col="ID")
             df = df.sort_values(by=docking_column)
-            total_len += len(df)
-            df = df.head(len(df) * (percentile *2))
+            df = df.head(int(len(df) * (percentile * 10)))
             global_docking_df = pd.concat([global_docking_df, df])
 
-        final_top_n = int(total_len * percentile)
+        # Keep only valid numeric values
+        global_docking_df = pd.to_numeric(global_docking_df[docking_column], errors='coerce').dropna().to_frame()
+        global_docking_df = global_docking_df.sort_values(by=docking_column)
 
-        global_docking_df = global_docking_df.head(final_top_n)
-        
+        final_len = int(len(global_docking_df) * percentile)
+        global_docking_df = global_docking_df.head(final_len)
+        print(f"Top-docked size (final_len): {final_len}")
+
         for exp in experiment_ls:
+            print(f"Analysing experiment: {exp}")
             exp_path = self.results_dir + exp
             n_its = count_number_iters(exp_path)
+
+            # Track metrics
+            total_counts = []
+            new_hits_per_iter = []
+            rediscovered_per_iter = []
+            cumulative_hits = set()
             total_hits = 0
             it_hits = []
             hit_ids = []
-            for it in range(n_its):
+            found_mols = set()
+
+            if not it_ls:
+                it_ls = [n for n in range(n_its + 1)]
+
+            for it in it_ls:
+                print(f"Iteration {it}")
                 it_hit = 0
                 it_hit_ids = []
+                new_hits = 0
+                rediscovered = 0
+                total_count = 0
+
                 it_path = exp_path + f'/it{it}/'
                 preds_files = glob(it_path + preds_file)
 
-                
-                best_mols = best(column=preds_column, ascending=True, n_mols=top_n)
-                for mol in best_mols:
+                top_df_ls = []
+                for pred_file in preds_files:
+                    try:
+                        df = pd.read_csv(pred_file, index_col="ID", compression="gzip")
+                        df = df.sort_values(by=preds_column, ascending=True)
+                        df = df.head(final_len)
+                        top_df_ls.append(df)
+                    except Exception as e:
+                        print(f"Error reading {pred_file}: {e}")
+                        continue
+
+                if not top_df_ls:
+                    continue
+
+                full_df = pd.concat(top_df_ls).sort_values(by=preds_column, ascending=True)
+                if not top_n:
+                    top_n = final_len
+                top_mols = full_df.head(top_n)
+
+                for mol in top_mols.index:
                     if mol in global_docking_df.index:
-                        it_hit_ids.append(mol)
-                        it_hit += 1
+                        total_count += 1
+                        if mol in cumulative_hits:
+                            rediscovered += 1
+                        else:
+                            new_hits += 1
+                            cumulative_hits.add(mol)
+                        if mol not in found_mols:
+                            it_hit_ids.append(mol)
+                            it_hit += 1
+                            found_mols.add(mol)
 
                 it_hits.append(it_hit)
                 hit_ids.append(it_hit_ids)
+                total_counts.append(total_count)
+                new_hits_per_iter.append(new_hits)
+                rediscovered_per_iter.append(rediscovered)
                 total_hits += it_hit
-            
-            experiment_hits[exp] = {
+
+                print(f"New hits this iteration: {it_hit} / Rediscovered: {rediscovered} / Total: {total_count}")
+
+            self.experiment_hits[exp] = {
                 "total_hits": total_hits,
                 "it_hits": it_hits,
-                "hit_ids": hit_ids
+                "hit_ids": hit_ids,
+                "total_counts": total_counts,
+                "new_hits": new_hits_per_iter,
+                "rediscovered": rediscovered_per_iter
             }
+            
+
+
+    def _plot_discovery_bars(self,
+                            label_fontsize: int = 18,
+                            legend_fontsize: int = 18,
+                            tick_fontsize: int = 16,
+                            top_n: int = 50):
+
+        experiments = list(self.experiment_hits.keys())
+        n_exps = len(experiments)
+        n_its = max(len(data["new_hits"]) for data in self.experiment_hits.values())
+
+        iterations = np.arange(n_its)
+        bar_width = 0.8 / n_exps
+
+        # Create a much larger figure with more space for legends
+        fig, ax1 = plt.subplots(figsize=(22, 10))  # Increased width for legend space
+        ax2 = ax1.twinx()  # Create second axis for discovery %
+
+        # Precompute color and linestyle lists
+        colour_ls = []
+        linestyle_ls = []
+        exp_names = []
+
+        for exp in experiments:
+            exp_name = exp.split("_")[-1]
+            exp_name = f"_{exp_name}"
+            exp_names.append(exp_name)
+            method = next((m for m in self.method_colour_map.keys() if exp.endswith(m)), None)
+            colour = self.method_colour_map.get(method, "black")
+            linestyle = self.linestyles.get("_50_" if "_50_" in exp else "_10_", "--")
+
+            colour_ls.append(colour)
+            linestyle_ls.append(linestyle)
+
+        method_color_legend = {}
+
+        for i, (exp, exp_suffix) in enumerate(zip(experiments, exp_names)):
+            new_hits = self.experiment_hits[exp]["new_hits"]
+            rediscovered = self.experiment_hits[exp]["rediscovered"]
+            total_counts = self.experiment_hits[exp]["total_counts"]
+
+            # Pad if needed
+            new_hits = new_hits + [0] * (n_its - len(new_hits))
+            rediscovered = rediscovered + [0] * (n_its - len(rediscovered))
+            total_counts = total_counts + [0] * (n_its - len(total_counts))
+
+            color = colour_ls[i]
+            linestyle = linestyle_ls[i]
+
+            # Calculate x-positions - same for both bars and line plots
+            x_positions = iterations + i * bar_width
+
+            # Stacked bars
+            ax1.bar(x_positions, rediscovered, width=bar_width, color=color, alpha=0.2, hatch='///')
+            ax1.bar(x_positions, new_hits, width=bar_width, bottom=rediscovered, color=color, alpha=0.2)
+
+            # Store method name and color for legend
+            method_color_legend[exp_suffix] = color
+
+            # Use the same x-positions for the line to align with bars
+            discovery_pct = [(oc / top_n) * 100 for oc in total_counts]
+            ax2.plot(x_positions, discovery_pct, marker='o', linestyle=linestyle, color=color, 
+                    linewidth=4, markersize=8)
+
+        # Axis labels
+        ax1.set_xlabel("Iteration", fontsize=label_fontsize)
+        ax1.set_ylabel("Hit Count", fontsize=label_fontsize)
+        ax2.set_ylabel("Discovery %", fontsize=label_fontsize)
+
+        # Set x-ticks at the midpoint of each iteration's group of bars
+        ax1.set_xticks(iterations + bar_width * (n_exps - 1) / 2)
+        ax1.set_xticklabels([str(i) for i in iterations], rotation=45, fontsize=tick_fontsize)
+        ax1.tick_params(axis='y', labelsize=tick_fontsize)
+        ax2.tick_params(axis='y', labelsize=tick_fontsize)
+
+        # First create a figure-level legend for plot elements
+        element_handles = [
+            Patch(facecolor='gray', alpha=0.4, label='New Hits'),
+            Patch(facecolor='white', edgecolor='black', hatch='///', label='Rediscovered Hits'),
+            Line2D([0], [0], color='black', linestyle='-', marker='o', linewidth=2, label='Hit Discovery %')
+        ]
+        
+        # Method legends - ensure exp_suffixes are shown correctly
+        method_handles = []
+        for exp_suffix, color in method_color_legend.items():
+            method_handles.append(Patch(facecolor=color, label=exp_suffix))
+        
+        # Adjust figure size to make room for legends
+        plt.subplots_adjust(right=0.68)  # Make much more space for legends
+        
+        # Create the legend box for plot elements
+        legend1 = fig.legend(
+            handles=element_handles,
+            title="Plot Elements",
+            loc='center right',
+            bbox_to_anchor=(0.99, 0.85),
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
+        
+        # Create the legend box for methods
+        legend2 = fig.legend(
+            handles=method_handles,
+            title="Methods",
+            loc='center right',
+            bbox_to_anchor=(0.99, 0.5),  # Position below first legend
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
+        
+        # Final layout adjustments
+        fig.tight_layout(rect=[0, 0, 0.68, 1])  # Match the right adjustment
+        plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery_with_precision.png")
+        plt.show()

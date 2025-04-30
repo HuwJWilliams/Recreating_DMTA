@@ -698,12 +698,12 @@ an = Analysis(results_dir=results_dir,
 #                          n_iters=30, save_plot=True)
 # %%
 
-an.analyseHits(experiment_ls=['average_50_rmp', 'average_50_mu', 'average_50_mp'], #'average_50_mpo', 'average_50_rmpo', 'average_50_r'],
-               it_ls=[0, 1, 2, 3],
+an.analyseHits(experiment_ls=['average_50_rmp', 'average_50_mu', 'average_50_mp'],# 'average_50_mpo', 'average_50_rmpo', 'average_50_r'],
+               it_ls=[],
                top_n=50)
 
 # %%
-an._plot_experiment_hits()
+an._plot_discovery_bars()
 # %%
 # an.analyseHits(experiment_ls=['average_50_rmp', 'average_50_mu', 'average_50_mp'], #'average_50_mpo', 'average_50_rmpo', 'average_50_r'],
 #                it_ls=[],

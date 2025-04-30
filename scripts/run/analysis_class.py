@@ -4133,9 +4133,14 @@ class Analysis:
             df = df.head(int(len(df) * (percentile * 10)))
             global_docking_df = pd.concat([global_docking_df, df])
 
+        print(len(global_docking_df))
         # Keep only valid numeric values
+        
         global_docking_df = pd.to_numeric(global_docking_df[docking_column], errors='coerce').dropna().to_frame()
         global_docking_df = global_docking_df.sort_values(by=docking_column)
+        print(len(global_docking_df))
+        return
+
 
         final_len = int(len(global_docking_df) * percentile)
         global_docking_df = global_docking_df.head(final_len)
@@ -4219,14 +4224,22 @@ class Analysis:
                 "new_hits": new_hits_per_iter,
                 "rediscovered": rediscovered_per_iter
             }
+
+            with open(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json", "w") as f:
+                json.dump(self.experiment_hits, f, indent=4)
             
 
 
     def _plot_discovery_bars(self,
+                             experiment_hits_path: str=f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
                             label_fontsize: int = 18,
                             legend_fontsize: int = 18,
                             tick_fontsize: int = 16,
                             top_n: int = 50):
+        
+        if experiment_hits_path:
+            with open(experiment_hits_path, "r") as f:
+                self.experiment_hits = json.load(f)
 
         experiments = list(self.experiment_hits.keys())
         n_exps = len(experiments)
@@ -4235,103 +4248,99 @@ class Analysis:
         iterations = np.arange(n_its)
         bar_width = 0.8 / n_exps
 
-        # Create a much larger figure with more space for legends
-        fig, ax1 = plt.subplots(figsize=(22, 10))  # Increased width for legend space
-        ax2 = ax1.twinx()  # Create second axis for discovery %
+        fig, ax1 = plt.subplots(figsize=(20, 10))
+        ax2 = ax1.twinx()
 
-        # Precompute color and linestyle lists
         colour_ls = []
         linestyle_ls = []
-        exp_names = []
+        exp_suffixes = []
 
+        # Build colors and linestyles
         for exp in experiments:
-            exp_name = exp.split("_")[-1]
-            exp_name = f"_{exp_name}"
-            exp_names.append(exp_name)
-            method = next((m for m in self.method_colour_map.keys() if exp.endswith(m)), None)
-            colour = self.method_colour_map.get(method, "black")
-            linestyle = self.linestyles.get("_50_" if "_50_" in exp else "_10_", "--")
-
-            colour_ls.append(colour)
-            linestyle_ls.append(linestyle)
+            exp_suffix = next((s for s in self.method_colour_map if exp.endswith(s)), None)
+            exp_suffixes.append(exp_suffix if exp_suffix else "_unknown")
+            colour_ls.append(self.method_colour_map.get(exp_suffix, "black"))
+            linestyle_ls.append(self.linestyles.get("_50_" if "_50_" in exp else "_10_", "--"))
 
         method_color_legend = {}
 
-        for i, (exp, exp_suffix) in enumerate(zip(experiments, exp_names)):
+        for i, (exp, exp_suffix) in enumerate(zip(experiments, exp_suffixes)):
             new_hits = self.experiment_hits[exp]["new_hits"]
             rediscovered = self.experiment_hits[exp]["rediscovered"]
             total_counts = self.experiment_hits[exp]["total_counts"]
 
-            # Pad if needed
-            new_hits = new_hits + [0] * (n_its - len(new_hits))
-            rediscovered = rediscovered + [0] * (n_its - len(rediscovered))
-            total_counts = total_counts + [0] * (n_its - len(total_counts))
+            new_hits += [0] * (n_its - len(new_hits))
+            rediscovered += [0] * (n_its - len(rediscovered))
+            total_counts += [0] * (n_its - len(total_counts))
 
             color = colour_ls[i]
             linestyle = linestyle_ls[i]
-
-            # Calculate x-positions - same for both bars and line plots
             x_positions = iterations + i * bar_width
 
-            # Stacked bars
-            ax1.bar(x_positions, rediscovered, width=bar_width, color=color, alpha=0.2, hatch='///')
-            ax1.bar(x_positions, new_hits, width=bar_width, bottom=rediscovered, color=color, alpha=0.2)
+            ax1.bar(x_positions, rediscovered, width=bar_width, color=color, alpha=0.25, hatch='///')
+            ax1.bar(x_positions, new_hits, width=bar_width, bottom=rediscovered, color=color, alpha=0.6)
 
-            # Store method name and color for legend
             method_color_legend[exp_suffix] = color
 
-            # Use the same x-positions for the line to align with bars
             discovery_pct = [(oc / top_n) * 100 for oc in total_counts]
-            ax2.plot(x_positions, discovery_pct, marker='o', linestyle=linestyle, color=color, 
+            ax2.plot(x_positions, discovery_pct, marker='o', linestyle=linestyle, color=color,
                     linewidth=4, markersize=8)
 
-        # Axis labels
         ax1.set_xlabel("Iteration", fontsize=label_fontsize)
         ax1.set_ylabel("Hit Count", fontsize=label_fontsize)
-        ax2.set_ylabel("Discovery %", fontsize=label_fontsize)
+        ax2.set_ylabel("Hit Discovery %", fontsize=label_fontsize)
 
-        # Set x-ticks at the midpoint of each iteration's group of bars
         ax1.set_xticks(iterations + bar_width * (n_exps - 1) / 2)
         ax1.set_xticklabels([str(i) for i in iterations], rotation=45, fontsize=tick_fontsize)
         ax1.tick_params(axis='y', labelsize=tick_fontsize)
         ax2.tick_params(axis='y', labelsize=tick_fontsize)
 
-        # First create a figure-level legend for plot elements
+        # Plot Elements Legend (left of plot)
         element_handles = [
             Patch(facecolor='gray', alpha=0.4, label='New Hits'),
             Patch(facecolor='white', edgecolor='black', hatch='///', label='Rediscovered Hits'),
             Line2D([0], [0], color='black', linestyle='-', marker='o', linewidth=2, label='Hit Discovery %')
         ]
-        
-        # Method legends - ensure exp_suffixes are shown correctly
-        method_handles = []
-        for exp_suffix, color in method_color_legend.items():
-            method_handles.append(Patch(facecolor=color, label=exp_suffix))
-        
-        # Adjust figure size to make room for legends
-        plt.subplots_adjust(right=0.68)  # Make much more space for legends
-        
-        # Create the legend box for plot elements
-        legend1 = fig.legend(
+        leg1 = fig.legend(
             handles=element_handles,
             title="Plot Elements",
-            loc='center right',
-            bbox_to_anchor=(0.99, 0.85),
+            loc='center left',
+            bbox_to_anchor=(0.75, 0.85),
             fontsize=legend_fontsize,
             title_fontsize=legend_fontsize
         )
-        
-        # Create the legend box for methods
-        legend2 = fig.legend(
-            handles=method_handles,
+
+        # Methods Legend (just below the plot elements one)
+        exp_names = [e.split("_")[-1] for e in experiments]
+        unique_suffixes = []
+        for e in exp_names:
+            suffix = f"_{e}"
+            if suffix not in unique_suffixes:
+                unique_suffixes.append(suffix)
+
+        method_handles = []
+        method_labels = []
+        for suffix in unique_suffixes:
+            color = self.method_colour_map.get(suffix)
+            if color:
+                method_handles.append(Line2D([0], [0], color=color, lw=4))
+                method_labels.append(suffix.lstrip("_"))
+
+        leg2 = fig.legend(
+            method_handles,
+            method_labels,
             title="Methods",
-            loc='center right',
-            bbox_to_anchor=(0.99, 0.5),  # Position below first legend
+            loc='center left',
+            bbox_to_anchor=(0.75, 0.5),
             fontsize=legend_fontsize,
             title_fontsize=legend_fontsize
         )
-        
-        # Final layout adjustments
-        fig.tight_layout(rect=[0, 0, 0.68, 1])  # Match the right adjustment
+
+        # Final adjustments
+        plt.subplots_adjust(right=0.75)
+        fig.tight_layout(rect=[0, 0, 0.75, 1])
+        fig.add_artist(leg1)
+        fig.add_artist(leg2)
+
         plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery_with_precision.png")
         plt.show()

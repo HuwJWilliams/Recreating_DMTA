@@ -552,6 +552,178 @@ class Analysis:
 
         plt.show()
 
+
+    def PCA_Plot_single_allowed(
+        self,
+        df1,
+        df2=None,
+        df3=None,
+        source_ls: list = None,
+        n_components: int = 5,
+        loadings_filename: str = "pca_loadings",
+        pca_df_filename: str = "pca_components",
+        kdep_sample_size: float = 0.33,
+        contamination: float = 0.00001,
+        plot_fname: str = "PCA_Plot",
+        save_plot: bool = True,
+        save_extra_data: bool = False,
+        save_fpath: str = f"{PROJ_DIR}/results/rdkit_desc/plots/",
+        plot_area: bool = False,
+        plot_scatter: bool = True,
+        random_seed: int = None,
+        plot_loadings: bool = False,
+        plot_title: str = 'PCA Plot',
+        remove_outliers: bool = True,
+        kdep_sample_ls: list = None,
+        axis_fontsize: int = 20,
+        tick_fontsize: int = 18,
+        label_fontsize: int = 20,
+        legend_fontsize: int = 20,
+        kde_tick_dicts: list = None
+    ):
+        if source_ls is None or len(source_ls) < 1:
+            raise ValueError("At least one source must be provided in source_ls.")
+        if kdep_sample_ls is None:
+            kdep_sample_ls = []
+        if random_seed is None:
+            random_seed = rand.randint(0, 2**31)
+
+        from glob import glob
+
+        def load_data(data, used_cols=None):
+            if isinstance(data, list):
+                df_list = []
+                for item in data:
+                    if isinstance(item, str) and '*' in item:
+                        for file in glob(item):
+                            df = pd.read_csv(file, index_col="ID")
+                            if used_cols is not None:
+                                df = df[used_cols]
+                            df_list.append(df)
+                    elif isinstance(item, str):
+                        df = pd.read_csv(item, index_col="ID")
+                        if used_cols is not None:
+                            df = df[used_cols]
+                        df_list.append(df)
+                    else:
+                        df = item.copy()
+                        if used_cols is not None:
+                            df = df[used_cols]
+                        df_list.append(df)
+                return pd.concat(df_list, axis=0)
+
+            elif isinstance(data, str) and '*' in data:
+                df_list = []
+                for file in glob(data):
+                    df = pd.read_csv(file, index_col="ID")
+                    if used_cols is not None:
+                        df = df[used_cols]
+                    df_list.append(df)
+                return pd.concat(df_list, axis=0)
+
+            elif isinstance(data, str):
+                df = pd.read_csv(data, index_col="ID")
+            else:
+                df = data.copy()
+
+            if used_cols is not None:
+                df = df[used_cols]
+            return df
+
+        dfs_raw = [df1, df2, df3][:len(source_ls)]
+        dfs_loaded = []
+
+        for i, raw_df in enumerate(dfs_raw):
+            if raw_df is not None:
+                df = load_data(raw_df) if i == 0 else load_data(raw_df, used_cols)
+                if i == 0:
+                    used_cols = df.columns
+                df["Source"] = source_ls[i]
+                dfs_loaded.append(df)
+
+        combined_df = pd.concat(dfs_loaded, axis=0)
+
+        scaler = StandardScaler()
+        combined_df = combined_df.dropna()
+        combined_df[used_cols] = scaler.fit_transform(combined_df[used_cols])
+        pca = PCA(n_components=n_components)
+        principal_components = pca.fit_transform(combined_df[used_cols])
+
+        loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+        loadings_df = pd.DataFrame(loadings, columns=[f"PC{i+1}" for i in range(n_components)], index=used_cols)
+        abs_loadings_df = loadings_df.abs().rename_axis("Features")
+        loadings_df = loadings_df.rename_axis("Features")
+
+        if save_extra_data:
+            loadings_df.to_csv(f"{PROJ_DIR}/scripts/run/{loadings_filename}.csv")
+            abs_loadings_df.to_csv(f"{PROJ_DIR}/scripts/run/{loadings_filename}_abs.csv")
+
+        pca_df = pd.DataFrame(principal_components, columns=[f"PC{i+1}" for i in range(n_components)], index=combined_df.index)
+        pca_df["Source"] = combined_df["Source"].values
+        if save_extra_data:
+            pca_df.to_csv(f"{PROJ_DIR}/scripts/run/{pca_df_filename}.csv.gz", compression='gzip')
+
+        if remove_outliers:
+            lof = LocalOutlierFactor(n_neighbors=20, contamination=contamination)
+            inliers = lof.fit_predict(pca_df[[f"PC{i+1}" for i in range(n_components)]]) == 1
+            pca_df = pca_df[inliers]
+
+        fig, axs = plt.subplots(nrows=n_components, ncols=n_components, figsize=(20, 20))
+        explained_variance = pca.explained_variance_ratio_ * 100
+
+        for i in range(n_components):
+            for j in range(n_components):
+                if i != j:
+                    if plot_scatter:
+                        sns.scatterplot(x=f"PC{j+1}", y=f"PC{i+1}", hue="Source", data=pca_df, ax=axs[i, j], legend=False, edgecolor="none", palette="dark", alpha=0.2)
+                    if plot_area:
+                        for idx, source in enumerate(pca_df['Source'].unique()):
+                            data = pca_df[pca_df['Source'] == source][[f"PC{j+1}", f"PC{i+1}"]].values
+                            if len(data) > 2:
+                                hull = ConvexHull(data)
+                                points = data[hull.vertices]
+                                points = np.vstack((points, points[0]))
+                                axs[i, j].fill(points[:, 0], points[:, 1], alpha=0.2, color=sns.color_palette('dark')[idx], edgecolor=sns.color_palette('dark')[idx])
+                else:
+                    sampled_data = []
+                    for source in source_ls:
+                        data = pca_df[pca_df['Source'] == source]
+                        if source in kdep_sample_ls:
+                            data = data.sample(frac=kdep_sample_size, random_state=random_seed)
+                        sampled_data.append(data)
+                    sampled_df = pd.concat(sampled_data)
+                    sns.kdeplot(x=f"PC{i+1}", hue="Source", data=sampled_df, fill=True, common_norm=False, ax=axs[i, i], legend=False, palette="dark")
+
+                axs[i, j].tick_params(axis='both', labelsize=tick_fontsize, pad=6)
+
+                if i == n_components - 1:
+                    axs[i, j].set_xlabel(f"PC{j+1} ({explained_variance[j]:.2f}% Var)", fontsize=axis_fontsize)
+                else:
+                    axs[i, j].set_xlabel("")
+                    axs[i, j].set_xticklabels([])
+                if j == 0:
+                    axs[i, j].set_ylabel(f"PC{i+1} ({explained_variance[i]:.2f}% Var)", fontsize=axis_fontsize)
+                else:
+                    axs[i, j].set_ylabel("")
+                    axs[i, j].set_yticklabels([])
+
+        handles = []
+        labels = []
+        for idx, source in enumerate(pca_df['Source'].unique()):
+            handles.append(plt.Line2D([], [], color=sns.color_palette('dark')[idx], marker='o', linestyle='None', label=source))
+            handles.append(plt.Rectangle((0, 0), 1, 1, color=sns.color_palette('dark')[idx], alpha=0.2, label=f"{source} area"))
+            labels.extend([source, f"{source} area"])
+
+        fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.00), ncol=3, fontsize=legend_fontsize, frameon=False)
+        plt.tight_layout()
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.95, bottom=0.3, wspace=0.6, hspace=0.6)
+
+        if save_plot:
+            plt.savefig(save_fpath + plot_fname + ".png", dpi=600, bbox_inches='tight')
+
+        return fig
+
+
     def PCA_Plot(
         self,
         train: str,
@@ -738,6 +910,7 @@ class Analysis:
                                 legend=False,
                                 edgecolor="none",
                                 palette="dark",
+                                alpha=0.5
                             )
                     
                     dark_colours = sns.color_palette('dark')
@@ -867,11 +1040,11 @@ class Analysis:
                 # Adjusting labels and titles, including the variance for each principal component
                 if i == n_components - 1:
                     axs[i, j].set_xlabel(
-                        f"PC{j+1} ({explained_variance[j]:.2f}% Variance)", fontsize=axis_fontsize, labelpad=10
+                        f"PC{j+1} ({explained_variance[j]:.2f}% Var)", fontsize=axis_fontsize, labelpad=10
                     )
                 if j == 0:
                     axs[i, j].set_ylabel(
-                        f"PC{i+1} ({explained_variance[i]:.2f}% Variance)", fontsize=axis_fontsize, labelpad=10
+                        f"PC{i+1} ({explained_variance[i]:.2f}% Var)", fontsize=axis_fontsize, labelpad=10
                     )
 
         # Define handles and labels for the legend
@@ -912,7 +1085,7 @@ class Analysis:
             custom_handles, 
             custom_labels,
             loc='upper center',
-            bbox_to_anchor=(0.5, 1.05),  # Pushes legend above plot
+            bbox_to_anchor=(0.5, 1.00),  # Pushes legend above plot
             ncol=3,
             fontsize=legend_fontsize,
             frameon=False
@@ -925,7 +1098,7 @@ class Analysis:
         plt.subplots_adjust(
             left=0.1,
             right=0.9,
-            top=0.93,
+            top=0.95,
             bottom=0.3,
             wspace=0.6,
             hspace=0.6
@@ -4121,6 +4294,7 @@ class Analysis:
             preds_column: str="pred_Affinity(kcal/mol)",
             percentile: float=0.01,
             preds_file: str="all_preds_*.csv.gz",
+            json_name: str="hit_discovery"
     ):
         self.experiment_hits = {}
         docking_results_ls = glob(docking_results_path)
@@ -4139,7 +4313,6 @@ class Analysis:
         global_docking_df = pd.to_numeric(global_docking_df[docking_column], errors='coerce').dropna().to_frame()
         global_docking_df = global_docking_df.sort_values(by=docking_column)
         print(len(global_docking_df))
-        return
 
 
         final_len = int(len(global_docking_df) * percentile)
@@ -4225,7 +4398,7 @@ class Analysis:
                 "rediscovered": rediscovered_per_iter
             }
 
-            with open(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json", "w") as f:
+            with open(f"{PROJ_DIR}/results/rdkit_desc/plots/{json_name}.json", "w") as f:
                 json.dump(self.experiment_hits, f, indent=4)
             
 
@@ -4235,13 +4408,20 @@ class Analysis:
                             label_fontsize: int = 18,
                             legend_fontsize: int = 18,
                             tick_fontsize: int = 16,
-                            top_n: int = 50):
+                            top_n: int = 50,
+                            plot_name:str="hits_discovery",
+                            allowed_experiments: list=[] ):
         
         if experiment_hits_path:
             with open(experiment_hits_path, "r") as f:
                 self.experiment_hits = json.load(f)
 
-        experiments = list(self.experiment_hits.keys())
+        experiments = (
+            [key for key in self.experiment_hits if key in allowed_experiments] 
+            if allowed_experiments 
+            else list(self.experiment_hits.keys())
+        )
+
         n_exps = len(experiments)
         n_its = max(len(data["new_hits"]) for data in self.experiment_hits.values())
 
@@ -4287,8 +4467,10 @@ class Analysis:
                     linewidth=4, markersize=8)
 
         ax1.set_xlabel("Iteration", fontsize=label_fontsize)
+        ax1.set_ylim(0, 50)
         ax1.set_ylabel("Hit Count", fontsize=label_fontsize)
         ax2.set_ylabel("Hit Discovery %", fontsize=label_fontsize)
+        ax2.set_ylim(0, 100)
 
         ax1.set_xticks(iterations + bar_width * (n_exps - 1) / 2)
         ax1.set_xticklabels([str(i) for i in iterations], rotation=45, fontsize=tick_fontsize)
@@ -4342,5 +4524,5 @@ class Analysis:
         fig.add_artist(leg1)
         fig.add_artist(leg2)
 
-        plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery_with_precision.png")
+        plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
         plt.show()

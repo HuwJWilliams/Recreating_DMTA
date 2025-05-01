@@ -26,9 +26,9 @@ an = Analysis(results_dir=results_dir,
               )
 # %%
 
-# chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
-# ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
-# prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
+chembl_feats = '/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_1.csv.gz'
+ho_feats = '/users/yhb18174/Recreating_DMTA/datasets/held_out_data/PMG_held_out_desc.csv'
+prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc*'
 
 # an.PCA_Plot(train=chembl_feats,
 #             validation=ho_feats,
@@ -55,6 +55,27 @@ an = Analysis(results_dir=results_dir,
 #     {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
 # ])
 
+# an.PCA_Plot_single_allowed(
+#             df1=prediction,
+#             source_ls=['PyMolGen'],
+#             n_components=5,
+#             plot_scatter=True,
+#             plot_area=False,
+#             save_extra_data=False,
+#             plot_loadings=False,
+#             kdep_sample_size=0.5,
+#             kdep_sample_ls=['PyMolGen'],
+#             tick_fontsize=18,
+#             label_fontsize=20,
+#             axis_fontsize=18,
+#             legend_fontsize=20,
+#            kde_tick_dicts = [
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.035, 0.07]},  # for PC1
+#     {"xticks": [-20, 0, 20], "yticks": [0.00, 0.05, 0.10]}, # for PC2
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.04, 0.08, 0.12]},  # for PC3
+#     {"xticks": [-10, 0, 10], "yticks": [0.00, 0.10, 0.20]},  # for PC4
+#     {"xticks": [-10, 0, 10, 20], "yticks": [0.00, 0.05, 0.1, 0.15]},  # for PC5
+# ])
 # %%
 # experiment_ls = ["average_50_rmp"]
 # mol_sel_ls = ['rmp']
@@ -688,7 +709,27 @@ an = Analysis(results_dir=results_dir,
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
 #                                )
 # %%
-# an.PlotFeatureImportanceEigenVectors3D(experiment='average_50_mp',
+# an.PlotFeatureImportanceEigenVectors3D(experiment='averan.analyseHits(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+#                               'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+#                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
+#                it_ls=[],
+#                top_n=50)
+
+# an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
+#                         plot_name='random_chosen_hit_discovery')
+
+# an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mpo", "average_50_mu"],
+#                         plot_name='top_chosen_hit_discovery')
+
+# an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mu", 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2',],
+#                         plot_name='mp_mu_hit_discovery')
+
+# an._plot_discovery_bars(allowed_experiments=['average_50_rmp', "average_50_rmu",'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
+#                         plot_name='rmp_rmu_hit_discovery')
+
+
+# an._plot_discovery_bars(allowed_experiments=['average_50_mp', 'average_50_rmp_0025', 'average_50_rmp_005', "average_50_rmp", 'average_50_rmp_025', 'average_50_rmp_05'],
+#                         plot_name='diff_pool_hit_discovery')
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
 #                                save_data=False
 #                                )
@@ -698,16 +739,24 @@ an = Analysis(results_dir=results_dir,
 #                          n_iters=30, save_plot=True)
 # %%
 
-an.analyseHits(experiment_ls=['average_50_rmp', 'average_50_mu', 'average_50_mp'],# 'average_50_mpo', 'average_50_rmpo', 'average_50_r'],
-               it_ls=[],
-               top_n=50)
-
-# %%
-an._plot_discovery_bars()
-# %%
-# an.analyseHits(experiment_ls=['average_50_rmp', 'average_50_mu', 'average_50_mp'], #'average_50_mpo', 'average_50_rmpo', 'average_50_r'],
+# an.analyseHits(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+#                               'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+#                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
 #                it_ls=[],
-#                top_n=None)
+#                top_n=50)
+
+an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
+                        plot_name='random_chosen_hit_discovery')
+
+an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mpo", "average_50_mu"],
+                        plot_name='top_chosen_hit_discovery')
+
+an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mu", 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2',],
+                        plot_name='mp_mu_hit_discovery')
+
+an._plot_discovery_bars(allowed_experiments=['average_50_rmp', "average_50_rmu",'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
+                        plot_name='rmp_rmu_hit_discovery')
 
 
-# %%
+an._plot_discovery_bars(allowed_experiments=['average_50_mp', 'average_50_rmp_0025', 'average_50_rmp_005', "average_50_rmp", 'average_50_rmp_025', 'average_50_rmp_05'],
+                        plot_name='diff_pool_hit_discovery')

@@ -675,7 +675,7 @@ class Analysis:
             for j in range(n_components):
                 if i != j:
                     if plot_scatter:
-                        sns.scatterplot(x=f"PC{j+1}", y=f"PC{i+1}", hue="Source", data=pca_df, ax=axs[i, j], legend=False, edgecolor="none", palette="dark", alpha=0.2)
+                        sns.scatterplot(x=f"PC{j+1}", y=f"PC{i+1}", hue="Source", data=pca_df, ax=axs[i, j], legend=False, edgecolor="none", palette="dark", alpha=0.1, s=15)
                     if plot_area:
                         for idx, source in enumerate(pca_df['Source'].unique()):
                             data = pca_df[pca_df['Source'] == source][[f"PC{j+1}", f"PC{i+1}"]].values
@@ -4495,7 +4495,8 @@ class Analysis:
         # Methods Legend (just below the plot elements one)
         exp_names = [e.split("_")[-1] for e in experiments]
         unique_suffixes = []
-        for e in exp_names:
+        for e in exp_names:        for e in exp_names:
+
             suffix = f"_{e}"
             if suffix not in unique_suffixes:
                 unique_suffixes.append(suffix)

@@ -27,14 +27,13 @@ import time
 from PIL import Image
 import os
 from collections import defaultdict
-from joypy import joyplot
 from scipy.stats import gaussian_kde
-from matplotlib.patches import Patch, PathPatch
+from matplotlib.patches import Patch
 
 
 from rdkit.DataStructs import FingerprintSimilarity
 from rdkit import Chem
-from rdkit.Chem import Draw, rdFingerprintGenerator, BRICS
+from rdkit.Chem import Draw, rdFingerprintGenerator, BRICS, PandasTools
 from rdkit.Chem.Scaffolds import MurckoScaffold
 
 
@@ -249,6 +248,7 @@ class Analysis:
         experiments: list,
         save_plot: bool = True,
         results_dir: str = f"{PROJ_DIR}/results/rdkit_desc/",
+        method_legend_map: dict = None,
         plot_fname: str = "Perf_Plot",
         plot_int: bool = False,
         plot_ho: bool = False,
@@ -512,25 +512,25 @@ class Analysis:
             prop={"size": legend_fontsize}
         )
 
+        # Track which suffixes are present in the current experiments
+        used_suffixes = set()
+        for exp in experiments:
+            matched_suffix = next((s for s in self.method_colour_map if exp.endswith(s)), None)
+            if matched_suffix:
+                used_suffixes.add(matched_suffix)
 
-        exp_names = [e.split("_")[-1] for e in experiments]
-        labels = []
-        for e in exp_names:
-            name = f"_{e}"
-            if name not in labels:
-                labels.append(name)
-
-        print(labels)
+        # Build handles and labels in defined order
         handles = []
-        colour_ls = []
-        for label in labels:
-            colour = self.method_colour_map[label]
-            colour_ls.append(colour)
-            if colour:
-                handle = Line2D([0], [0], color=colour, lw=2)
-                handles.append(handle)
-            else:
-                print(f"Warning: No color found for label {label}")
+        labels = []
+        if method_legend_map:
+            for suffix, label in method_legend_map.items():
+                if suffix in used_suffixes:
+                    colour = self.method_colour_map.get(suffix)
+                    if colour:
+                        handles.append(Line2D([0], [0], color=colour, lw=2))
+                        labels.append(label)
+                    else:
+                        print(f"Warning: No color found for method suffix {suffix}")
 
         leg2 = fig.legend(
             handles,
@@ -3001,7 +3001,8 @@ class Analysis:
                              pred_yticks: list=[-12, -10.5, -9, -7.5],
                              tick_fontsize: int=18,
                              label_fontsize:int=18,
-                             legend_fontsize: int=16):
+                             legend_fontsize: int=16,
+                             method_legend_map: dict=None):
                 
         """
         Description
@@ -3119,7 +3120,7 @@ class Analysis:
         ax2.set_xticklabels(exp_names, rotation=45, fontsize=tick_fontsize)
 
         ax1.set_ylabel(docking_column, fontsize=label_fontsize)
-        ax2.set_ylabel(f"Predictted {docking_column}", fontsize=label_fontsize)
+        ax2.set_ylabel(f"Predicted {docking_column}", fontsize=label_fontsize)
 
         ax1.set_xlabel("")
         ax2.set_xlabel(ax2.get_xlabel(), fontsize=label_fontsize)
@@ -3136,11 +3137,26 @@ class Analysis:
         ax3.set_xlabel(docking_column, fontsize=label_fontsize)
         ax3.set_ylabel(f"Predicted {docking_column}", fontsize=label_fontsize)
 
-        labels = []
-        for e in exp_names:
-            name = f"_{e}"
-            if name not in labels:
-                labels.append(name)
+        # Determine which suffixes are actually used
+        used_suffixes = set()
+        for exp in experiment_ls:
+            matched_suffix = next((s for s in self.method_colour_map if exp.endswith(s)), None)
+            if matched_suffix:
+                used_suffixes.add(matched_suffix)
+
+        # Build labels and handles in user-defined order
+        legend_handles = []
+        legend_labels = []
+
+        if method_legend_map:
+            for suffix, label in method_legend_map.items():
+                if suffix in used_suffixes:
+                    color = self.method_colour_map.get(suffix)
+                    if color:
+                        legend_handles.append(Line2D([0], [0], color=color, lw=2))
+                        legend_labels.append(label)
+                    else:
+                        print(f"Warning: No color found for suffix {suffix}")
 
         # For each experiment (hue), calculate and plot the line of best fit
         for experiment, label in zip(full_df['Experiment'].unique(), labels):
@@ -3158,10 +3174,12 @@ class Analysis:
             # Plot the line of best fit for this experiment (only within the data range)
             ax3.plot([x_min, x_max], [y_min, y_max], color=self.method_colour_map[label], lw=2)
 
-        handles, labels = ax3.get_legend_handles_labels()
-        ax3.legend(handles=handles, labels=exp_names, title="Experiment", loc='best', fontsize=legend_fontsize, title_fontsize=label_fontsize)
-
-        print(labels)
+        ax3.legend(handles=legend_handles,
+                labels=legend_labels,
+                title="Experiment",
+                loc='best',
+                fontsize=legend_fontsize,
+                title_fontsize=label_fontsize)
 
         plt.tight_layout()
 
@@ -3569,8 +3587,17 @@ class Analysis:
         dpi: int = 500,
         tick_fontsize: int = 20,
         label_fontsize: int = 24,
-        title_fontsize: int = 26
+        title_fontsize: int = 26,
+        extra_sources: dict = {
+            "ChEMBL": "/users/yhb18174/Recreating_DMTA/datasets/ChEMBL/training_data/desc/rdkit/ChEMBL_rdkit_desc_trimmed.csv",
+            "Hits": "/users/yhb18174/Recreating_DMTA/datasets/hits/hits_features.csv",
+        }
     ):
+        external_styles = {
+            "PyMolGen": {"facecolor": "#999999", "hatch": "."},
+            "ChEMBL": {"facecolor": "#999999", "hatch":"-"},
+            "Hits": {"facecolor": "#999999", "hatch": "+"},
+        }
         Path(self.results_dir, save_path).mkdir(parents=True, exist_ok=True)
         all_data = []
         exp_suffix = experiment[7:]
@@ -3651,9 +3678,21 @@ class Analysis:
             except Exception as e:
                 print(f"Failed to read {file}: {e}")
 
-        # Step 5: Ridgeline plots for each feature
-        plot_iters = [it for it in iter_ls if it != 0] + ["PyMolGen"]
+        extra_raw_data = {
+            "ChEMBL": {},
+            "Hits": {}
+        }
 
+        for label, path in extra_sources.items():
+            try:
+                df = pd.read_csv(path)
+                for col in features:
+                    if col in df.columns:
+                        extra_raw_data[label].setdefault(col, []).append(df[col].dropna())
+            except Exception as e:
+                print(f"Failed to read {label} data from {path}: {e}")
+
+        # Step 5: Ridgeline plots for each feature
         for feat in features:
             df_plot = combined_df[[feat, "iteration"]].copy()
             df_plot = df_plot.rename(columns={feat: "value"})
@@ -3670,11 +3709,22 @@ class Analysis:
             else:
                 print(f"{feat} not found in PyMolGen descriptors")
 
+            # Add ChEMBL and Hits if available
+            for label, feat_dict in extra_raw_data.items():
+                if feat in feat_dict:
+                    all_values = pd.concat(feat_dict[feat]).dropna()
+                    all_values = pd.to_numeric(all_values, errors="coerce").dropna()
+                    if not all_values.empty:
+                        label_df = pd.DataFrame({"value": all_values, "iteration": label})
+                        df_plot = pd.concat([df_plot, label_df], ignore_index=True)
+                    else:
+                        print(f"No valid {label} data for feature: {feat}")
+
             if df_plot.empty or df_plot["value"].nunique() <= 1:
                 print(f"Skipping {feat}: no variation or all NaNs.")
                 continue
 
-            ordered_iters = [str(it) for it in sorted(plot_iters, key=lambda x: (x != "PyMolGen", x), reverse=True)]
+            ordered_iters = ["PyMolGen", "ChEMBL", "Hits"] + [str(it) for it in sorted(iter_ls) if it != 0]
 
             df_plot["iteration"] = pd.Categorical(
                 df_plot["iteration"].astype(str),
@@ -3710,34 +3760,36 @@ class Analysis:
                     bump_y = np.exp(-0.5 * ((x_vals - val) / 0.2) ** 2)
                     bump_y = bump_y / bump_y.max() * 0.9
 
-                    if it == "PyMolGen":
-                        ax.fill_between(
-                            x_vals, i, i + bump_y,
-                            facecolor="#999999",
-                            edgecolor="black",
-                            hatch="//",
-                            linewidth=0.5
-                        )
-                    else:
-                        ax.fill_between(x_vals, i, i + bump_y, color=color_map[feat], alpha=0.7)
+                    style = external_styles.get(it, {})
+                    facecolor = style.get("facecolor", color_map[feat])
+                    hatch = style.get("hatch", None)
 
+                    ax.fill_between(
+                        x_vals, i, i + bump_y,
+                        facecolor=facecolor,
+                        edgecolor="black",
+                        hatch=hatch,
+                        linewidth=0.5
+                    )
                     ax.plot(x_vals, i + bump_y, color="black", linewidth=1)
+
                 else:
                     kde = gaussian_kde(values)
                     y_vals = kde(x_vals)
                     y_scaled = y_vals / y_vals.max() * 0.9
 
-                    if it == "PyMolGen":
-                        ax.fill_between(
-                            x_vals, i, i + y_scaled,
-                            facecolor="#999999",
-                            edgecolor="black",
-                            hatch="//",
-                            linewidth=0.5
-                        )
-                    else:
-                        ax.fill_between(x_vals, i, i + y_scaled, color=color_map[feat], alpha=0.7)
+                    style = external_styles.get(it, {})
+                    facecolor = style.get("facecolor", color_map[feat])
+                    hatch = style.get("hatch", None)
 
+                    ax.fill_between(
+                        x_vals, i, i + y_scaled,
+                        facecolor=facecolor,
+                        edgecolor="black",
+                        hatch=hatch,
+                        linewidth=0.5,
+                        alpha=0.7 if it not in external_styles else 1.0
+                    )
                     ax.plot(x_vals, i + y_scaled, color="black", linewidth=1)
 
 
@@ -3746,7 +3798,7 @@ class Analysis:
 
             ax.set_yticks(y_ticks)
             ax.set_yticklabels(y_labels, fontsize=tick_fontsize)
-            ax.set_xlabel("Feature Value", fontsize=label_fontsize)
+            ax.set_xlabel(feat, fontsize=label_fontsize)
             ax.set_ylabel("Iteration", fontsize=label_fontsize)
             ax.tick_params(axis="x", labelsize=tick_fontsize)
             plt.tight_layout()
@@ -3860,7 +3912,6 @@ class Analysis:
             plt.savefig(save_path + f'/{filename}{exp_suffix}.png', dpi=dpi)
         plt.show()
 
-
     def PlotFeatureImportanceEigenVectors3D(self,
                                     experiment: str,
                                     iter_ls: list,
@@ -3875,11 +3926,6 @@ class Analysis:
                                     title_fontsize: int = 18,
                                     legend_fontsize: int = 14,
                                     legend_title_fontsize: int = 16):
-
-        import seaborn as sns
-        from sklearn.decomposition import PCA
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Patch
 
         top_feats = []
         seen_feats = set()
@@ -3990,12 +4036,6 @@ class Analysis:
                                     tick_fontsize: int = 14,
                                     label_fontsize: int = 16,
                                     title_fontsize: int = 18):
-        import matplotlib.pyplot as plt
-        from sklearn.decomposition import PCA
-        import seaborn as sns
-        import pandas as pd
-        from pathlib import Path
-        import numpy as np
 
         exp_suffix = experiment[7:]
 
@@ -4113,7 +4153,8 @@ class Analysis:
                                     save_plot: bool=False,
                                     tick_fontsize:int=18,
                                     label_fontsize:int=20,
-                                    legend_fontsize:int=16):
+                                    legend_fontsize:int=16,
+                                    method_legend_map: dict=None):
 
         import re
         glob_best_pred = float('inf')
@@ -4238,22 +4279,26 @@ class Analysis:
             prop={"size": legend_fontsize}
         )
 
-        # Create second legend for experiment colors
-        exp_names = [e.split("_")[-1] for e in experiment_ls]
-        labels = []
-        for e in exp_names:
-            name = f"_{e}"
-            if name not in labels:
-                labels.append(name)
+        # Detect suffixes actually used in the experiment list
+        used_suffixes = set()
+        for exp in experiment_ls:
+            matched_suffix = next((s for s in self.method_colour_map if exp.endswith(s)), None)
+            if matched_suffix:
+                used_suffixes.add(matched_suffix)
 
+        # Build color legend using method_legend_map in order
         handles = []
-        for label in labels:
-            if label in self.method_colour_map:
-                colour = self.method_colour_map[label]
-                handle = Line2D([0], [0], color=colour, lw=2)
-                handles.append(handle)
-            else:
-                print(f"Warning: No color found for label {label}")
+        labels = []
+
+        if method_legend_map:
+            for suffix, label in method_legend_map.items():
+                if suffix in used_suffixes:
+                    colour = self.method_colour_map.get(suffix)
+                    if colour:
+                        handles.append(Line2D([0], [0], color=colour, lw=2))
+                        labels.append(label)
+                    else:
+                        print(f"Warning: No color found for method suffix {suffix}")
 
         leg2 = fig.legend(
             handles,
@@ -4400,25 +4445,57 @@ class Analysis:
 
             with open(f"{PROJ_DIR}/results/rdkit_desc/plots/{json_name}.json", "w") as f:
                 json.dump(self.experiment_hits, f, indent=4)
-            
 
+                            # Create RDKit grid image for final iteration hits
+            try:
+                final_hit_ids = hit_ids[-1]  # Last iteration
+                smiles_path = f"{exp_path}/it{it_ls[-1]}/"
+                pred_file = glob(smiles_path + preds_file)[0]  # Use first matching prediction file
+                df = pd.read_csv(pred_file, index_col="ID", compression="gzip")
+
+                # Filter to hits and keep top 50
+                hit_df = df.loc[df.index.intersection(final_hit_ids)].copy()
+                hit_df = hit_df.head(50)
+
+                # Ensure SMILES column exists
+                smiles_col = "SMILES" if "SMILES" in hit_df.columns else None
+                if not smiles_col:
+                    print(f"SMILES column not found in {pred_file}. Cannot draw molecules.")
+                else:
+                    from rdkit import Chem
+                    from rdkit.Chem import Draw
+
+                    hit_df["mol"] = hit_df[smiles_col].apply(Chem.MolFromSmiles)
+                    img = Draw.MolsToGridImage(
+                        hit_df["mol"].tolist(),
+                        molsPerRow=5,
+                        subImgSize=(200, 200),
+                        legends=[str(i) for i in hit_df.index]
+                    )
+
+                    img_path = f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_final_hits.png"
+                    img.save(img_path)
+                    print(f"Saved RDKit grid image for {exp} to {img_path}")
+            except Exception as e:
+                print(f"Could not create RDKit image for {exp}: {e}")
 
     def _plot_discovery_bars(self,
-                             experiment_hits_path: str=f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
-                            label_fontsize: int = 18,
+                            experiment_hits_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
+                            label_fontsize: int = 22,
                             legend_fontsize: int = 18,
-                            tick_fontsize: int = 16,
+                            tick_fontsize: int = 18,
                             top_n: int = 50,
-                            plot_name:str="hits_discovery",
-                            allowed_experiments: list=[] ):
+                            plot_name: str = "hits_discovery",
+                            allowed_experiments: list = [],
+                            method_legend_map: dict = None):
         
         if experiment_hits_path:
             with open(experiment_hits_path, "r") as f:
                 self.experiment_hits = json.load(f)
 
         experiments = (
-            [key for key in self.experiment_hits if key in allowed_experiments] 
-            if allowed_experiments 
+            [key for key in self.experiment_hits if key in allowed_experiments]
+            if allowed_experiments
             else list(self.experiment_hits.keys())
         )
 
@@ -4428,7 +4505,7 @@ class Analysis:
         iterations = np.arange(n_its)
         bar_width = 0.8 / n_exps
 
-        fig, ax1 = plt.subplots(figsize=(20, 10))
+        fig, ax1 = plt.subplots(figsize=(18, 9))
         ax2 = ax1.twinx()
 
         colour_ls = []
@@ -4473,7 +4550,7 @@ class Analysis:
         ax2.set_ylim(0, 100)
 
         ax1.set_xticks(iterations + bar_width * (n_exps - 1) / 2)
-        ax1.set_xticklabels([str(i) for i in iterations], rotation=45, fontsize=tick_fontsize)
+        ax1.set_xticklabels([str(i) for i in iterations], rotation=60, fontsize=tick_fontsize)
         ax1.tick_params(axis='y', labelsize=tick_fontsize)
         ax2.tick_params(axis='y', labelsize=tick_fontsize)
 
@@ -4492,22 +4569,19 @@ class Analysis:
             title_fontsize=legend_fontsize
         )
 
-        # Methods Legend (just below the plot elements one)
-        exp_names = [e.split("_")[-1] for e in experiments]
-        unique_suffixes = []
-        for e in exp_names:        for e in exp_names:
-
-            suffix = f"_{e}"
-            if suffix not in unique_suffixes:
-                unique_suffixes.append(suffix)
-
         method_handles = []
         method_labels = []
-        for suffix in unique_suffixes:
-            color = self.method_colour_map.get(suffix)
-            if color:
-                method_handles.append(Line2D([0], [0], color=color, lw=4))
-                method_labels.append(suffix.lstrip("_"))
+
+        # Only include suffixes present in this plot
+        suffixes_in_plot = set(exp_suffixes)
+
+        if method_legend_map:
+            for suffix, label in method_legend_map.items():
+                if suffix in suffixes_in_plot:
+                    color = self.method_colour_map.get(suffix)
+                    if color:
+                        method_handles.append(Line2D([0], [0], color=color, lw=4))
+                        method_labels.append(label)
 
         leg2 = fig.legend(
             method_handles,

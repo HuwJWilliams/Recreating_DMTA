@@ -19,16 +19,12 @@ from misc_functions import (
     )
 results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'
 ho_an = Analysis(results_dir=results_dir, 
-            #   held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
              held_out_stat_json="held_out_test/held_out_stats.json",
-
               docking_column='Affinity(kcal/mol)'
               )
 
 trho_an=Analysis(results_dir=results_dir, 
              held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
-            # held_out_stat_json="held_out_test/held_out_stats.json",
-
               docking_column='Affinity(kcal/mol)'
               )
 
@@ -48,7 +44,6 @@ plot_ls_ls = [
         "average_10_mpo",
         "average_10_r",
         "average_10_mu",
-        "average_50_rmu",
 ],
 [
         "average_50_mp_mu_2:8",
@@ -74,9 +69,44 @@ plot_ls_ls = [
         "average_50_r",
 ]]
 plot_ls_ref = ["sing", "mp_mu", "rmp_rmu", "diff_pool"]
+plot_method_legend_map_ls = [
+                {
+                        "_mp": "MP",
+                        "_mpo": "MPO",
+                        "_mu": "MU",
+                        "_r" : "R",
+                        "_rmp": "RMP",
+                        "_rmpo": "RMPO",
+                        "_rmu": "RMU",
+                },
+                {
+                        "_mp": "MP",
+                        "_mu": "MU",
+                        "_2:8": "MP:MU (2:8)",
+                        "_5:5": "MP:MU (5:5)",
+                        "_8:2": "MP:MU (8:2)"
+                },
+                {
+                        "_rmp": "RMP",
+                        "_rmu": "RMU",
+                        "_2:8": "RMP:RMU (2:8)",
+                        "_5:5": "RMP:RMU (5:5)",
+                        "_8:2": "RMP:RMU (8:2)"
+                },
+                {
+                        "_mp": "MP",
+                        "_0025": "RMP (2.5 %)",
+                        "_005": "RMP (5 %)", 
+                        "_rmp": "RMP (10 %)",
+                        "_025": "RMP (25 %)",
+                        "_05": "RMP (50 %)",
+                        "_r": "RMP (100 %)"
+                }
+
+]
 
 #%%
-for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
+for ref, plot_ls, legend_dict in zip(plot_ls_ref, plot_ls_ls, plot_method_legend_map_ls):
     break
     ho_an.Plot_Perf(
         experiments=plot_ls,
@@ -99,6 +129,7 @@ for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
         title_fontsize=20,
         legend_fontsize=20,
         save_plot=True,
+        method_legend_map=legend_dict
         )
 
     ho_an.Plot_Perf(
@@ -120,6 +151,8 @@ for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
         title_fontsize=20,
         legend_fontsize=20,
         save_plot=True,
+        method_legend_map=legend_dict
+
         )
 
     trho_an.Plot_Perf(
@@ -141,6 +174,8 @@ for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
         title_fontsize=20,
         legend_fontsize=20,
         save_plot=True,
+        method_legend_map=legend_dict
+
         )
 
 # %%
@@ -150,67 +185,45 @@ an = Analysis(results_dir=results_dir,
               held_out_stat_json="held_out_test/held_out_stats.json",
               docking_column='Affinity(kcal/mol)'
               )
-
 # %%
-# an.UniqueFragCountGrouped(suffix_ls=['_mp',
-#                                         "_mpo",
-#                                         "_mu",
-#                                         "_rmp",
-#                                         "_rmpo",
-#                                         "_rmu",
-#                                         "_r"], 
-#                                         max_iter=30,
-#                                      save_plot=True)
-# %%
-# an.UncertaintyChecker(experiment_ls=['average_50_mu'],
-#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                      save_plot=True,
-#                                      plot_name='uncertainty_checker_50_mu')
-# an.UncertaintyChecker(experiment_ls=['average_50_mp'],
-#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                      save_plot=True,
-#                                      plot_name='uncertainty_checker_50_mp')
-# an.UncertaintyChecker(experiment_ls=['average_50_rmp'],
-#                                      iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                      save_plot=True,
-#                                      plot_name='uncertainty_checker_50_rmp')
-# %%
+# an.PlotUncertaintyEvolution(experiment_ls=[
+#         'average_50_mp_mu_2:8',
+#         'average_50_mp_mu_5:5',
+#         'average_50_mp_mu_8:2',
+#         "average_50_mp",
+#         "average_50_mu"],
+#         n_iters=30, save_plot=True,
+#         method_legend_map={
+#                         "_mp": "MP",
+#                         "_mu": "MU",
+#                         "_2:8": "MP:MU (2:8)",
+#                         "_5:5": "MP:MU (5:5)",
+#                         "_8:2": "MP:MU (8:2)"
+#                 })
 
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-
-# %%
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-# %%
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_2:8',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_5:5',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
-
-an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp_mu_8:2',
-                               iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                               )
 
 #%%
-# for ref, plot_ls in zip(plot_ls_ref, plot_ls_ls):
+# for ref, plot_ls, legend_dict in zip(plot_ls_ref, plot_ls_ls, plot_method_legend_map_ls):
 #         plot_ls = [item for item in plot_ls if "_10_" not in item]
 #         an.Plot_Top_Pred_Docked(experiment_ls=plot_ls,
 #                                 iter=30,
 #                                 save_plot=True,
 #                                 save_structures=True,
 #                                 search_in_top=50,
-#                                 plot_name=f"{ref}_pred_docked_boxplot")
+#                                 plot_name=f"{ref}_pred_docked_boxplot",
+#                                 method_legend_map=legend_dict)
 
+# %%
+exp_ls = [
+      "average_50_rmp",
+        "average_50_mp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+        "average_50_rmu",]
 
-# an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu", "average_50_r"],
-                        #  n_iters=30, save_plot=True)
+for exp in exp_ls:
+        an.PlotFeatureImportanceAndRidgelines(experiment=exp,
+                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+        )

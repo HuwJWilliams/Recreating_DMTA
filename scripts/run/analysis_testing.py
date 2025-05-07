@@ -100,24 +100,23 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                             regression_line_colour='coral'
 #                             )
 
-# # %%
+# %%
 # an.Plot_Perf(
 #     experiments=[
-#         # "average_50_rmp",
-#         # "average_50_mp",
-#         # "average_50_rmpo",
-#         # "average_50_mpo",
-#         # "average_50_r",
+#         "average_50_rmp",
+#         "average_50_mp",
+#         "average_50_rmpo",
+#         "average_50_mpo",
+#         "average_50_r",
 #         "average_50_mu",
-#         # "average_50_rmu",
-
-#         # "average_10_rmp",
-#         # "average_10_mp",
-#         # "average_10_rmpo",
-#         # "average_10_mpo",
-#         # "average_10_r",
-#         # "average_10_mu",
-#         # "average_50_rmu",
+#         "average_50_rmu",
+#         "average_10_rmp",
+#         "average_10_mp",
+#         "average_10_rmpo",
+#         "average_10_mpo",
+#         "average_10_r",
+#         "average_10_mu",
+#         "average_50_rmu",
         
 #         # "average_50_mp_mu_2:8",
 #         # "average_50_mp_mu_5:5",
@@ -136,34 +135,43 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #         "average_50_r",
 
 #         # "20241024_10_scramb_mp" ,  
-#         # "20241024_10_scramb_r"  ,   False
+#         # "20241024_10_scramb_r"  ,
 #         # "20241105_50_scramb_rmpo",
 #         # "20241105_50_scramb_mp"  , 
 #         # "20241105_50_scramb_r",
 #         # "20241105_50_scramb_mpo"  ,
 #         # "20241105_50_scramb_rmp",
 #         # "20250410_50_scramb_rmu"
-#     ],
-#     plot_ho =True,
-#     plot_int= False,
-#     plot_chembl_int= False,
-#     plot_fname='test_plot',
-#     set_ylims=True,
-#     r_type = 'pearson_r',
-#     rmse_ylim=(0.25, 1.25),
-#     sdep_ylim=(0.0, 0.6),
-#     r2_ylim=(-0.2, 1),
-#     bias_ylim= (-1.2, 0),
-#     # r2_ylim=(-0.2, 0.8), #scrambled
-#     # bias_ylim= (-0.5, 0.5), #scrambled
-#     yticks=4,
-#     custom_xticks=[0, 500, 1000, 1500],
-#     tick_fontsize=20,
-#     label_fontsize=24,
-#     title_fontsize=20,
-#     legend_fontsize=20,
-#     save_plot=True,
-#     )
+    # ],
+    # plot_ho =True,
+    # method_legend_map= {
+    #                     "_mp": "MP",
+    #                     "_mpo": "MPO",
+    #                     "_mu": "MU",
+    #                     "_r" : "R",
+    #                     "_rmp": "RMP",
+    #                     "_rmpo": "RMPO",
+    #                     "_rmu": "RMU",
+    #                   },
+    # plot_int= False,
+    # plot_chembl_int= False,
+    # plot_fname='test_plot',
+    # set_ylims=True,
+    # r_type = 'pearson_r',
+    # rmse_ylim=(0.25, 1.25),
+    # sdep_ylim=(0.0, 0.6),
+    # r2_ylim=(-0.2, 1),
+    # bias_ylim= (-1.2, 0),
+    # # r2_ylim=(-0.2, 0.8), #scrambled
+    # # bias_ylim= (-0.5, 0.5), #scrambled
+    # yticks=4,
+    # custom_xticks=[0, 500, 1000, 1500],
+    # tick_fontsize=20,
+    # label_fontsize=24,
+    # title_fontsize=20,
+    # legend_fontsize=20,
+    # save_plot=False,
+    # )
 
  # %%
 # %%
@@ -679,7 +687,7 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                                      save_plot=True,
 #                                      plot_name='uncertainty_checker_50_rmp')
 
-# # %%
+# %%
 # an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mp',
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
 #                                )
@@ -688,10 +696,10 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 # an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmp',
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
 #                                )
-# # %%
-# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_mu',
+# %%
+# an.PlotFeatureImportanceAndRidgelines(experiment='average_50_rmu',
 #                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-                            #    )
+                              #  )
 
 # %%
 
@@ -714,49 +722,92 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
 #                it_ls=[],
 #                top_n=50)
+# %%
 
+an.analyseHits(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+                              'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+                              'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
+               it_ls=[],
+               top_n=50)
+# %%
 # an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
-#                         plot_name='random_chosen_hit_discovery')
+#                         plot_name='random_chosen_hit_discovery',
+#                         method_legend_map={
+#                             "_r" : "R",
+#                             "_rmp": "RMP",
+#                             "_rmpo": "RMPO",
+#                             "_rmu": "RMU",
+                            
+#                         })
 
-# an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mpo", "average_50_mu"],
-#                         plot_name='top_chosen_hit_discovery')
+# %%
+# an._plot_discovery_bars(
+#     allowed_experiments=[
+#         'average_50_mp', "average_50_mpo", "average_50_mu"
+#     ],
+#     plot_name='top_chosen_hit_discovery',
+#     method_legend_map={
+#         "_mp": "MP",
+#         "_mpo": "MPO",
+#         "_mu": "MU"
+#     },
+# )
 
-# an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mu", 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2',],
-#                         plot_name='mp_mu_hit_discovery')
-
-# an._plot_discovery_bars(allowed_experiments=['average_50_rmp', "average_50_rmu",'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
-#                         plot_name='rmp_rmu_hit_discovery')
-
-
-# an._plot_discovery_bars(allowed_experiments=['average_50_mp', 'average_50_rmp_0025', 'average_50_rmp_005', "average_50_rmp", 'average_50_rmp_025', 'average_50_rmp_05'],
-#                         plot_name='diff_pool_hit_discovery')
-#                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-#                                save_data=False
-#                                )
+# %%
+# an._plot_discovery_bars(
+#     allowed_experiments=[
+#         'average_50_mp',
+#         "average_50_mu",
+#         'average_50_mp_mu_2:8',
+#         'average_50_mp_mu_5:5',
+#         'average_50_mp_mu_8:2'
+#     ],
+#     plot_name='mp_mu_hit_discovery',
+#     method_legend_map={
+#         "_mp": "MP",
+#         "_mu": "MU",
+#         "_2:8": "MP:MU (2:8)",
+#         "_5:5": "MP:MU (5:5)",
+#         "_8:2": "MP:MU (8:2)"
+#     }
+# )
 # %%
 
-# an.PlotUncertaintyEvolution(experiment_ls=['average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', "average_50_mp", "average_50_mu"],
-#                          n_iters=30, save_plot=True)
+# an._plot_discovery_bars(
+#     allowed_experiments=[
+#         'average_50_rmp',
+#         "average_50_rmu",
+#         'average_50_rmp_rmu_2:8',
+#         'average_50_rmp_rmu_5:5',
+#         'average_50_rmp_rmu_8:2'
+#     ],
+#     plot_name='rmp_rmu_hit_discovery',
+#     method_legend_map={
+#         "_rmp": "RMP",
+#         "_rmu": "RMU",
+#         "_2:8": "RMP:RMU (2:8)",
+#         "_5:5": "RMP:RMU (5:5)",
+#         "_8:2": "RMP:RMU (8:2)"
+#     }
+# )
 # %%
 
-# an.analyseHits(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
-#                               'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
-#                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
-#                it_ls=[],
-#                top_n=50)
-
-an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
-                        plot_name='random_chosen_hit_discovery')
-
-an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mpo", "average_50_mu"],
-                        plot_name='top_chosen_hit_discovery')
-
-an._plot_discovery_bars(allowed_experiments=['average_50_mp', "average_50_mu", 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2',],
-                        plot_name='mp_mu_hit_discovery')
-
-an._plot_discovery_bars(allowed_experiments=['average_50_rmp', "average_50_rmu",'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5', 'average_50_rmp_rmu_8:2'],
-                        plot_name='rmp_rmu_hit_discovery')
-
-
-an._plot_discovery_bars(allowed_experiments=['average_50_mp', 'average_50_rmp_0025', 'average_50_rmp_005', "average_50_rmp", 'average_50_rmp_025', 'average_50_rmp_05'],
-                        plot_name='diff_pool_hit_discovery')
+# an._plot_discovery_bars(allowed_experiments=['average_50_mp', 
+#                                              'average_50_rmp_0025', 
+#                                              'average_50_rmp_005', 
+#                                              "average_50_rmp", 
+#                                              'average_50_rmp_025', 
+#                                              'average_50_rmp_05',
+#                                              'average_50_r'],
+#                         plot_name='diff_pool_hit_discovery',
+#                             method_legend_map={
+#                               "_mp": "MP",
+#                               "_0025": "RMP (2.5 %)",
+#                               "_005": "RMP (5 %)", 
+#                               "_rmp": "RMP (10 %)",
+#                               "_025": "RMP (25 %)",
+#                               "_05": "RMP (50 %)",
+#                               "_r": "R"
+#                           }
+#                       )
+# %%

@@ -3594,9 +3594,9 @@ class Analysis:
         }
     ):
         external_styles = {
-            "PyMolGen": {"facecolor": "#999999", "hatch": "."},
-            "ChEMBL": {"facecolor": "#999999", "hatch":"-"},
-            "Hits": {"facecolor": "#999999", "hatch": "+"},
+            "PyMolGen": {"facecolor": "#000000", "hatch": "."},
+            "ChEMBL": {"facecolor": "#000000", "hatch":"-"},
+            "Hits": {"facecolor": "#000000", "hatch": "+"},
         }
         Path(self.results_dir, save_path).mkdir(parents=True, exist_ok=True)
         all_data = []
@@ -4333,61 +4333,56 @@ class Analysis:
             self,
             experiment_ls: list,
             it_ls: list,
-            top_n: int=None,
-            docking_results_path: str=f"{PROJ_DIR}/datasets/PyMolGen/docking/PMG_docking_*.csv",
-            docking_column: str="Affinity(kcal/mol)",
-            preds_column: str="pred_Affinity(kcal/mol)",
-            percentile: float=0.01,
-            preds_file: str="all_preds_*.csv.gz",
-            json_name: str="hit_discovery"
+            top_n: int = None,
+            docking_results_path: str = f"{PROJ_DIR}/datasets/PyMolGen/docking/PMG_docking_*.csv",
+            docking_column: str = "Affinity(kcal/mol)",
+            preds_column: str = "pred_Affinity(kcal/mol)",
+            percentile: float = 0.01,
+            preds_file: str = "all_preds_*.csv.gz",
+            json_name: str = "hit_discovery"
     ):
         self.experiment_hits = {}
         docking_results_ls = glob(docking_results_path)
 
         global_docking_df = pd.DataFrame()
-
         for docking_file in docking_results_ls:
             df = pd.read_csv(docking_file, index_col="ID")
             df = df.sort_values(by=docking_column)
             df = df.head(int(len(df) * (percentile * 10)))
             global_docking_df = pd.concat([global_docking_df, df])
 
-        print(len(global_docking_df))
-        # Keep only valid numeric values
-        
         global_docking_df = pd.to_numeric(global_docking_df[docking_column], errors='coerce').dropna().to_frame()
         global_docking_df = global_docking_df.sort_values(by=docking_column)
-        print(len(global_docking_df))
-
-
         final_len = int(len(global_docking_df) * percentile)
         global_docking_df = global_docking_df.head(final_len)
-        print(f"Top-docked size (final_len): {final_len}")
 
         for exp in experiment_ls:
-            print(f"Analysing experiment: {exp}")
             exp_path = self.results_dir + exp
             n_its = count_number_iters(exp_path)
 
-            # Track metrics
-            total_counts = []
-            new_hits_per_iter = []
-            rediscovered_per_iter = []
-            cumulative_hits = set()
             total_hits = 0
-            it_hits = []
-            hit_ids = []
-            found_mols = set()
+            total_hit_ids = set()
+            it_hits, it_hit_ids_all = [], []
+            new_hits_per_iter, new_hits_ids_all = [], []
+            rediscovered_per_iter, rediscovered_ids_all = [], []
 
             if not it_ls:
                 it_ls = [n for n in range(n_its + 1)]
 
+            # Initialize all accumulators
+            total_hit_ids = set()
+            it_hits = []
+            it_hit_ids_all = []
+            new_hits_per_iter = []
+            new_hits_ids_all = []
+            rediscovered_per_iter = []
+            rediscovered_ids_all = []
+            top_pred_per_iter = []
+
             for it in it_ls:
-                print(f"Iteration {it}")
-                it_hit = 0
-                it_hit_ids = []
-                new_hits = 0
-                rediscovered = 0
+                it_hit, it_hit_ids = 0, []
+                new_hits, new_hits_ids = 0, []
+                rediscovered, rediscovered_ids = 0, []
                 total_count = 0
 
                 it_path = exp_path + f'/it{it}/'
@@ -4415,69 +4410,136 @@ class Analysis:
                 for mol in top_mols.index:
                     if mol in global_docking_df.index:
                         total_count += 1
-                        if mol in cumulative_hits:
+                        it_hit_ids.append(mol)
+                        it_hit += 1
+                        if mol in total_hit_ids:
                             rediscovered += 1
+                            rediscovered_ids.append(mol)
                         else:
                             new_hits += 1
-                            cumulative_hits.add(mol)
-                        if mol not in found_mols:
-                            it_hit_ids.append(mol)
-                            it_hit += 1
-                            found_mols.add(mol)
+                            new_hits_ids.append(mol)
+                            total_hit_ids.add(mol)
 
                 it_hits.append(it_hit)
-                hit_ids.append(it_hit_ids)
-                total_counts.append(total_count)
+                it_hit_ids_all.append(it_hit_ids)
                 new_hits_per_iter.append(new_hits)
+                new_hits_ids_all.append(new_hits_ids)
                 rediscovered_per_iter.append(rediscovered)
-                total_hits += it_hit
+                rediscovered_ids_all.append(rediscovered_ids)
 
-                print(f"New hits this iteration: {it_hit} / Rediscovered: {rediscovered} / Total: {total_count}")
+                total_hits = len(total_hit_ids)  
+                top_pred_ids = list(top_mols.head(top_n).index)
+                top_pred_per_iter.append(top_pred_ids)
+
+                              
 
             self.experiment_hits[exp] = {
                 "total_hits": total_hits,
+                "total_hit_ids": list(total_hit_ids),
                 "it_hits": it_hits,
-                "hit_ids": hit_ids,
-                "total_counts": total_counts,
+                "it_hit_ids": it_hit_ids_all,
                 "new_hits": new_hits_per_iter,
-                "rediscovered": rediscovered_per_iter
+                "new_hits_ids": new_hits_ids_all,
+                "rediscovered": rediscovered_per_iter,
+                "rediscovered_ids": rediscovered_ids_all,
+                "top_pred_per_iter": top_pred_per_iter
             }
 
-            with open(f"{PROJ_DIR}/results/rdkit_desc/plots/{json_name}.json", "w") as f:
-                json.dump(self.experiment_hits, f, indent=4)
+        with open(f"{PROJ_DIR}/results/rdkit_desc/plots/{json_name}.json", "w") as f:
+            json.dump(self.experiment_hits, f, indent=4)
 
-                            # Create RDKit grid image for final iteration hits
-            try:
-                final_hit_ids = hit_ids[-1]  # Last iteration
-                smiles_path = f"{exp_path}/it{it_ls[-1]}/"
-                pred_file = glob(smiles_path + preds_file)[0]  # Use first matching prediction file
-                df = pd.read_csv(pred_file, index_col="ID", compression="gzip")
+    def draw_final_hit_molecules(
+            self,
+            experiment_ls: list,
+            it_ls: list,
+            docking_results_path: str = f"{PROJ_DIR}/datasets/PyMolGen/docking/PMG_docking_*.csv",
+            docking_column: str = "Affinity(kcal/mol)",
+            preds_file: str = "all_preds_*.csv.gz",
+            percentile: float = 0.01
+    ):
+        with open(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json", "r") as f:
+            experiment_hits = json.load(f)
 
-                # Filter to hits and keep top 50
-                hit_df = df.loc[df.index.intersection(final_hit_ids)].copy()
-                hit_df = hit_df.head(50)
+        experiment_ls = [experiment_ls[0]]
 
-                # Ensure SMILES column exists
-                smiles_col = "SMILES" if "SMILES" in hit_df.columns else None
-                if not smiles_col:
-                    print(f"SMILES column not found in {pred_file}. Cannot draw molecules.")
+
+        for experiment in experiment_ls:
+            hit_df = pd.DataFrame()
+
+            final_it_hits = experiment_hits[experiment]["it_hit_ids"][-1]
+            final_it_top_preds = experiment_hits[experiment]["top_pred_per_iter"][-1]
+
+            hit_df['ID'] = final_it_top_preds
+            is_hit_ls = []
+            batch_no_ls = []
+            for id in hit_df['ID']:
+                if id in final_it_hits:
+                    is_hit_ls.append(1)
                 else:
-                    from rdkit import Chem
-                    from rdkit.Chem import Draw
+                    is_hit_ls.append(0)
+                batch_no = molid2batchno(
+                    molid=id, 
+                    prefix='PMG-',
+                    dataset_file=docking_results_path
+                                         )
+                batch_no_ls.append(batch_no)
 
-                    hit_df["mol"] = hit_df[smiles_col].apply(Chem.MolFromSmiles)
-                    img = Draw.MolsToGridImage(
-                        hit_df["mol"].tolist(),
-                        molsPerRow=5,
-                        subImgSize=(200, 200),
-                        legends=[str(i) for i in hit_df.index]
-                    )
+            hit_df['is_hit'] = is_hit_ls
+            hit_df['batch_no'] = batch_no_ls
 
-                    img_path = f"{PROJ_DIR}/results/rdkit_desc/plots/{exp}_final_hits.png"
-                    img.save(img_path)
-                    print(f"Saved RDKit grid image for {exp} to {img_path}")
-            except Exception as e:
-                print(f"Could not create RDKit image for {exp}: {e}")
+            hit_df = hit_df.sort_values(by='batch_no')
+
+            #print(hit_df)
+
+            smiles_df_ls = []
+            for batch_no in hit_df['batch_no'].unique():
+                batch_path = docking_results_path.replace("*", str(batch_no))
+                batch_df = pd.read_csv(batch_path, index_col='ID')
+                
+                molid_ls = []
+                smiles_ls = []
+                for id in hit_df[hit_df['batch_no'] == batch_no]['ID']:
+                    smiles_ls.append(batch_df.loc[id, 'SMILES'])
+                    molid_ls.append(id)
+
+                smiles_df = pd.DataFrame(index=molid_ls)
+                smiles_df['SMILES'] = smiles_ls
+                smiles_df_ls.append(smiles_df)
+            
+            top_pred_smiles_df = pd.concat(smiles_df_ls)
+
+            print(hit_df.head(1))
+            print(top_pred_smiles_df.head(1))
+
+            # Make sure both use the same index (ID)
+            hit_df = hit_df.set_index("ID")
+            top_pred_smiles_df.index.name = "ID"
+
+            # Now join works as expected
+            hit_df = hit_df.join(top_pred_smiles_df, how='left')
+
+            # Convert SMILES to RDKit Mol objects
+            hit_df["mol"] = hit_df["SMILES"].apply(Chem.MolFromSmiles)
+            hit_df = hit_df[hit_df["mol"].notnull()]  # Filter out failed parses
+
+            # Generate legends based on 'is_hit' column
+            hit_df["legend"] = hit_df.apply(lambda row: f"{row.name} - {'HIT' if row['is_hit'] else ''}", axis=1)
+
+            # Draw the molecules
+            img = Draw.MolsToGridImage(
+                hit_df["mol"].tolist(),
+                legends=hit_df["legend"].tolist(),
+                molsPerRow=5,
+                subImgSize=(200, 200),
+                useSVG=False
+            )
+
+           # img.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
+            pil_img = Image.fromarray(img)
+            pil_img.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
+            
+
+
 
     def _plot_discovery_bars(self,
                             experiment_hits_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
@@ -4524,7 +4586,7 @@ class Analysis:
         for i, (exp, exp_suffix) in enumerate(zip(experiments, exp_suffixes)):
             new_hits = self.experiment_hits[exp]["new_hits"]
             rediscovered = self.experiment_hits[exp]["rediscovered"]
-            total_counts = self.experiment_hits[exp]["total_counts"]
+            total_counts = [n + r for n, r in zip(new_hits, rediscovered)]
 
             new_hits += [0] * (n_its - len(new_hits))
             rediscovered += [0] * (n_its - len(rediscovered))

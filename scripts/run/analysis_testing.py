@@ -724,11 +724,20 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                top_n=50)
 # %%
 
-an.analyseHits(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
-                              'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
-                              'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'],
-               it_ls=[],
-               top_n=50)
+# an.analyseHits(experiment_ls=["average_50_rmp", 
+#                               'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+#                               'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+#                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'
+#                               ],
+#                it_ls=[],
+#                top_n=50)
+# %%
+an.draw_final_hit_molecules(experiment_ls=["average_50_rmp", 
+                              # 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+                              # 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+                              # 'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'
+                              ],
+               it_ls=[])
 # %%
 # an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
 #                         plot_name='random_chosen_hit_discovery',

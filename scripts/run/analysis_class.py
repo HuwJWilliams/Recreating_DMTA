@@ -4460,8 +4460,8 @@ class Analysis:
         with open(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json", "r") as f:
             experiment_hits = json.load(f)
 
-        experiment_ls = [experiment_ls[0]]
-
+        hit_csv = pd.read_csv(f"{PROJ_DIR}/datasets/hits/hits_targets.csv", index_col='ID')
+        hit_csv = hit_csv.sort_values(by='Affinity(kcal/mol)').reset_index()
 
         for experiment in experiment_ls:
             hit_df = pd.DataFrame()
@@ -4531,15 +4531,13 @@ class Analysis:
                 legends=hit_df["legend"].tolist(),
                 molsPerRow=5,
                 subImgSize=(200, 200),
-                useSVG=False
             )
 
-           # img.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
-            pil_img = Image.fromarray(img)
-            pil_img.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
+            img_pil = PILImage.open(BytesIO(img.data))
+            img_pil.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
+
+    
             
-
-
 
     def _plot_discovery_bars(self,
                             experiment_hits_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
@@ -4663,3 +4661,135 @@ class Analysis:
 
         plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
         plt.show()
+
+
+    def drawUMAP(self,
+                 experiment_ls,
+                 desc_results_path=f"{PROJ_DIR}/datasets/PyMolGen/desc/rdkit/PMG_rdkit_desc_*.csv"):
+        
+        with open(f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json", "r") as f:
+            experiment_hits = json.load(f)
+
+        top_pred_df_ls = []
+        for experiment in experiment_ls:
+            hit_df = pd.DataFrame()
+
+            final_it_hits = experiment_hits[experiment]["it_hit_ids"][-1]
+            final_it_top_preds = experiment_hits[experiment]["top_pred_per_iter"][-1]
+
+            hit_df['ID'] = final_it_top_preds
+            is_hit_ls = []
+            batch_no_ls = []
+            for id in hit_df['ID']:
+                if id in final_it_hits:
+                    is_hit_ls.append(1)
+                else:
+                    is_hit_ls.append(0)
+                batch_no = molid2batchno(
+                    molid=id, 
+                    prefix='PMG-',
+                    dataset_file=desc_results_path
+                                         )
+                batch_no_ls.append(batch_no)
+
+            hit_df['is_hit'] = is_hit_ls
+            hit_df['batch_no'] = batch_no_ls
+
+            hit_df = hit_df.sort_values(by='batch_no')
+
+            top_pred_desc_df = pd.DataFrame()
+            for batch_no in hit_df['batch_no'].unique():
+                batch_path = desc_results_path.replace("*", str(batch_no))
+                batch_df = pd.read_csv(batch_path, index_col='ID')
+                
+                common_index = batch_df.index.intersection(hit_df['ID'])
+                desc_subset = batch_df.loc[common_index]
+                top_pred_desc_df = pd.concat([top_pred_desc_df, desc_subset])
+
+            # Reset index to merge on 'ID'
+            hit_df = hit_df.set_index("ID")
+            top_pred_desc_df = top_pred_desc_df.join(hit_df[["is_hit"]], how="left")
+
+            # Add experiment label
+            top_pred_desc_df["Experiment"] = experiment
+            top_pred_desc_df.reset_index(inplace=True)
+
+            top_pred_df_ls.append(top_pred_desc_df)
+            print(top_pred_desc_df.shape)
+
+            import sys
+            sys.path = [str(p) for p in sys.path]
+
+            from umap.umap_ import UMAP
+            from sklearn.preprocessing import StandardScaler
+
+            full_df = pd.concat(top_pred_df_ls)
+
+        print(full_df.columns)
+
+        X = full_df.select_dtypes(include=[float, int])
+        y= full_df['Experiment']
+
+        plt.figure(figsize=(10, 8))
+
+        # Map experiment to color using self.method_colour_map
+        def get_exp_color(exp_name):
+            for suffix, color in self.method_colour_map.items():
+                if exp_name.endswith(suffix):
+                    return color
+            return "black"
+
+        full_df["Color"] = full_df["Experiment"].apply(get_exp_color)
+
+        # UMAP
+        reducer = UMAP(n_jobs=1, random_state=42)
+        embedding = reducer.fit_transform(X)
+        full_df["UMAP1"] = embedding[:, 0]
+        full_df["UMAP2"] = embedding[:, 1]
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        # Plot: use circles for hits, crosses for non-hits, colored by experiment
+        for exp in full_df["Experiment"].unique():
+            df_exp = full_df[full_df["Experiment"] == exp]
+            color = get_exp_color(exp)
+
+            # Plot hits
+            df_hits = df_exp[df_exp["is_hit"] == 1]
+            ax.scatter(df_hits["UMAP1"], df_hits["UMAP2"], color=color, edgecolor='black',
+                    marker='o', s=60, alpha=0.8)
+
+            # Plot non-hits
+            df_non_hits = df_exp[df_exp["is_hit"] == 0]
+            ax.scatter(df_non_hits["UMAP1"], df_non_hits["UMAP2"], color=color, edgecolor='black',
+                    marker='X', s=60, alpha=0.6)
+
+        # 1. Legend for Hit Status (marker shape)
+        hit_legend = [
+            Line2D([0], [0], marker='o', color='w', label='Hit', markerfacecolor='gray', markeredgecolor='black', markersize=10),
+            Line2D([0], [0], marker='X', color='w', label='Non-Hit', markerfacecolor='gray', markeredgecolor='black', markersize=10)
+        ]
+        legend1 = ax.legend(handles=hit_legend, title='Hit Status', loc='upper left')
+        ax.add_artist(legend1)
+
+        # 2. Legend for Experiment Method (color)
+        method_legend_map = {
+            "_mp": "MP",
+            "_mpo": "MPO",
+            "_mu": "MU"
+        }
+        method_legend = [
+            Line2D([0], [0], marker='o', linestyle='None', color='w',
+                markerfacecolor=self.method_colour_map[suffix], markeredgecolor='black',
+                label=label, markersize=10)
+            for suffix, label in method_legend_map.items()
+        ]
+        legend2 = ax.legend(handles=method_legend, title="Method", loc='upper right')
+
+        # Final polish
+        ax.set_title("UMAP of Top Predicted Molecules by Experiment")
+        ax.set_xlabel("UMAP-1")
+        ax.set_ylabel("UMAP-2")
+        plt.tight_layout()
+        plt.show()
+

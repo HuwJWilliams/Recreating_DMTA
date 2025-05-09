@@ -21,17 +21,14 @@
 #SBATCH --time=168:00:00
 #
 # Job name
-#SBATCH --job-name=hybrid
+#SBATCH --job-name=hybrid_mp_mu
 #
 # Output file
 #SBATCH --output=slurm-%j.out
 
-## Email settings
-## SBATCH --mail-type=END,FAIL
-## SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
-
-# Exclude Nodes
-#SBATCH --exclude=node012
+# Email settings
+# SBATCH --mail-type=END,FAIL
+# SBATCH --mail-user=huw.williams.2018@uni.strath.ac.uk
 #=======================================================
 
 
@@ -49,15 +46,9 @@ module load anaconda/python-3.9.7
 # Modify the line below to run your program
 source activate phd_env
 
-n_cmpds=50
-sel_method="mu"
-start_iter=1
-total_iters=4
-run_date="20250508"
-random_frac=0.1
-extra_description=""
-
-python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py $n_cmpds $sel_method $start_iter $total_iters $run_date $random_frac $extra_description
+# Run the Python script
+python -u /users/yhb18174/Recreating_DMTA/scripts/run/run_DMTA.py \
+    50 "mu" 1 4 "20250810" 0.1 ""
 
 #=========================================================
 # Epilogue script to record job endtime and runtime

@@ -104,11 +104,11 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 # an.Plot_Perf(
 #     experiments=[
 #         "average_50_rmp",
-#         "average_50_mp",
+        # "average_50_mp",
 #         "average_50_rmpo",
 #         "average_50_mpo",
-#         "average_50_r",
-#         "average_50_mu",
+        # "average_50_r",
+        # "average_50_mu",
 #         "average_50_rmu",
 #         "average_10_rmp",
 #         "average_10_mp",
@@ -117,6 +117,7 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #         "average_10_r",
 #         "average_10_mu",
 #         "average_50_rmu",
+    # '20250508_50_mu_mp_4:26',
         
 #         # "average_50_mp_mu_2:8",
 #         # "average_50_mp_mu_5:5",
@@ -134,11 +135,11 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #         "average_50_rmp_05",
 #         "average_50_r",
 
-#         # "20241024_10_scramb_mp" ,  
-#         # "20241024_10_scramb_r"  ,
+        # "20241024_10_scramb_mp" ,  
+        # "20241024_10_scramb_r"  ,
 #         # "20241105_50_scramb_rmpo",
-#         # "20241105_50_scramb_mp"  , 
-#         # "20241105_50_scramb_r",
+        # "20241105_50_scramb_mp"  , 
+        # "20241105_50_scramb_mu",
 #         # "20241105_50_scramb_mpo"  ,
 #         # "20241105_50_scramb_rmp",
 #         # "20250410_50_scramb_rmu"
@@ -732,12 +733,14 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                it_ls=[],
 #                top_n=50)
 # %%
-an.draw_final_hit_molecules(experiment_ls=["average_50_rmp", 
-                              # 'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
-                              # 'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
-                              # 'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'
-                              ],
-               it_ls=[])
+# an.draw_final_hit_molecules(experiment_ls=["average_50_rmp", 
+#                               'average_50_mu', 'average_50_mp', 'average_50_mpo', 'average_50_rmpo', 'average_50_r', 'average_50_rmu',
+#                               'average_50_mp_mu_2:8', 'average_50_mp_mu_5:5', 'average_50_mp_mu_8:2', 'average_50_rmp_rmu_2:8', 'average_50_rmp_rmu_5:5',
+#                               'average_50_rmp_rmu_8:2', 'average_50_rmp_0025', 'average_50_rmp_0025', 'average_50_rmp_005', 'average_50_rmp_025', 'average_50_rmp_05'
+#                               ],
+#                it_ls=[])
+# %%
+# an.drawUMAP(experiment_ls=["average_50_rmp", 'average_50_mu', 'average_50_mp',])
 # %%
 # an._plot_discovery_bars(allowed_experiments=['average_50_r', "average_50_rmp",'average_50_rmpo',  'average_50_rmu'],
 #                         plot_name='random_chosen_hit_discovery',
@@ -820,3 +823,50 @@ an.draw_final_hit_molecules(experiment_ls=["average_50_rmp",
 #                           }
 #                       )
 # %%
+an.analyseHits(experiment_ls=[
+    "20241011_50_r",
+    "20241015_50_r",
+    "20241023_50_r",
+
+    "20241011_50_rmp",
+    "20241015_50_rmp",
+    "20241023_50_rmp",
+
+    "20241011_50_rmpo",
+    "20241015_50_rmpo",
+    "20241023_50_rmpo",
+
+    "20250218_50_rmu",
+    "20250219_50_rmu",
+    "20250220_50_rmu",
+                              ],
+              json_name="indi_random_hit_discovery",
+               it_ls=[],
+               top_n=50)
+
+an._plot_discovery_bars(allowed_experiments=[
+    "20241011_50_r",
+    "20241015_50_r",
+    "20241023_50_r",
+
+    "20241011_50_rmp",
+    "20241015_50_rmp",
+    "20241023_50_rmp",
+
+    "20241011_50_rmpo",
+    "20241015_50_rmpo",
+    "20241023_50_rmpo",
+    
+    "20250218_50_rmu",
+    "20250219_50_rmu",
+    "20250220_50_rmu",
+        ],
+  method_legend_map={
+      "_r" : "R",
+      "_rmp": "RMP",
+      "_rmpo": "RMPO",
+      "_rmu": "RMU",                            
+  },
+  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/indi_random_hit_discovery.json",
+  plot_name='indi_random_hit_discovery'
+  )

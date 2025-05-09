@@ -23,7 +23,7 @@ fl = path +  "PMG_rdkit_full.csv"
 # experiments = glob('/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/202*')
 # all_experiments = [str(Path(path).name) for path in experiments]
 
-all_experiments = ["20250410_50_rmu"]
+all_experiments = ["20250508_50_mu_mp_4:26"]
 # PredictNewTestSet(
 #     feats=ft,
 #     targs=tg,

@@ -4463,6 +4463,10 @@ class Analysis:
         hit_csv = pd.read_csv(f"{PROJ_DIR}/datasets/hits/hits_targets.csv", index_col='ID')
         hit_csv = hit_csv.sort_values(by='Affinity(kcal/mol)').reset_index()
 
+        # put hit rankings in illustration
+    
+
+
         for experiment in experiment_ls:
             hit_df = pd.DataFrame()
 
@@ -4537,7 +4541,6 @@ class Analysis:
             img_pil.save(f"{PROJ_DIR}/results/rdkit_desc/plots/{experiment}_final_hits_grid.png")
 
     
-            
 
     def _plot_discovery_bars(self,
                             experiment_hits_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
@@ -4547,7 +4550,8 @@ class Analysis:
                             top_n: int = 50,
                             plot_name: str = "hits_discovery",
                             allowed_experiments: list = [],
-                            method_legend_map: dict = None):
+                            method_legend_map: dict = None,
+                            n_its:int=30):
         
         if experiment_hits_path:
             with open(experiment_hits_path, "r") as f:
@@ -4560,7 +4564,9 @@ class Analysis:
         )
 
         n_exps = len(experiments)
-        n_its = max(len(data["new_hits"]) for data in self.experiment_hits.values())
+
+        if not n_its:
+            n_its = max(len(data["new_hits"]) for data in self.experiment_hits.values())
 
         iterations = np.arange(n_its)
         bar_width = 0.8 / n_exps
@@ -4582,13 +4588,14 @@ class Analysis:
         method_color_legend = {}
 
         for i, (exp, exp_suffix) in enumerate(zip(experiments, exp_suffixes)):
-            new_hits = self.experiment_hits[exp]["new_hits"]
-            rediscovered = self.experiment_hits[exp]["rediscovered"]
-            total_counts = [n + r for n, r in zip(new_hits, rediscovered)]
+            new_hits = self.experiment_hits[exp]["new_hits"][:n_its]
+            rediscovered = self.experiment_hits[exp]["rediscovered"][:n_its]
 
+            # If too short, pad to n_its
             new_hits += [0] * (n_its - len(new_hits))
             rediscovered += [0] * (n_its - len(rediscovered))
-            total_counts += [0] * (n_its - len(total_counts))
+
+            total_counts = [n + r for n, r in zip(new_hits, rediscovered)]
 
             color = colour_ls[i]
             linestyle = linestyle_ls[i]

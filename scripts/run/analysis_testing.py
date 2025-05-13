@@ -17,7 +17,7 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/'#complete_archive/50_sel/'
 an = Analysis(results_dir=results_dir, 
               held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
             # held_out_stat_json="held_out_test/held_out_stats.json",
@@ -101,78 +101,78 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                             )
 
 # %%
-# an.Plot_Perf(
-#     experiments=[
-#         "average_50_rmp",
-        # "average_50_mp",
-#         "average_50_rmpo",
-#         "average_50_mpo",
-        # "average_50_r",
-        # "average_50_mu",
-#         "average_50_rmu",
-#         "average_10_rmp",
-#         "average_10_mp",
-#         "average_10_rmpo",
-#         "average_10_mpo",
-#         "average_10_r",
-#         "average_10_mu",
-#         "average_50_rmu",
-    # '20250508_50_mu_mp_4:26',
+an.Plot_Perf(
+    experiments=[
+        "average_50_rmp",
+        "average_50_mp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+        "average_50_rmu",
+        # "average_10_rmp",
+        # "average_10_mp",
+        # "average_10_rmpo",
+        # "average_10_mpo",
+        # "average_10_r",
+        # "average_10_mu",
+        "average_50_rmu",
+    '20250508_50_mu_mp_4:26',
         
-#         # "average_50_mp_mu_2:8",
-#         # "average_50_mp_mu_5:5",
-#         # "average_50_mp_mu_8:2",
+        # "average_50_mp_mu_2:8",
+        # "average_50_mp_mu_5:5",
+        # "average_50_mp_mu_8:2",
 
-#         # "average_50_rmp_rmu_2:8",
-#         # "average_50_rmp_rmu_5:5",
-#         # "average_50_rmp_rmu_8:2",
+        # "average_50_rmp_rmu_2:8",
+        # "average_50_rmp_rmu_5:5",
+        # "average_50_rmp_rmu_8:2",
 
-#         "average_50_mp",
-#         "average_50_rmp_0025",
-#         "average_50_rmp_005",
-#         "average_50_rmp",
-#         "average_50_rmp_025",
-#         "average_50_rmp_05",
-#         "average_50_r",
+        # "average_50_mp",
+        # "average_50_rmp_0025",
+        # "average_50_rmp_005",
+        # "average_50_rmp",
+        # "average_50_rmp_025",
+        # "average_50_rmp_05",
+        # "average_50_r",
 
         # "20241024_10_scramb_mp" ,  
         # "20241024_10_scramb_r"  ,
-#         # "20241105_50_scramb_rmpo",
+        # "20241105_50_scramb_rmpo",
         # "20241105_50_scramb_mp"  , 
         # "20241105_50_scramb_mu",
-#         # "20241105_50_scramb_mpo"  ,
-#         # "20241105_50_scramb_rmp",
-#         # "20250410_50_scramb_rmu"
-    # ],
-    # plot_ho =True,
-    # method_legend_map= {
-    #                     "_mp": "MP",
-    #                     "_mpo": "MPO",
-    #                     "_mu": "MU",
-    #                     "_r" : "R",
-    #                     "_rmp": "RMP",
-    #                     "_rmpo": "RMPO",
-    #                     "_rmu": "RMU",
-    #                   },
-    # plot_int= False,
-    # plot_chembl_int= False,
-    # plot_fname='test_plot',
-    # set_ylims=True,
-    # r_type = 'pearson_r',
-    # rmse_ylim=(0.25, 1.25),
-    # sdep_ylim=(0.0, 0.6),
-    # r2_ylim=(-0.2, 1),
-    # bias_ylim= (-1.2, 0),
-    # # r2_ylim=(-0.2, 0.8), #scrambled
-    # # bias_ylim= (-0.5, 0.5), #scrambled
-    # yticks=4,
-    # custom_xticks=[0, 500, 1000, 1500],
-    # tick_fontsize=20,
-    # label_fontsize=24,
-    # title_fontsize=20,
-    # legend_fontsize=20,
-    # save_plot=False,
-    # )
+        # "20241105_50_scramb_mpo"  ,
+        # "20241105_50_scramb_rmp",
+        # "20250410_50_scramb_rmu"
+    ],
+    plot_ho =True,
+    method_legend_map= {
+                        "_mp": "MP",
+                        "_mpo": "MPO",
+                        "_mu": "MU",
+                        "_r" : "R",
+                        "_rmp": "RMP",
+                        "_rmpo": "RMPO",
+                        "_rmu": "RMU",
+                      },
+    plot_int= False,
+    plot_chembl_int= False,
+    plot_fname='test_plot',
+    set_ylims=True,
+    r_type = 'pearson_r',
+    rmse_ylim=(0.25, 1.25),
+    sdep_ylim=(0.0, 0.6),
+    r2_ylim=(-0.2, 1),
+    bias_ylim= (-1.2, 0),
+    # r2_ylim=(-0.2, 0.8), #scrambled
+    # bias_ylim= (-0.5, 0.5), #scrambled
+    yticks=4,
+    custom_xticks=[0, 500, 1000, 1500],
+    tick_fontsize=20,
+    label_fontsize=24,
+    title_fontsize=20,
+    legend_fontsize=20,
+    save_plot=False,
+    )
 
  # %%
 # %%
@@ -844,6 +844,7 @@ an.analyseHits(experiment_ls=[
                it_ls=[],
                top_n=50)
 
+# %%
 an._plot_discovery_bars(allowed_experiments=[
     "20241011_50_r",
     "20241015_50_r",
@@ -870,3 +871,53 @@ an._plot_discovery_bars(allowed_experiments=[
   experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/indi_random_hit_discovery.json",
   plot_name='indi_random_hit_discovery'
   )
+
+# %%
+import json
+import pandas as pd
+
+with open("/users/yhb18174/Recreating_DMTA/results/rdkit_desc/plots/hit_discovery.json", 'r') as f:
+    data = json.load(f)
+
+df = pd.DataFrame()
+experiment_ls = []
+hit_count_ls = []
+hit_percentage_ls = []
+its = [5, 15, 30]
+
+for key in data.keys():
+    experiment_ls.append(key)
+    hit_counts = []
+    hit_perc_ls = []
+
+    for it in its:
+        if it < len(data[key]["it_hits"]):
+            count = data[key]["it_hits"][it]
+        else:
+            count = 0
+        hit_counts.append(count)
+        hit_perc_ls.append(count * 100 / 50)
+
+    hit_count_ls.append(hit_counts)
+    hit_percentage_ls.append(hit_perc_ls)
+
+print(hit_count_ls)
+print(hit_percentage_ls)
+# %%
+
+# Build one row per experiment
+rows = []
+for exp_name, counts, percents in zip(experiment_ls, hit_count_ls, hit_percentage_ls):
+    row = {"Experiment": exp_name}
+    for i, it in enumerate(its):
+        #row[f"Hits@{it}"] = counts[i]
+        row[f"%@{it}"] = percents[i]
+    rows.append(row)
+
+# Create DataFrame
+df = pd.DataFrame(rows)
+
+df
+# %%
+df.sort_values(by="%@30", ascending=False)
+# %%

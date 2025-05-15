@@ -40,7 +40,7 @@ PredictNewTestSet(
     full_data=tfl,
     test_set_name = 'trimmed_held_out',
     experiment_ls=all_experiments,
-    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/'
+    results_dir = '/users/yhb18174/Recreating_DMTA/results/rdkit_desc/complete_archive/50_sel/'
 )
 
 

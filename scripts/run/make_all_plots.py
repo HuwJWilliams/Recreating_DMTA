@@ -214,16 +214,9 @@ an = Analysis(results_dir=results_dir,
 #                                 method_legend_map=legend_dict)
 
 # %%
-exp_ls = [
-      "average_50_rmp",
-        "average_50_mp",
-        "average_50_rmpo",
-        "average_50_mpo",
-        "average_50_r",
-        "average_50_mu",
-        "average_50_rmu",]
 
-for exp in exp_ls:
-        an.PlotFeatureImportanceAndRidgelines(experiment=exp,
-                                iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
-        )
+for exp_ls in plot_ls_ls:
+        for exp in exp_ls:
+                an.PlotFeatureImportanceAndRidgelines(experiment=exp,
+                                        iter_ls=[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                )

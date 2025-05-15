@@ -3632,12 +3632,14 @@ class Analysis:
         )
         plt.xlabel("Importance", fontsize=label_fontsize)
         plt.ylabel("Feature", fontsize=label_fontsize)
-        plt.xticks(fontsize=tick_fontsize)
+        plt.xticks(fontsize=tick_fontsize, rotation=0.45)
         plt.yticks(fontsize=tick_fontsize)
+
+        plt.tight_layout()
 
         if save_data:
             plt.savefig(Path(save_path) / f"{filename}_importance{exp_suffix}_barplot.png", dpi=dpi)
-            feat_importance_df.to_csv(Path(save_path) / "feature_importance_df.csv")
+            feat_importance_df.to_csv(Path(save_path) / f"feature_importance_df{exp_suffix}.csv")
 
         plt.show()
 
@@ -4558,7 +4560,7 @@ class Analysis:
                 self.experiment_hits = json.load(f)
 
         experiments = (
-            [key for key in self.experiment_hits if key in allowed_experiments]
+            [key for key in self.experiment_hits if any(key.endswith(ae) for ae in allowed_experiments)]
             if allowed_experiments
             else list(self.experiment_hits.keys())
         )

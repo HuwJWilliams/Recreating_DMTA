@@ -3632,7 +3632,7 @@ class Analysis:
         )
         plt.xlabel("Importance", fontsize=label_fontsize)
         plt.ylabel("Feature", fontsize=label_fontsize)
-        plt.xticks(fontsize=tick_fontsize, rotation=0.45)
+        plt.xticks(fontsize=tick_fontsize, rotation=45)
         plt.yticks(fontsize=tick_fontsize)
 
         plt.tight_layout()

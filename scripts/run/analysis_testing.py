@@ -922,3 +922,6 @@ an._plot_discovery_bars(allowed_experiments=[
 # df
 # # %%
 # df.sort_values(by="%@5", ascending=False)
+
+# %%
+an.uncertaintyDevelopment("average_50_rmp")

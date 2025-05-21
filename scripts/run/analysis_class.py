@@ -4801,4 +4801,126 @@ class Analysis:
         ax.set_ylabel("UMAP-2")
         plt.tight_layout()
         plt.show()
+        
+    def uncertaintyDevelopment(
+            self,
+            experiment: str,
+            final_it: int = 30,
+            bins: list = [0.0, 0.2, 0.4, 0.6, 0.8, np.inf],
+            labels: list = [
+                "Very Certain",
+                "Moderately Certain",
+                "Certain",
+                "Quite Uncertain",
+                "Very Uncertain"
+            ],
+            true_values_path: str = f"{PROJ_DIR}/datasets/held_out_data/PMG_held_out_targ_trimmed.csv"
+    ):
+        from sklearn.metrics import mean_squared_error
 
+        full_dict = {}
+
+        # Load true values once
+        true_df = pd.read_csv(true_values_path, index_col="ID")
+        true_df['Affinity(kcal/mol)'] = pd.to_numeric(true_df['Affinity(kcal/mol)'], errors='coerce')
+
+        for it in range(0, final_it + 1):
+            bin_rmse_list = {label: [] for label in labels}
+            bin_counts_total = {label: 0 for label in labels}
+
+            preds_path = f"{self.results_dir}/{experiment}/it{it}/held_out_test/held_out_test_preds.csv"
+
+            try:
+                df = pd.read_csv(preds_path, index_col="ID")
+            except FileNotFoundError:
+                print(f"❌ File not found for iteration {it}: {preds_path}")
+                continue
+
+            # Ensure numeric
+            df['Uncertainty'] = pd.to_numeric(df['Uncertainty'], errors='coerce')
+            df['pred_Affinity(kcal/mol)'] = pd.to_numeric(df['pred_Affinity(kcal/mol)'], errors='coerce')
+
+            # Merge true values
+            df = df.join(true_df[["Affinity(kcal/mol)"]], how="inner")
+
+            # Drop NaNs
+            df = df.dropna(subset=["Uncertainty", "pred_Affinity(kcal/mol)", "Affinity(kcal/mol)"])
+
+            # Bin uncertainty
+            df["uncertainty_bin"] = pd.cut(df["Uncertainty"], bins=bins, labels=labels)
+
+            # Compute per-molecule RMSE
+            df["RMSE"] = np.sqrt((df["Affinity(kcal/mol)"] - df["pred_Affinity(kcal/mol)"]) ** 2)
+
+            # Count and compute per-bin RMSE
+            mean_rmse_per_bin = {}
+            bin_counts = df['uncertainty_bin'].value_counts().reindex(labels, fill_value=0).to_dict()
+
+            for label in labels:
+                bin_df = df[df["uncertainty_bin"] == label]
+                bin_counts_total[label] += bin_counts[label]
+                
+                if not bin_df.empty:
+                    rmse = np.sqrt(
+                        mean_squared_error(
+                            bin_df["Affinity(kcal/mol)"],
+                            bin_df["pred_Affinity(kcal/mol)"]
+                        )
+                    )
+                    mean_rmse_per_bin[label] = round(rmse, 2)
+                else:
+                    mean_rmse_per_bin[label] = np.nan
+
+            full_dict[it] = {
+                "bin_counts": bin_counts_total,
+                "mean_rmse_per_bin": mean_rmse_per_bin
+            }
+        
+        data = {label: [] for label in labels}
+        iterations = sorted(full_dict.keys())
+
+        for it in iterations:
+            for label in labels:
+                rmse = full_dict[it]["mean_rmse_per_bin"].get(label, None)
+                data[label].append(rmse)
+
+        # Create DataFrame
+        df_rmse = pd.DataFrame(data, index=iterations)
+        df_rmse.index.name = "Iteration"
+
+        label_colors = {
+            "Very Certain": "#2ca02c",        # green
+            "Moderately Certain": "#98df8a",  # light green
+            "Certain": "#ffcc00",             # yellow
+            "Quite Uncertain": "#ff7f0e",     # orange
+            "Very Uncertain": "#d62728",      # red
+        }
+
+        plt.figure(figsize=(10, 6))
+        for label in labels:
+            plt.plot(
+                df_rmse.index,
+                df_rmse[label],
+                marker="o",
+                label=label,
+                color=label_colors[label]
+            )
+
+        plt.xlabel("Iteration", fontsize=14)
+        plt.ylabel("Mean RMSE", fontsize=14)
+        plt.title("Uncertainty Bin RMSE Over Iterations", fontsize=16)
+        plt.grid(True)
+
+        plt.legend(
+            title="Uncertainty Bin",
+            fontsize=12,
+            title_fontsize=13,
+            loc="center left",
+            bbox_to_anchor=(1.02, 0.5),
+            borderaxespad=0
+        )
+
+        plt.tight_layout()
+        plt.show()
+
+        return full_dict

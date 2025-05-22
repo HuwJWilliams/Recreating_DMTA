@@ -824,28 +824,11 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                       )
 # %%
 an.analyseHits(experiment_ls=[
-    "20250316_50_rmp_rmu_2:8",
-    "20250317_50_rmp_rmu_2:8",
-    "20250319_50_rmp_rmu_2:8",
-
-    "20250317_50_rmp_rmu_5:5",
-    "20250322_50_rmp_rmu_5:5",
-    "20250323_50_rmp_rmu_5:5",
-
-    "20250323_50_rmp_rmu_8:2",
-    "20250324_50_rmp_rmu_8:2",
-    "20250325_50_rmp_rmu_8:2",
-
-    "20250218_50_rmu",
-    "20250219_50_rmu",
-    "20250220_50_rmu",
-
-    "20241011_50_rmp",
-    "20241015_50_rmp"
-    "20241023_50_rmp"
-
+"20241015_50_mu",
+"20241011_50_mu",
+"20241023_50_mu"
                               ],
-              json_name="hybrid_random_hit_discovery",
+              json_name="indi_muhit_discovery",
                it_ls=[],
                top_n=50)
 
@@ -853,75 +836,52 @@ an.analyseHits(experiment_ls=[
 
 # %%
 an._plot_discovery_bars(allowed_experiments=[
-    "20250316_50_rmp_rmu_2:8",
-    "20250317_50_rmp_rmu_2:8",
-    "20250319_50_rmp_rmu_2:8",
+"20241015_50_mu",
+"20241011_50_mu",
+"20241023_50_mu"
 
-    "20250317_50_rmp_rmu_5:5",
-    "20250322_50_rmp_rmu_5:5",
-    "20250323_50_rmp_rmu_5:5",
-
-    "20250323_50_rmp_rmu_8:2",
-    "20250324_50_rmp_rmu_8:2",
-    "20250325_50_rmp_rmu_8:2",
         ],
   method_legend_map={
-      "_2:8" : "RMP:RMU (2:8)",
-      "_5:5" : "RMP:RMU (5:5)",
-      "_8:2" : "RMP:RMU (8:2)",
+      "_mu" : "MU",
   },
-  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/hybrid_random_hit_discovery.json",
-  plot_name='bias_corrected_greedy_hit_discovery'
+  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/indi_muhit_discovery.json",
+  plot_name='indi_mu_hit_discovery'
   )
 
-# # %%
-# import json
-# import pandas as pd
-
-# with open("/users/yhb18174/Recreating_DMTA/results/rdkit_desc/plots/hit_discovery.json", 'r') as f:
-#     data = json.load(f)
-
-# df = pd.DataFrame()
-# experiment_ls = []
-# hit_count_ls = []
-# hit_percentage_ls = []
-# its = [ 0, 5, 15, 30]
-
-# for key in data.keys():
-#     experiment_ls.append(key)
-#     hit_counts = []
-#     hit_perc_ls = []
-
-#     for it in its:
-#         if it < len(data[key]["it_hits"]):
-#             count = data[key]["it_hits"][it]
-#         else:
-#             count = 0
-#         hit_counts.append(count)
-#         hit_perc_ls.append(count * 100 / 50)
-
-#     hit_count_ls.append(hit_counts)
-#     hit_percentage_ls.append(hit_perc_ls)
-
-# print(hit_count_ls)
-# print(hit_percentage_ls)
-# # %%
-
-# # Build one row per experiment
-# rows = []
-# for exp_name, counts, percents in zip(experiment_ls, hit_count_ls, hit_percentage_ls):
-#     row = {"Experiment": exp_name}
-#     for i, it in enumerate(its):
-#         #row[f"Hits@{it}"] = counts[i]
-#         row[f"%@{it}"] = percents[i]
-#     rows.append(row)
-
-# # Create DataFrame
-# df = pd.DataFrame(rows)
-
-# df
-# # %%
-# df.sort_values(by="%@5", ascending=False)
-
 # %%
-an.uncertaintyDevelopment("average_50_rmp")
+exp_ls = [
+        "average_50_rmp",
+        "average_50_mp",
+        "average_50_rmpo",
+        "average_50_mpo",
+        "average_50_r",
+        "average_50_mu",
+        "average_50_rmu",
+        "average_50_mp_mu_2:8",
+        "average_50_mp_mu_5:5",
+        "average_50_mp_mu_8:2", 
+        "average_50_rmp_rmu_2:8",
+        "average_50_rmp_rmu_5:5",
+        "average_50_rmp_rmu_8:2",
+        ]
+
+plot_name_ref = [
+        "rmp",
+        "mp",
+        "rmpo",
+        "mpo",
+        "r",
+        "mu",
+        "rmu",
+        "mp_mu_2:8",
+        "mp_mu_5:5",
+        "mp_mu_8:2", 
+        "rmp_rmu_2:8",
+        "rmp_rmu_5:5",
+        "rmp_rmu_8:2",
+]
+
+for exp, ref in zip(exp_ls, plot_name_ref):
+    an.uncertaintyDevelopment(exp,
+                              plot_name=f"uncertainty_rmse_bin_{ref}")
+# %%

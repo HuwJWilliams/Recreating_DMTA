@@ -4814,6 +4814,10 @@ class Analysis:
                 "Quite Uncertain",
                 "Very Uncertain"
             ],
+            tick_fontsize:int=18,
+            label_fontsize:int=20,
+            plot_name: str="uncertainty_rmse_bin_plot",
+            save_plot:bool=True,
             true_values_path: str = f"{PROJ_DIR}/datasets/held_out_data/PMG_held_out_targ_trimmed.csv"
     ):
         from sklearn.metrics import mean_squared_error
@@ -4906,21 +4910,53 @@ class Analysis:
                 color=label_colors[label]
             )
 
-        plt.xlabel("Iteration", fontsize=14)
-        plt.ylabel("Mean RMSE", fontsize=14)
-        plt.title("Uncertainty Bin RMSE Over Iterations", fontsize=16)
-        plt.grid(True)
+        plt.xlabel("Iteration", fontsize=label_fontsize)
+        plt.ylabel("Mean RMSE", fontsize=label_fontsize)
+        plt.xticks(fontsize=tick_fontsize)
+        plt.yticks(fontsize=tick_fontsize)
 
         plt.legend(
             title="Uncertainty Bin",
-            fontsize=12,
-            title_fontsize=13,
+            fontsize=tick_fontsize,
+            title_fontsize=tick_fontsize,
             loc="center left",
             bbox_to_anchor=(1.02, 0.5),
             borderaxespad=0
         )
 
         plt.tight_layout()
+
+        count_table = pd.DataFrame({
+            it: full_dict[it]["bin_counts"] for it in iterations
+        }).T  # Transpose to have iterations as rows
+
+        count_table.index.name = "Iteration"
+
+        # Convert to percentages (row-wise normalization)
+        total_mols = len(true_df)  # total number of molecules
+        count_table_pct = (count_table / total_mols) * 100        
+        count_table_pct = count_table_pct.round(1)  # Round to 1 decimal place
+
+        combined_columns = pd.MultiIndex.from_product(
+            [count_table.columns, ["Count", "%"]],
+            names=['Bin', "Metric"]
+        )
+
+        combined_data = []
+
+        for it in count_table.index:
+            row= []
+            for col in count_table.columns:
+                row.extend([count_table.loc[it,col], count_table_pct.loc[it,col]])
+            
+            combined_data.append(row)
+        combined_df = pd.DataFrame(combined_data, index=count_table.index, columns=combined_columns)
+        combined_df.index.name = "Iteration"
+
+        if save_plot:
+            plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
+            combined_df.to_csv(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.csv")
         plt.show()
 
-        return full_dict
+
+        return count_table_pct, full_dict

@@ -294,7 +294,7 @@ class Run_GNINA:
         receptor_path (str)         Pathway to the receptor
         center (x,y,z) (float)      X, Y, Z coordinate of the center of the focussed box
         size (x, y, z) (float)      Size of the focussed box in the X, Y, Z dimensions
-        exhaustivenedd (int)        Exhaustiveness of the global search
+        exhaustiveness (int)        Exhaustiveness of the global search
         num_modes (t1_1_rint)       Number of binding modes to generate
         cpu (int)                   Number of CPUs to use (default keep as 1)
         addH (int)                  Automatically adds hydrogens in ligands (0= off, 1= on)

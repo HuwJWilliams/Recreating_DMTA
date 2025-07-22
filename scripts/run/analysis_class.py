@@ -4348,7 +4348,10 @@ class Analysis:
 
         global_docking_df = pd.DataFrame()
         for docking_file in docking_results_ls:
-            df = pd.read_csv(docking_file, index_col="ID")
+            try:
+                df = pd.read_csv(docking_file, index_col="ID")
+            except UnicodeDecodeError as e:
+                df = pd.read_csv(docking_file, index_col="ID", compression='gzip')
             df = df.sort_values(by=docking_column)
             df = df.head(int(len(df) * (percentile * 10)))
             global_docking_df = pd.concat([global_docking_df, df])

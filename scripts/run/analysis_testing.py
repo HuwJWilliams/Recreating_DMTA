@@ -17,7 +17,7 @@ from misc_functions import (
     get_descs_for_molid,
     create_gif,
     )
-results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/50_sel/'
+results_dir=str(PROJ_DIR) + '/results/rdkit_desc/complete_archive/scrambled/'
 an = Analysis(results_dir=results_dir, 
               held_out_stat_json="trimmed_held_out_test/trimmed_held_out_stats.json",
             # held_out_stat_json="held_out_test/held_out_stats.json",
@@ -824,11 +824,20 @@ prediction = '/users/yhb18174/Recreating_DMTA/datasets/PyMolGen/desc/rdkit/PMG_r
 #                       )
 # %%
 an.analyseHits(experiment_ls=[
-"20241015_50_mu",
-"20241011_50_mu",
-"20241023_50_mu"
+"20241024_10_scramb_mp",
+"20241024_10_scramb_mpo",
+"20241024_10_scramb_mu"
                               ],
-              json_name="indi_muhit_discovery",
+              json_name="shuffled_indi_mp_hit_discovery",
+               it_ls=[],
+               top_n=50)
+
+an.analyseHits(experiment_ls=[
+"20241024_10_scramb_rmp",
+"20241024_10_scramb_rmpo",
+"20241024_10_scramb_r"
+                              ],
+              json_name="shuffled_indi_r_hit_discovery",
                it_ls=[],
                top_n=50)
 
@@ -836,53 +845,68 @@ an.analyseHits(experiment_ls=[
 
 # %%
 an._plot_discovery_bars(allowed_experiments=[
-"20241015_50_mu",
-"20241011_50_mu",
-"20241023_50_mu"
-
+"20241024_10_scramb_mp",
+"20241024_10_scramb_mpo",
+"20241024_10_scramb_mu"
         ],
   method_legend_map={
       "_mu" : "MU",
+      "_mp" : "MP",
+      "_mpo" : "MPO"
   },
-  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/indi_muhit_discovery.json",
-  plot_name='indi_mu_hit_discovery'
+  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/shuffled_indi_mp_hit_discovery.json",
+  plot_name='shuffled_indi_mp_hit_discovery'
+  )
+
+an._plot_discovery_bars(allowed_experiments=[
+"20241024_10_scramb_rmp",
+"20241024_10_scramb_rmpo",
+"20241024_10_scramb_r"
+        ],
+  method_legend_map={
+      "_mu" : "MU",
+      "_mp" : "MP",
+      "_mpo" : "MPO"
+  },
+  experiment_hits_path=f"{PROJ_DIR}/results/rdkit_desc/plots/shuffled_indi_r_hit_discovery.json",
+  plot_name='shuffled_indi_r_hit_discovery'
   )
 
 # %%
-exp_ls = [
-        "average_50_rmp",
-        "average_50_mp",
-        "average_50_rmpo",
-        "average_50_mpo",
-        "average_50_r",
-        "average_50_mu",
-        "average_50_rmu",
-        "average_50_mp_mu_2:8",
-        "average_50_mp_mu_5:5",
-        "average_50_mp_mu_8:2", 
-        "average_50_rmp_rmu_2:8",
-        "average_50_rmp_rmu_5:5",
-        "average_50_rmp_rmu_8:2",
-        ]
+# exp_ls = [
+#         "average_50_rmp",
+#         "average_50_mp",
+#         "average_50_rmpo",
+#         "average_50_mpo",
+#         "average_50_r",
+#         "average_50_mu",
+#         "average_50_rmu",
+#         "average_50_mp_mu_2:8",
+#         "average_50_mp_mu_5:5",
+#         "average_50_mp_mu_8:2", 
+#         "average_50_rmp_rmu_2:8",
+#         "average_50_rmp_rmu_5:5",
+#         "average_50_rmp_rmu_8:2",
+#         ]
 
-plot_name_ref = [
-        "rmp",
-        "mp",
-        "rmpo",
-        "mpo",
-        "r",
-        "mu",
-        "rmu",
-        "mp_mu_2:8",
-        "mp_mu_5:5",
-        "mp_mu_8:2", 
-        "rmp_rmu_2:8",
-        "rmp_rmu_5:5",
-        "rmp_rmu_8:2",
-]
+# plot_name_ref = [
+#         "rmp",
+#         "mp",
+#         "rmpo",
+#         "mpo",
+#         "r",
+#         "mu",
+#         "rmu",
+#         "mp_mu_2:8",
+#         "mp_mu_5:5",
+#         "mp_mu_8:2", 
+#         "rmp_rmu_2:8",
+#         "rmp_rmu_5:5",
+#         "rmp_rmu_8:2",
+# ]
 
-for exp, ref in zip(exp_ls, plot_name_ref):
-    an.uncertaintyDevelopment(exp,
-                              plot_name=f"uncertainty_rmse_bin_{ref}")
+# for exp, ref in zip(exp_ls, plot_name_ref):
+#     an.uncertaintyDevelopment(exp,
+#                               plot_name=f"uncertainty_rmse_bin_{ref}")
 # %%
 

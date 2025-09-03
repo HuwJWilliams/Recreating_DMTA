@@ -4674,6 +4674,135 @@ class Analysis:
         plt.savefig(f"{PROJ_DIR}/results/rdkit_desc/plots/{plot_name}.png")
         plt.show()
 
+    def plot_true_hit_scores_scatter(
+        self,
+        experiment_hits_path: str = f"{PROJ_DIR}/results/rdkit_desc/plots/hit_discovery.json",
+        docking_results_path: str = f"{PROJ_DIR}/datasets/hits/hits_targets.csv",
+        docking_column: str = "Affinity(kcal/mol)",
+        allowed_experiments: list = None,
+        out_name: str = "hits_scatter_all_experiments.png",
+        point_alpha: float = 0.8,
+        jitter: float = 0.18,
+        invert_y: bool = True,   # docking affinities are often more negative = better
+        figsize=(16, 9),
+        seed: int = 42,
+        label_fontsize: int = 20,
+        tick_fontsize: int = 18,
+        legend_fontsize: int = 16
+    ):
+        """
+        One scatter plot showing **individual true docking-score hits** discovered by each experiment.
+        - X axis: experiments (categorical)
+        - Y axis: true docking score (from docking CSVs)
+        - Each point = one discovered 'true hit' molecule ID for that experiment
+        """
+
+        # --- Load experiment hits (from your analyseHits output) ---
+        with open(experiment_hits_path, "r") as f:
+            experiment_hits = json.load(f)
+
+        # Filter which experiments to plot
+        if allowed_experiments:
+            experiments = [e for e in experiment_hits if any(e.endswith(ae) for ae in allowed_experiments)]
+        else:
+            experiments = list(experiment_hits.keys())
+
+        if not experiments:
+            print("No experiments to plot. Check `allowed_experiments` and the JSON contents.")
+            return
+
+        # --- Build a lookup for true docking scores from all batches ---
+        docking_files = glob(docking_results_path)
+        if not docking_files:
+            raise FileNotFoundError(f"No docking files matched: {docking_results_path}")
+
+        docking_map = {}  # ID -> docking score
+        for fpath in docking_files:
+            try:
+                df = pd.read_csv(fpath, index_col="ID")
+            except UnicodeDecodeError:
+                df = pd.read_csv(fpath, index_col="ID", compression="gzip")
+            # Coerce to numeric, drop NAs
+            if docking_column not in df.columns:
+                raise KeyError(f"Column '{docking_column}' not found in {os.path.basename(fpath)}")
+            s = pd.to_numeric(df[docking_column], errors='coerce').dropna()
+            docking_map.update(s.to_dict())
+
+        # --- Collect rows: one per discovered 'true hit' per experiment ---
+        rows = []
+        for exp in experiments:
+            hit_ids = experiment_hits[exp]["it_hit_ids"][-1]
+            for mid in hit_ids:
+                if mid in docking_map:
+                    rows.append({"experiment": exp, "ID": mid, "docking_score": docking_map[mid]})
+
+        if not rows:
+            print("No matching hits with docking scores found to plot.")
+            return
+
+        plot_df = pd.DataFrame(rows)
+
+        # --- Prepare plotting ---
+        rng = np.random.default_rng(seed)
+        exp_order = sorted(experiments)  # stable ordering
+        x_positions = {exp: i * 0.6 for i, exp in enumerate(exp_order)}
+
+        exp_labels = {exp: exp.split("_")[-1].upper() for exp in exp_order}
+
+        # Assign an x (with jitter) for each row
+        xs = [x_positions[exp] + rng.uniform(-jitter, jitter) for exp in plot_df["experiment"]]
+        plot_df["x"] = xs
+
+        # --- Plot ---
+        plt.figure(figsize=figsize)
+        # Color by experiment for legibility
+        for exp in exp_order:
+            sub = plot_df[plot_df["experiment"] == exp]
+            colour = self.method_colour_map.get(f"_{exp.split('_')[-1].lower()}", "black")
+            plt.scatter(sub["x"], sub["docking_score"], alpha=point_alpha, label=exp_labels[exp], edgecolors="black",
+                        s=120, color=colour)
+
+        # Category ticks
+        plt.xticks(
+            list(x_positions.values()),
+            [exp_labels[e] for e in exp_order],
+            rotation=30, ha="right", fontsize=tick_fontsize
+        )
+
+        plt.yticks(fontsize=tick_fontsize)
+
+        plt.xlabel("Experiment", fontsize=label_fontsize)
+        plt.ylabel(docking_column, fontsize=label_fontsize)
+
+        # Optional: invert y if more negative is better (common for kcal/mol docking)
+        if invert_y:
+            plt.gca().invert_yaxis()
+
+        # Optional: show per-experiment medians as reference lines
+        for exp, xpos in x_positions.items():
+            med = plot_df.loc[plot_df["experiment"] == exp, "docking_score"].median()
+            if pd.notnull(med):
+                plt.hlines(
+                    med,
+                    xpos - 0.35,
+                    xpos + 0.35,
+                    colors="black",
+                    linestyles="dashed",
+                    linewidth=2,
+                    alpha=0.8
+                )
+
+        # De-clutter
+        plt.tight_layout()
+        plt.legend(title="Experiments", bbox_to_anchor=(1.02, 1), loc="upper left", frameon=False,
+                   fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+
+        out_path = f"{PROJ_DIR}/results/rdkit_desc/plots/{out_name}"
+        plt.savefig(out_path, dpi=300, bbox_inches="tight")
+        plt.show()
+        print(f"Saved scatter: {out_path}")
+
+
 
     def drawUMAP(self,
                  experiment_ls,
@@ -4731,10 +4860,6 @@ class Analysis:
 
             import sys
             sys.path = [str(p) for p in sys.path]
-
-            from umap.umap_ import UMAP
-            from sklearn.preprocessing import StandardScaler
-
             full_df = pd.concat(top_pred_df_ls)
 
         print(full_df.columns)

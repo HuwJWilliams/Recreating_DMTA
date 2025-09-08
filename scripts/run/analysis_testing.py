@@ -910,3 +910,5 @@ an._plot_discovery_bars(allowed_experiments=[
 #                               plot_name=f"uncertainty_rmse_bin_{ref}")
 # %%
 
+an.plot_true_hit_scores_scatter(allowed_experiments=["average_50_mp", "average_50_mpo", "average_50_mu", "average_50_r", "average_50_rmp", "average_50_rmpo"])
+# %%
